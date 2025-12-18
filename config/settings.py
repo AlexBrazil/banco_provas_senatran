@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 # -----------------------------------------------------------------------------
 # settings.py está em: <BASE_DIR>/config/settings.py
 # e o manage.py / .env estão em: <BASE_DIR>/
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega .env ANTES de qualquer os.getenv()
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
