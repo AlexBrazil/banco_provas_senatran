@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Resultado do Simulado</title>
+</head>
+<body>
+  <h1>Resultado</h1>
+
+  <p>Acertos: <strong>{{ acertos }}</strong> / {{ total }} ({{ percent }}%)</p>
+
+  <h3>Revisão (resumo)</h3>
+  <ul>
+    {% for item in revisao %}
+      <li>
+        #{{ item.questao.numero_no_modulo }} — {{ item.questao.modulo.nome }} —
+        {% if item.respondida %}
+          {% if item.acertou %}✅ Acertou{% else %}❌ Errou{% endif %}
+        {% else %}
+          ⚠️ Não respondida
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Novo simulado</button>
+  </form>
+
+  <p><a href="{% url 'simulado:config' %}">Voltar para configuração</a></p>
+</body>
+</html>
