@@ -1,0 +1,21 @@
+<h2>Questão {{ idx|add:1 }} de {{ total }}</h2>
+<p><strong>{{ questao.modulo.nome }}</strong></p>
+
+<p>{{ questao.enunciado }}</p>
+
+{% if questao.imagem_arquivo %}
+  <p><em>Imagem:</em> {{ questao.imagem_arquivo }}</p>
+{% endif %}
+
+<form method="post" action="{% url 'simulado:responder' %}">
+  {% csrf_token %}
+  {% for a in alternativas %}
+    <div style="margin: 8px 0;">
+      <label>
+        <input type="radio" name="alternativa_id" value="{{ a.id }}" required>
+        {{ a.texto }}
+      </label>
+    </div>
+  {% endfor %}
+  <button type="submit">Responder</button>
+</form>

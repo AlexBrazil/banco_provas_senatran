@@ -1,0 +1,32 @@
+<h1>Simulado</h1>
+
+<form method="get">
+  <label>Curso</label>
+  <select name="curso" onchange="this.form.submit()">
+    <option value="">Selecione...</option>
+    {% for c in cursos %}
+      <option value="{{ c.id }}" {% if curso_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if curso_id %}
+<hr>
+<form method="post" action="{% url 'simulado:iniciar' %}">
+  {% csrf_token %}
+  <input type="hidden" name="curso_id" value="{{ curso_id }}">
+
+  <label>Módulo (opcional)</label>
+  <select name="modulo_id">
+    <option value="">Todos</option>
+    {% for m in modulos %}
+      <option value="{{ m.id }}">M{{ m.ordem }} - {{ m.nome }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Quantidade</label>
+  <input type="number" name="qtd" value="10" min="1" max="50">
+
+  <button type="submit">Iniciar</button>
+</form>
+{% endif %}
