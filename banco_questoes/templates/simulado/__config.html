@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Configurar Simulado</title>
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Simulado</h1>
+  <p class="muted">Configure seu simulado antes de iniciar</p>
+
+  <div class="card">
+    <form method="post" action="{% url 'simulado:iniciar' %}">
+      {% csrf_token %}
+
+      <div style="margin-bottom:12px;">
+        <label class="muted">Módulo</label>
+        <select name="modulo_id" required>
+          {% for m in modulos %}
+            <option value="{{ m.id }}">
+              {{ m.curso.nome }} — M{{ m.ordem }}: {{ m.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label class="muted">Quantidade de questões</label>
+        <input type="number" name="qtd" min="1" max="50" value="{{ qtd_default|default:10 }}" required>
+      </div>
+
+      <button class="btn" type="submit">Iniciar simulado</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

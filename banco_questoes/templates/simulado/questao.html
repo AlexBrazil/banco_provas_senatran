@@ -1,21 +1,37 @@
+{% load static %}
+
 <h2>Questão {{ idx|add:1 }} de {{ total }}</h2>
 <p><strong>{{ questao.modulo.nome }}</strong></p>
 
 <p>{{ questao.enunciado }}</p>
 
 {% if questao.imagem_arquivo %}
-  <p><em>Imagem:</em> {{ questao.imagem_arquivo }}</p>
+  <div style="margin: 12px 0;">
+    <img
+      src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
+      alt="Imagem da questão"
+      style="max-width: 520px; width: 100%; height: auto; display: block; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #fff;"
+      onerror="this.closest('div').style.display='none';"
+    >
+    <small style="display:block; color:#666; margin-top:6px;">
+      Arquivo: {{ questao.imagem_arquivo }}
+    </small>
+  </div>
 {% endif %}
 
 <form method="post" action="{% url 'simulado:responder' %}">
   {% csrf_token %}
+
   {% for a in alternativas %}
-    <div style="margin: 8px 0;">
-      <label>
-        <input type="radio" name="alternativa_id" value="{{ a.id }}" required>
-        {{ a.texto }}
+    <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+      <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
+        <input type="radio" name="alternativa_id" value="{{ a.id }}" required style="margin-top: 3px;">
+        <span>{{ a.texto }}</span>
       </label>
     </div>
   {% endfor %}
-  <button type="submit">Responder</button>
+
+  <button type="submit" style="margin-top: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
+    Responder
+  </button>
 </form>

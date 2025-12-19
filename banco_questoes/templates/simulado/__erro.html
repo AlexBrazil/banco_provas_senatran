@@ -1,0 +1,29 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Erro</title>
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Erro</h1>
+  <p class="muted">Algo deu errado durante o simulado</p>
+
+  <div class="card">
+    {% if mensagem %}
+      <p class="muted">{{ mensagem }}</p>
+    {% else %}
+      <p class="muted">Ocorreu um erro inesperado.</p>
+    {% endif %}
+
+    <div style="margin-top:16px;">
+      <a class="btn" href="{% url 'simulado:config' %}">Voltar</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
