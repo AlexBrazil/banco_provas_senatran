@@ -1,37 +1,58 @@
 {% load static %}
 
-<h2>Questão {{ idx|add:1 }} de {{ total }}</h2>
-<p><strong>{{ questao.modulo.nome }}</strong></p>
+<link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
 
-<p>{{ questao.enunciado }}</p>
+<div class="simulado-container">
 
-{% if questao.imagem_arquivo %}
-  <div style="margin: 12px 0;">
-    <img
-      src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
-      alt="Imagem da questão"
-      style="max-width: 520px; width: 100%; height: auto; display: block; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #fff;"
-      onerror="this.closest('div').style.display='none';"
-    >
-    <small style="display:block; color:#666; margin-top:6px;">
-      Arquivo: {{ questao.imagem_arquivo }}
-    </small>
-  </div>
-{% endif %}
+  <h2 class="simulado-titulo">
+    Questão {{ idx|add:1 }} de {{ total }}
+  </h2>
 
-<form method="post" action="{% url 'simulado:responder' %}">
-  {% csrf_token %}
+  <p class="simulado-modulo">
+    <strong>{{ questao.modulo.nome }}</strong>
+  </p>
 
-  {% for a in alternativas %}
-    <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-      <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
-        <input type="radio" name="alternativa_id" value="{{ a.id }}" required style="margin-top: 3px;">
-        <span>{{ a.texto }}</span>
-      </label>
+  <p class="simulado-enunciado">
+    {{ questao.enunciado }}
+  </p>
+
+  {% if questao.imagem_arquivo %}
+    <div class="questao-imagem-wrapper">
+      <img
+        src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
+        alt="Imagem da questão"
+        class="questao-imagem"
+        onerror="this.closest('.questao-imagem-wrapper').style.display='none';"
+      >
+      <small class="questao-imagem-label">
+        Arquivo: {{ questao.imagem_arquivo }}
+      </small>
     </div>
-  {% endfor %}
+  {% endif %}
 
-  <button type="submit" style="margin-top: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
-    Responder
-  </button>
-</form>
+  <form method="post" action="{% url 'simulado:responder' %}" class="simulado-form">
+    {% csrf_token %}
+
+    {% for a in alternativas %}
+      <div class="alternativa">
+        <label class="alternativa-label">
+          <input
+            type="radio"
+            name="alternativa_id"
+            value="{{ a.id }}"
+            required
+            class="alternativa-radio"
+          >
+          <span class="alternativa-texto">
+            {{ a.texto }}
+          </span>
+        </label>
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn-simulado">
+      Responder
+    </button>
+  </form>
+
+</div>

@@ -9,4 +9,6 @@ urlpatterns = [
     path("questao/", views_simulado.simulado_questao, name="questao"),
     path("responder/", views_simulado.simulado_responder, name="responder"),
     path("resultado/", views_simulado.simulado_resultado, name="resultado"),
+    #endpoint AJAX
+    path("api/modulos/", views_simulado.api_modulos_por_curso, name="api_modulos"),
 ]

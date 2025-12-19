@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import random
 from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import reverse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET
 
 from banco_questoes.models import Curso, CursoModulo, Questao, Alternativa
 
@@ -29,21 +29,8 @@ def _clear_state(request: HttpRequest) -> None:
 @require_http_methods(["GET"])
 def simulado_config(request: HttpRequest) -> HttpResponse:
     cursos = Curso.objects.filter(ativo=True).order_by("nome")
+    return render(request, "simulado/config.html", {"cursos": cursos})
 
-    curso_id = request.GET.get("curso")
-    modulos = []
-    if curso_id:
-        modulos = CursoModulo.objects.filter(curso_id=curso_id, ativo=True).order_by("ordem")
-
-    return render(
-        request,
-        "simulado/config.html",
-        {
-            "cursos": cursos,
-            "curso_id": curso_id,
-            "modulos": modulos,
-        },
-    )
 
 
 @require_http_methods(["POST"])
@@ -223,3 +210,28 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
             "revisao": revisao,
         },
     )
+
+# O que isso faz:
+# recebe curso_id
+# busca módulos ativos
+# retorna JSON limpo e fácil pro front usar.
+@require_GET
+def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
+    curso_id = (request.GET.get("curso_id") or "").strip()
+
+    if not curso_id:
+        return JsonResponse({"ok": False, "error": "curso_id ausente."}, status=400)
+
+    qs = (
+        CursoModulo.objects
+        .filter(curso_id=curso_id, ativo=True)
+        .order_by("ordem")
+        .values("id", "ordem", "nome")
+    )
+
+    modulos = [
+        {"id": str(m["id"]), "ordem": m["ordem"], "nome": m["nome"]}
+        for m in qs
+    ]
+
+    return JsonResponse({"ok": True, "modulos": modulos})

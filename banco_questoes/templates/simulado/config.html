@@ -1,32 +1,125 @@
-<h1>Simulado</h1>
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Configurar Simulado</title>
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+</head>
+<body>
 
-<form method="get">
-  <label>Curso</label>
-  <select name="curso" onchange="this.form.submit()">
-    <option value="">Selecione...</option>
-    {% for c in cursos %}
-      <option value="{{ c.id }}" {% if curso_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>
-    {% endfor %}
-  </select>
-</form>
+<div class="wrap">
+  <h1>Simulado</h1>
+  <p class="muted">Escolha o curso, módulo (opcional) e a quantidade</p>
 
-{% if curso_id %}
-<hr>
-<form method="post" action="{% url 'simulado:iniciar' %}">
-  {% csrf_token %}
-  <input type="hidden" name="curso_id" value="{{ curso_id }}">
+  <div class="card">
+    <form method="post" action="{% url 'simulado:iniciar' %}" id="form-simulado">
+      {% csrf_token %}
 
-  <label>Módulo (opcional)</label>
-  <select name="modulo_id">
-    <option value="">Todos</option>
-    {% for m in modulos %}
-      <option value="{{ m.id }}">M{{ m.ordem }} - {{ m.nome }}</option>
-    {% endfor %}
-  </select>
+      <label class="muted">Curso</label>
+      <select name="curso_id" id="curso_id" required>
+        <option value="">Selecione...</option>
+        {% for c in cursos %}
+          <option value="{{ c.id }}">{{ c.nome }}</option>
+        {% endfor %}
+      </select>
 
-  <label>Quantidade</label>
-  <input type="number" name="qtd" value="10" min="1" max="50">
+      <label class="muted">Módulo (opcional)</label>
+      <select name="modulo_id" id="modulo_id" disabled>
+        <option value="">Todos</option>
+      </select>
 
-  <button type="submit">Iniciar</button>
-</form>
-{% endif %}
+      <label class="muted">Quantidade</label>
+      <input type="number" name="qtd" id="qtd" value="10" min="1" max="50" required disabled>
+
+      <div class="actions">
+        <button class="btn" type="submit" id="btn_iniciar" disabled>Iniciar</button>
+        <a class="btn secondary" href="{% url 'admin:index' %}">Admin</a>
+      </div>
+    </form>
+
+    <p class="muted" id="status_msg" style="margin-top:10px;"></p>
+
+    <noscript>
+      <p class="muted">
+        Seu navegador está sem JavaScript. Sem JS, a lista de módulos não será carregada automaticamente.
+      </p>
+    </noscript>
+  </div>
+</div>
+
+<script>
+(function () {
+  const cursoSel = document.getElementById("curso_id");
+  const moduloSel = document.getElementById("modulo_id");
+  const qtdInp   = document.getElementById("qtd");
+  const btn      = document.getElementById("btn_iniciar");
+  const msg      = document.getElementById("status_msg");
+
+  function setEnabled(enabled) {
+    moduloSel.disabled = !enabled;
+    qtdInp.disabled = !enabled;
+    btn.disabled = !enabled;
+  }
+
+  function resetModulos() {
+    moduloSel.innerHTML = '<option value="">Todos</option>';
+  }
+
+  async function carregarModulos(cursoId) {
+    msg.textContent = "Carregando módulos...";
+    resetModulos();
+    setEnabled(false);
+
+    try {
+      const url = "{% url 'simulado:api_modulos' %}" + "?curso_id=" + encodeURIComponent(cursoId);
+      const resp = await fetch(url, { headers: { "Accept": "application/json" } });
+
+      if (!resp.ok) {
+        const dataErr = await resp.json().catch(() => null);
+        throw new Error((dataErr && dataErr.error) ? dataErr.error : ("HTTP " + resp.status));
+      }
+
+      const data = await resp.json();
+      if (!data.ok) {
+        throw new Error(data.error || "Resposta inválida");
+      }
+
+      for (const m of data.modulos) {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = "M" + m.ordem + " - " + m.nome;
+        moduloSel.appendChild(opt);
+      }
+
+      msg.textContent = data.modulos.length
+        ? ("Módulos carregados: " + data.modulos.length)
+        : "Este curso não possui módulos ativos (você ainda pode iniciar por 'Todos').";
+
+      setEnabled(true);
+
+    } catch (e) {
+      msg.textContent = "Erro ao carregar módulos: " + e.message;
+      // Mesmo com erro, deixa iniciar com "Todos"
+      setEnabled(true);
+    }
+  }
+
+  cursoSel.addEventListener("change", () => {
+    const cursoId = cursoSel.value;
+    if (!cursoId) {
+      resetModulos();
+      msg.textContent = "";
+      setEnabled(false);
+      return;
+    }
+    carregarModulos(cursoId);
+  });
+
+  // Estado inicial
+  setEnabled(false);
+})();
+</script>
+
+</body>
+</html>
