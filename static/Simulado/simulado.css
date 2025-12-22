@@ -251,6 +251,11 @@ label{
   color: var(--text);
 }
 
+.simulado-form select option {
+  color: #0f172a;
+  background: #f8fafc;
+}
+
 .simulado-form label {
   margin-top: 0;
   font-weight: 600;
