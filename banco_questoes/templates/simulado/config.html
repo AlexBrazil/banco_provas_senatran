@@ -10,117 +10,105 @@
     <link rel="stylesheet" href="{% static 'Simulado/simulado.css' %}">
 </head>
 <body class="simulado-container">
-
-    <h1 class="simulado-title">Simulado</h1>
-
-    <!-- ========================= -->
-    <!-- FORM PRINCIPAL DE CONFIG -->
-    <!-- ========================= -->
-    <form method="post" action="{% url 'simulado:iniciar' %}" id="simulado-form" class="simulado-form">
-        {% csrf_token %}
-
-        <!-- ================= -->
-        <!-- CURSO -->
-        <!-- ================= -->
-        <div class="form-group">
-            <label for="curso_id">Curso</label>
-            <select name="curso_id" id="curso_id" required>
-                <option value="">Selecione o curso...</option>
-                {% for c in cursos %}
-                    <option value="{{ c.id }}">{{ c.nome }}</option>
-                {% endfor %}
-            </select>
+    <div class="simulado-card">
+        <div class="simulado-header">
+            <div>
+                <h1 class="simulado-title">Simulado</h1>
+                <p class="simulado-subtitle">Monte o treino escolhendo curso, módulo e filtros.</p>
+            </div>
         </div>
 
-        <!-- ================= -->
-        <!-- MÓDULO -->
-        <!-- ================= -->
-        <div class="form-group">
-            <label for="modulo_id">Módulo</label>
-            <select name="modulo_id" id="modulo_id" disabled>
-                <option value="">Todos os módulos</option>
-            </select>
+        <div class="simulado-grid">
+            <!-- FORM PRINCIPAL DE CONFIG -->
+            <form method="post" action="{% url 'simulado:iniciar' %}" id="simulado-form" class="simulado-form">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="curso_id">Curso</label>
+                        <select name="curso_id" id="curso_id" required>
+                            <option value="">Selecione o curso...</option>
+                            {% for c in cursos %}
+                                <option value="{{ c.id }}">{{ c.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modulo_id">Módulo</label>
+                        <select name="modulo_id" id="modulo_id" disabled>
+                            <option value="">Todos os módulos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dificuldade">Dificuldade</label>
+                        <select name="dificuldade" id="dificuldade">
+                            <option value="">Misturado</option>
+                            <option value="FACIL">Fácil</option>
+                            <option value="INTERMEDIARIO">Intermediário</option>
+                            <option value="DIFICIL">Difícil</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-group--full check-group">
+                        <label>
+                            <input type="checkbox" name="com_imagem" id="com_imagem" value="1">
+                            Somente questões com imagem
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="so_placas" id="so_placas" value="1">
+                            Somente questões de placas
+                        </label>
+                    </div>
+
+                    <div class="form-group form-group--short">
+                        <label for="qtd">Quantidade de questões</label>
+                        <input
+                            type="number"
+                            name="qtd"
+                            id="qtd"
+                            value="10"
+                            min="1"
+                            max="50"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btn-iniciar" disabled>
+                        Iniciar Simulado
+                    </button>
+                    <button type="button" id="btn-limpar" disabled>
+                        Limpar filtros
+                    </button>
+                </div>
+            </form>
+
+            <!-- PAINEL DE STATS -->
+            <aside id="stats-panel" class="stats-panel" aria-live="polite">
+                <h3>Disponibilidade</h3>
+
+                <p id="stats_hint" class="stats-hint"></p>
+                <p id="stats_error" class="stats-error is-hidden"></p>
+
+                <ul class="stats-list">
+                    <li><span class="stats-label">Total disponível</span> <span id="stat-total" class="stats-value">—</span></li>
+                    <li><span class="stats-label">Com imagem</span> <span id="stat-imagem" class="stats-value">—</span></li>
+                    <li><span class="stats-label">Placas</span> <span id="stat-placas" class="stats-value">—</span></li>
+                </ul>
+
+                <h4>Por dificuldade</h4>
+                <ul class="stats-list stats-list--cols">
+                    <li><span class="stats-label">Fácil</span> <span id="stat-facil" class="stats-value">—</span></li>
+                    <li><span class="stats-label">Intermediário</span> <span id="stat-intermediario" class="stats-value">—</span></li>
+                    <li><span class="stats-label">Difícil</span> <span id="stat-dificil" class="stats-value">—</span></li>
+                </ul>
+            </aside>
         </div>
-
-        <!-- ================= -->
-        <!-- DIFICULDADE -->
-        <!-- ================= -->
-        <div class="form-group">
-            <label for="dificuldade">Dificuldade</label>
-            <select name="dificuldade" id="dificuldade">
-                <option value="">Misturado</option>
-                <option value="FACIL">Fácil</option>
-                <option value="INTERMEDIARIO">Intermediário</option>
-                <option value="DIFICIL">Difícil</option>
-            </select>
-        </div>
-
-        <!-- ================= -->
-        <!-- FILTROS BOOLEANOS -->
-        <!-- ================= -->
-        <div class="form-group check-group">
-            <label>
-                <input type="checkbox" name="com_imagem" id="com_imagem" value="1">
-                Somente questões com imagem
-            </label>
-
-            <label>
-                <input type="checkbox" name="so_placas" id="so_placas" value="1">
-                Somente questões de placas
-            </label>
-        </div>
-
-        <!-- ================= -->
-        <!-- QUANTIDADE -->
-        <!-- ================= -->
-        <div class="form-group">
-            <label for="qtd">Quantidade de questões</label>
-            <input
-                type="number"
-                name="qtd"
-                id="qtd"
-                value="10"
-                min="1"
-                max="50"
-                required
-            >
-        </div>
-
-        <!-- ================= -->
-        <!-- PAINEL DE STATS -->
-        <!-- ================= -->
-        <div id="stats-panel" class="stats-panel">
-            <h3>Disponibilidade</h3>
-
-            <p id="stats_hint" class="stats-hint"></p>
-            <p id="stats_error" class="stats-error is-hidden"></p>
-
-            <ul>
-                <li><strong>Total disponível:</strong> <span id="stat-total">–</span></li>
-                <li><strong>Com imagem:</strong> <span id="stat-imagem">–</span></li>
-                <li><strong>Placas:</strong> <span id="stat-placas">–</span></li>
-            </ul>
-
-            <h4>Por dificuldade</h4>
-            <ul>
-                <li>Fácil: <span id="stat-facil">–</span></li>
-                <li>Intermediário: <span id="stat-intermediario">–</span></li>
-                <li>Difícil: <span id="stat-dificil">–</span></li>
-            </ul>
-        </div>
-
-        <!-- ================= -->
-        <!-- BOTÃO -->
-        <!-- ================= -->
-        <div class="form-actions">
-            <button type="submit" id="btn-iniciar" disabled>
-                Iniciar Simulado
-            </button>
-            <button type="button" id="btn-limpar" disabled>
-                Limpar filtros
-            </button>
-        </div>
-    </form>
+    </div>
 
     <!-- ========================= -->
     <!-- JS DO SIMULADO (AJAX) -->
