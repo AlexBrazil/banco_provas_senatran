@@ -29,7 +29,16 @@ def _clear_state(request: HttpRequest) -> None:
 @require_http_methods(["GET"])
 def simulado_config(request: HttpRequest) -> HttpResponse:
     cursos = Curso.objects.filter(ativo=True).order_by("nome")
-    return render(request, "simulado/config.html", {"cursos": cursos})
+    quick_curso_id = (
+        Curso.objects.filter(ativo=True, nome__iexact="Primeira Habilitação")
+        .values_list("id", flat=True)
+        .first()
+    )
+    return render(
+        request,
+        "simulado/config.html",
+        {"cursos": cursos, "quick_curso_id": quick_curso_id},
+    )
 
 @require_http_methods(["POST"])
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:

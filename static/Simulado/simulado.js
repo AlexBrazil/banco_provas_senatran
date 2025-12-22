@@ -10,6 +10,7 @@
 
   const btnIniciar = $("#btn-iniciar");
   const btnLimpar = $("#btn-limpar");
+  const btnInicioRapido = $("#btn-inicio-rapido");
 
   const statTotalDisponivel = $("#stat-total");
   const statComImagem = $("#stat-imagem");
@@ -206,4 +207,41 @@
   setEnabled(btnIniciar, false);
   setEnabled(btnLimpar, false);
   resetStatsUI();
+
+  // Início rápido: preenche filtros e envia com o curso padrão
+  if (btnInicioRapido) {
+    const quickCursoId = btnInicioRapido.dataset.cursoId || "";
+    if (!quickCursoId) {
+      setEnabled(btnInicioRapido, false);
+    } else {
+      btnInicioRapido.addEventListener("click", async () => {
+        try {
+          clearError();
+          curso.value = quickCursoId;
+          modulo.value = "";
+          dificuldade.value = "";
+          comImagem.checked = false;
+          soPlacas.checked = false;
+          qtd.value = "10";
+
+          // habilita campos necessários
+          setEnabled(modulo, true);
+          setEnabled(dificuldade, true);
+          setEnabled(qtd, true);
+          setEnabled(comImagem, true);
+          setEnabled(soPlacas, true);
+          setEnabled(btnLimpar, true);
+          setEnabled(btnIniciar, true);
+
+          // tenta carregar módulos/stats, mas não bloqueia o submit
+          try { await loadModulos(quickCursoId); } catch (e) { /* ignore */ }
+          try { await refreshStats(); } catch (e) { /* ignore */ }
+
+          document.getElementById("simulado-form").submit();
+        } catch (e) {
+          showError(e.message);
+        }
+      });
+    }
+  }
 })();

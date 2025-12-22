@@ -16,6 +16,18 @@
                 <h1 class="simulado-title">Simulado</h1>
                 <p class="simulado-subtitle">Monte o treino escolhendo curso, módulo e filtros.</p>
             </div>
+            <div class="simulado-quick">
+                <button
+                    type="button"
+                    id="btn-inicio-rapido"
+                    class="btn-rapido"
+                    data-curso-id="{{ quick_curso_id|default_if_none:'' }}"
+                    {% if not quick_curso_id %}disabled title="Curso padrão não encontrado"{% endif %}
+                >
+                    Início rápido
+                </button>
+                <p class="simulado-quick-hint">Primeira Habilitação · Misturado · 10 questões</p>
+            </div>
         </div>
 
         <div class="simulado-grid">
