@@ -1,125 +1,137 @@
 {% load static %}
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <title>Configurar Simulado</title>
-  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+    <meta charset="utf-8">
+    <title>Configurar Simulado</title>
+
+    <!-- CSS do simulado -->
+    <link rel="stylesheet" href="{% static 'Simulado/simulado.css' %}">
 </head>
-<body>
+<body class="simulado-container">
 
-<div class="wrap">
-  <h1>Simulado</h1>
-  <p class="muted">Escolha o curso, módulo (opcional) e a quantidade</p>
+    <h1 class="simulado-title">Simulado</h1>
 
-  <div class="card">
-    <form method="post" action="{% url 'simulado:iniciar' %}" id="form-simulado">
-      {% csrf_token %}
+    <!-- ========================= -->
+    <!-- FORM PRINCIPAL DE CONFIG -->
+    <!-- ========================= -->
+    <form method="post" action="{% url 'simulado:iniciar' %}" id="simulado-form" class="simulado-form">
+        {% csrf_token %}
 
-      <label class="muted">Curso</label>
-      <select name="curso_id" id="curso_id" required>
-        <option value="">Selecione...</option>
-        {% for c in cursos %}
-          <option value="{{ c.id }}">{{ c.nome }}</option>
-        {% endfor %}
-      </select>
+        <!-- ================= -->
+        <!-- CURSO -->
+        <!-- ================= -->
+        <div class="form-group">
+            <label for="curso_id">Curso</label>
+            <select name="curso_id" id="curso_id" required>
+                <option value="">Selecione o curso...</option>
+                {% for c in cursos %}
+                    <option value="{{ c.id }}">{{ c.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-      <label class="muted">Módulo (opcional)</label>
-      <select name="modulo_id" id="modulo_id" disabled>
-        <option value="">Todos</option>
-      </select>
+        <!-- ================= -->
+        <!-- MÓDULO -->
+        <!-- ================= -->
+        <div class="form-group">
+            <label for="modulo_id">Módulo</label>
+            <select name="modulo_id" id="modulo_id" disabled>
+                <option value="">Todos os módulos</option>
+            </select>
+        </div>
 
-      <label class="muted">Quantidade</label>
-      <input type="number" name="qtd" id="qtd" value="10" min="1" max="50" required disabled>
+        <!-- ================= -->
+        <!-- DIFICULDADE -->
+        <!-- ================= -->
+        <div class="form-group">
+            <label for="dificuldade">Dificuldade</label>
+            <select name="dificuldade" id="dificuldade">
+                <option value="">Misturado</option>
+                <option value="FACIL">Fácil</option>
+                <option value="INTERMEDIARIO">Intermediário</option>
+                <option value="DIFICIL">Difícil</option>
+            </select>
+        </div>
 
-      <div class="actions">
-        <button class="btn" type="submit" id="btn_iniciar" disabled>Iniciar</button>
-        <a class="btn secondary" href="{% url 'admin:index' %}">Admin</a>
-      </div>
+        <!-- ================= -->
+        <!-- FILTROS BOOLEANOS -->
+        <!-- ================= -->
+        <div class="form-group check-group">
+            <label>
+                <input type="checkbox" name="com_imagem" id="com_imagem" value="1">
+                Somente questões com imagem
+            </label>
+
+            <label>
+                <input type="checkbox" name="so_placas" id="so_placas" value="1">
+                Somente questões de placas
+            </label>
+        </div>
+
+        <!-- ================= -->
+        <!-- QUANTIDADE -->
+        <!-- ================= -->
+        <div class="form-group">
+            <label for="qtd">Quantidade de questões</label>
+            <input
+                type="number"
+                name="qtd"
+                id="qtd"
+                value="10"
+                min="1"
+                max="50"
+                required
+            >
+        </div>
+
+        <!-- ================= -->
+        <!-- PAINEL DE STATS -->
+        <!-- ================= -->
+        <div id="stats-panel" class="stats-panel">
+            <h3>Disponibilidade</h3>
+
+            <p id="stats_hint" class="stats-hint"></p>
+            <p id="stats_error" class="stats-error is-hidden"></p>
+
+            <ul>
+                <li><strong>Total disponível:</strong> <span id="stat-total">–</span></li>
+                <li><strong>Com imagem:</strong> <span id="stat-imagem">–</span></li>
+                <li><strong>Placas:</strong> <span id="stat-placas">–</span></li>
+            </ul>
+
+            <h4>Por dificuldade</h4>
+            <ul>
+                <li>Fácil: <span id="stat-facil">–</span></li>
+                <li>Intermediário: <span id="stat-intermediario">–</span></li>
+                <li>Difícil: <span id="stat-dificil">–</span></li>
+            </ul>
+        </div>
+
+        <!-- ================= -->
+        <!-- BOTÃO -->
+        <!-- ================= -->
+        <div class="form-actions">
+            <button type="submit" id="btn-iniciar" disabled>
+                Iniciar Simulado
+            </button>
+            <button type="button" id="btn-limpar" disabled>
+                Limpar filtros
+            </button>
+        </div>
     </form>
 
-    <p class="muted" id="status_msg" style="margin-top:10px;"></p>
-
-    <noscript>
-      <p class="muted">
-        Seu navegador está sem JavaScript. Sem JS, a lista de módulos não será carregada automaticamente.
-      </p>
-    </noscript>
-  </div>
-</div>
-
-<script>
-(function () {
-  const cursoSel = document.getElementById("curso_id");
-  const moduloSel = document.getElementById("modulo_id");
-  const qtdInp   = document.getElementById("qtd");
-  const btn      = document.getElementById("btn_iniciar");
-  const msg      = document.getElementById("status_msg");
-
-  function setEnabled(enabled) {
-    moduloSel.disabled = !enabled;
-    qtdInp.disabled = !enabled;
-    btn.disabled = !enabled;
-  }
-
-  function resetModulos() {
-    moduloSel.innerHTML = '<option value="">Todos</option>';
-  }
-
-  async function carregarModulos(cursoId) {
-    msg.textContent = "Carregando módulos...";
-    resetModulos();
-    setEnabled(false);
-
-    try {
-      const url = "{% url 'simulado:api_modulos' %}" + "?curso_id=" + encodeURIComponent(cursoId);
-      const resp = await fetch(url, { headers: { "Accept": "application/json" } });
-
-      if (!resp.ok) {
-        const dataErr = await resp.json().catch(() => null);
-        throw new Error((dataErr && dataErr.error) ? dataErr.error : ("HTTP " + resp.status));
-      }
-
-      const data = await resp.json();
-      if (!data.ok) {
-        throw new Error(data.error || "Resposta inválida");
-      }
-
-      for (const m of data.modulos) {
-        const opt = document.createElement("option");
-        opt.value = m.id;
-        opt.textContent = "M" + m.ordem + " - " + m.nome;
-        moduloSel.appendChild(opt);
-      }
-
-      msg.textContent = data.modulos.length
-        ? ("Módulos carregados: " + data.modulos.length)
-        : "Este curso não possui módulos ativos (você ainda pode iniciar por 'Todos').";
-
-      setEnabled(true);
-
-    } catch (e) {
-      msg.textContent = "Erro ao carregar módulos: " + e.message;
-      // Mesmo com erro, deixa iniciar com "Todos"
-      setEnabled(true);
-    }
-  }
-
-  cursoSel.addEventListener("change", () => {
-    const cursoId = cursoSel.value;
-    if (!cursoId) {
-      resetModulos();
-      msg.textContent = "";
-      setEnabled(false);
-      return;
-    }
-    carregarModulos(cursoId);
-  });
-
-  // Estado inicial
-  setEnabled(false);
-})();
-</script>
+    <!-- ========================= -->
+    <!-- JS DO SIMULADO (AJAX) -->
+    <!-- ========================= -->
+    <script>
+        window.SIMULADO_ENDPOINTS = {
+            modulos: "{% url 'simulado:api_modulos' %}",
+            stats: "{% url 'simulado:api_stats' %}",
+        };
+    </script>
+    <script src="{% static 'Simulado/simulado.js' %}"></script>
 
 </body>
 </html>

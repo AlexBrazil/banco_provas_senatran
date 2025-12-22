@@ -5,8 +5,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET
-
 from banco_questoes.models import Curso, CursoModulo, Questao, Alternativa
+from django.db.models import Count, Q
 
 
 SESSION_KEY = "simulado_state_v1"
@@ -31,14 +31,17 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
     cursos = Curso.objects.filter(ativo=True).order_by("nome")
     return render(request, "simulado/config.html", {"cursos": cursos})
 
-
-
 @require_http_methods(["POST"])
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:
-    # Inputs
+    # Inputs obrigatórios e básicos
     curso_id = request.POST.get("curso_id")
     modulo_id = request.POST.get("modulo_id") or ""
     qtd = int(request.POST.get("qtd") or 10)
+
+    # Novos filtros (opcionais)
+    dificuldade = (request.POST.get("dificuldade") or "").strip().upper()  # "" = misturado
+    com_imagem = (request.POST.get("com_imagem") == "1")
+    so_placas = (request.POST.get("so_placas") == "1")
 
     if not curso_id:
         return redirect(reverse("simulado:config"))
@@ -51,24 +54,32 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
 
     # Base queryset
     qs = Questao.objects.filter(curso_id=curso_id)
+
     if modulo_id:
         qs = qs.filter(modulo_id=modulo_id)
 
+    if dificuldade in {"FACIL", "INTERMEDIARIO", "DIFICIL"}:
+        qs = qs.filter(dificuldade=dificuldade)
+
+    if com_imagem:
+        qs = qs.exclude(imagem_arquivo="")
+
+    if so_placas:
+        qs = qs.exclude(codigo_placa="")
+
     total = qs.count()
     if total == 0:
-        # nada para simular
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Não existem questões para esse filtro (curso/módulo)."},
+            {"msg": "Não existem questões para esse filtro (curso/módulo/filtros)."},
             status=400,
         )
 
     if qtd > total:
         qtd = total
 
-    # Seleção aleatória (para 1500 questões funciona bem)
-    # Pegamos IDs e fazemos sample no Python (evita ORDER BY ? pesado)
+    # Seleção aleatória eficiente
     ids = list(qs.values_list("id", flat=True))
     chosen = random.sample(ids, k=qtd)
 
@@ -79,10 +90,18 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         "index": 0,
         "question_ids": [str(x) for x in chosen],
         "answers": {},  # {question_id: {"alt_id": "...", "is_correct": True/False}}
-    }
-    _set_state(request, state)
 
+        # guarda filtros usados (bom para exibir no resultado e depurar)
+        "filters": {
+            "dificuldade": dificuldade,   # "", FACIL, INTERMEDIARIO, DIFICIL
+            "com_imagem": com_imagem,     # bool
+            "so_placas": so_placas,       # bool
+        },
+    }
+
+    _set_state(request, state)
     return redirect(reverse("simulado:questao"))
+
 
 
 @require_http_methods(["GET"])
@@ -235,3 +254,81 @@ def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
     ]
 
     return JsonResponse({"ok": True, "modulos": modulos})
+
+@require_GET
+def api_stats(request: HttpRequest) -> JsonResponse:
+    """
+    Retorna contagens para o config do simulado.
+    Parâmetros (GET):
+      - curso_id (obrigatório)
+      - modulo_id (opcional)
+      - dificuldade (opcional): FACIL | INTERMEDIARIO | DIFICIL | "" (misturado)
+      - com_imagem (opcional): 1/0
+      - so_placas (opcional): 1/0
+    """
+    curso_id = (request.GET.get("curso_id") or "").strip()
+    if not curso_id:
+        return JsonResponse({"ok": False, "error": "curso_id ausente."}, status=400)
+
+    modulo_id = (request.GET.get("modulo_id") or "").strip()
+    dificuldade = (request.GET.get("dificuldade") or "").strip().upper()
+    com_imagem = (request.GET.get("com_imagem") or "0").strip() == "1"
+    so_placas = (request.GET.get("so_placas") or "0").strip() == "1"
+
+    qs = Questao.objects.filter(curso_id=curso_id)
+
+    if modulo_id:
+        qs = qs.filter(modulo_id=modulo_id)
+
+    if dificuldade in {"FACIL", "INTERMEDIARIO", "DIFICIL"}:
+        qs = qs.filter(dificuldade=dificuldade)
+
+    if com_imagem:
+        qs = qs.exclude(imagem_arquivo="")
+
+    if so_placas:
+        qs = qs.exclude(codigo_placa="")
+
+    # Total do filtro atual
+    total = qs.count()
+
+    # Contagens “de painel” (do mesmo recorte curso/modulo, mas separadas por critério)
+    base = Questao.objects.filter(curso_id=curso_id)
+    if modulo_id:
+        base = base.filter(modulo_id=modulo_id)
+
+    # Com imagem e placas (para o painel)
+    with_image = base.exclude(imagem_arquivo="").count()
+    only_placas = base.exclude(codigo_placa="").count()
+
+    # Por dificuldade (no recorte base)
+    diffs = (
+        base.values("dificuldade")
+        .annotate(n=Count("id"))
+    )
+    diff_map = {"FACIL": 0, "INTERMEDIARIO": 0, "DIFICIL": 0, "": 0, None: 0}
+    for row in diffs:
+        diff_map[row["dificuldade"]] = row["n"]
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "filters": {
+                "curso_id": curso_id,
+                "modulo_id": modulo_id,
+                "dificuldade": dificuldade,
+                "com_imagem": com_imagem,
+                "so_placas": so_placas,
+            },
+            "total_disponivel": total,
+            "painel": {
+                "com_imagem": with_image,
+                "placas": only_placas,
+                "por_dificuldade": {
+                    "FACIL": diff_map.get("FACIL", 0),
+                    "INTERMEDIARIO": diff_map.get("INTERMEDIARIO", 0),
+                    "DIFICIL": diff_map.get("DIFICIL", 0),
+                },
+            },
+        }
+    )

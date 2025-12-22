@@ -248,4 +248,111 @@ label{
   background: #eaeaea;
 }
 
+/* =========================
+   CONFIG (zero inline)
+   ========================= */
+
+.form { margin-top: 12px; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 860px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.field select,
+.field input[type="number"] {
+  width: 100%;
+}
+
+.hint {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: none;
+}
+
+.hint.is-visible {
+  display: block;
+}
+
+.checks {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.stats {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.stats-title {
+  font-size: 1.05rem;
+  margin: 0 0 10px 0;
+}
+
+.stats-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.stats-msg {
+  margin-top: 10px;
+  color: #6b7280;
+}
+
+.stats-msg.is-warn {
+  color: #b45309;
+}
+
+.is-hidden { display: none; }
+.stats-hint { margin: 6px 0; color: #6b7280; }
+.stats-error { margin: 6px 0; color: #b45309; }
+
+.actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.noscript {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+
 

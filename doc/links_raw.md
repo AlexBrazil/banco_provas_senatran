@@ -33,8 +33,6 @@
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/views_simulado.py
 - **urls_simulado.py**  
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/urls_simulado.py
-- **views.py**  
-  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/views.py
 - **admin.py**  
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/admin.py
 - **apps.py**  
