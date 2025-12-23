@@ -150,6 +150,15 @@ label{
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+.simulado-questao {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 14px;
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
 .simulado-card {
   width: min(1180px, 100%);
   background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
@@ -274,6 +283,10 @@ label{
   gap: 12px;
 }
 
+.simulado-questao .simulado-form {
+  align-items: flex-start;      /* evita esticar o botão de resposta */
+}
+
 .simulado-form select,
 .simulado-form input[type="number"] {
   width: 100%;
@@ -293,6 +306,11 @@ label{
   margin-top: 0;
   font-weight: 600;
   color: var(--text);
+}
+
+/* volta o layout padrão da tela de questão (itens em largura total) */
+.simulado-questao .simulado-form {
+  align-items: stretch;
 }
 
 .simulado-form select:focus,
@@ -325,6 +343,15 @@ label{
   color: inherit;              /* <- herda da .alternativa */
 }
 
+.simulado-questao .alternativa-label {
+  color: #111;                 /* força texto escuro na tela de questão */
+}
+
+.simulado-questao .alternativa:hover .alternativa-label,
+.simulado-questao .alternativa:has(input:checked) .alternativa-label {
+  color: #111;                 /* mantém legibilidade ao hover/seleção */
+}
+
 .alternativa-radio {
   margin-top: 4px;
 }
@@ -350,6 +377,12 @@ label{
   background: #f4f4f4;
   cursor: pointer;
   font-size: 1rem;
+  width: auto;
+}
+
+.simulado-questao .btn-simulado {
+  width: auto;
+  align-self: center;           /* centraliza o botão na tela de questão */
 }
 
 .btn-simulado:hover {
