@@ -9,6 +9,7 @@
     <!-- CSS do simulado -->
     <link rel="stylesheet" href="{% static 'Simulado/simulado.css' %}">
 </head>
+
 <body class="simulado-container">
     <div class="simulado-card">
         <div class="simulado-header">
@@ -16,6 +17,7 @@
                 <h1 class="simulado-title">Simulado</h1>
                 <p class="simulado-subtitle">Monte o treino escolhendo curso, módulo e filtros.</p>
             </div>
+
             <div class="simulado-quick">
                 <button
                     type="button"
@@ -51,6 +53,18 @@
                         <select name="modulo_id" id="modulo_id" disabled>
                             <option value="">Todos os módulos</option>
                         </select>
+                    </div>
+
+                    <!-- NOVO: MODO (PROVA / ESTUDO) -->
+                    <div class="form-group">
+                        <label for="modo">Modo</label>
+                        <select name="modo" id="modo">
+                            <option value="PROVA" selected>Prova (sem feedback imediato)</option>
+                            <option value="ESTUDO">Estudo (com feedback imediato)</option>
+                        </select>
+                        <p class="field-hint">
+                            Prova: você responde e vê o resultado no final. Estudo: mostra se acertou logo após responder.
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -93,6 +107,7 @@
                     <button type="submit" id="btn-iniciar" disabled>
                         Iniciar Simulado
                     </button>
+
                     <button type="button" id="btn-limpar" disabled>
                         Limpar filtros
                     </button>
@@ -107,16 +122,34 @@
                 <p id="stats_error" class="stats-error is-hidden"></p>
 
                 <ul class="stats-list">
-                    <li><span class="stats-label">Total disponível</span> <span id="stat-total" class="stats-value">—</span></li>
-                    <li><span class="stats-label">Com imagem</span> <span id="stat-imagem" class="stats-value">—</span></li>
-                    <li><span class="stats-label">Placas</span> <span id="stat-placas" class="stats-value">—</span></li>
+                    <li>
+                        <span class="stats-label">Total disponível</span>
+                        <span id="stat-total" class="stats-value">—</span>
+                    </li>
+                    <li>
+                        <span class="stats-label">Com imagem</span>
+                        <span id="stat-imagem" class="stats-value">—</span>
+                    </li>
+                    <li>
+                        <span class="stats-label">Placas</span>
+                        <span id="stat-placas" class="stats-value">—</span>
+                    </li>
                 </ul>
 
                 <h4>Por dificuldade</h4>
                 <ul class="stats-list stats-list--cols">
-                    <li><span class="stats-label">Fácil</span> <span id="stat-facil" class="stats-value">—</span></li>
-                    <li><span class="stats-label">Intermediário</span> <span id="stat-intermediario" class="stats-value">—</span></li>
-                    <li><span class="stats-label">Difícil</span> <span id="stat-dificil" class="stats-value">—</span></li>
+                    <li>
+                        <span class="stats-label">Fácil</span>
+                        <span id="stat-facil" class="stats-value">—</span>
+                    </li>
+                    <li>
+                        <span class="stats-label">Intermediário</span>
+                        <span id="stat-intermediario" class="stats-value">—</span>
+                    </li>
+                    <li>
+                        <span class="stats-label">Difícil</span>
+                        <span id="stat-dificil" class="stats-value">—</span>
+                    </li>
                 </ul>
             </aside>
         </div>
@@ -132,6 +165,5 @@
         };
     </script>
     <script src="{% static 'Simulado/simulado.js' %}"></script>
-
 </body>
 </html>

@@ -43,11 +43,21 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["POST"])
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     # Inputs obrigatórios e básicos
-    curso_id = request.POST.get("curso_id")
-    modulo_id = request.POST.get("modulo_id") or ""
-    qtd = int(request.POST.get("qtd") or 10)
+    curso_id = (request.POST.get("curso_id") or "").strip()
+    modulo_id = (request.POST.get("modulo_id") or "").strip()
 
-    # Novos filtros (opcionais)
+    # Quantidade
+    try:
+        qtd = int(request.POST.get("qtd") or 10)
+    except (TypeError, ValueError):
+        qtd = 10
+
+    # Modo (NOVO): PROVA | ESTUDO
+    modo = (request.POST.get("modo") or "PROVA").strip().upper()
+    if modo not in {"PROVA", "ESTUDO"}:
+        modo = "PROVA"
+
+    # Filtros (opcionais)
     dificuldade = (request.POST.get("dificuldade") or "").strip().upper()  # "" = misturado
     com_imagem = (request.POST.get("com_imagem") == "1")
     so_placas = (request.POST.get("so_placas") == "1")
@@ -100,6 +110,9 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         "question_ids": [str(x) for x in chosen],
         "answers": {},  # {question_id: {"alt_id": "...", "is_correct": True/False}}
 
+        # NOVO: modo do simulado
+        "mode": modo,  # "PROVA" | "ESTUDO"
+
         # guarda filtros usados (bom para exibir no resultado e depurar)
         "filters": {
             "dificuldade": dificuldade,   # "", FACIL, INTERMEDIARIO, DIFICIL
@@ -110,7 +123,6 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
 
     _set_state(request, state)
     return redirect(reverse("simulado:questao"))
-
 
 
 @require_http_methods(["GET"])
