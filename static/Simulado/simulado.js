@@ -3,6 +3,7 @@
 
   const curso = $("#curso_id");
   const modulo = $("#modulo_id");
+  const modo = $("#modo"); // NOVO
   const dificuldade = $("#dificuldade");
   const qtd = $("#qtd");
   const comImagem = $("#com_imagem");
@@ -23,6 +24,7 @@
   const statsError = $("#stats_error");
 
   function setEnabled(el, enabled) {
+    if (!el) return;
     el.disabled = !enabled;
   }
 
@@ -50,11 +52,12 @@
   }
 
   function resetFiltersOnly() {
-    modulo.value = "";
-    dificuldade.value = "";
-    comImagem.checked = false;
-    soPlacas.checked = false;
-    qtd.value = "10";
+    if (modulo) modulo.value = "";
+    if (dificuldade) dificuldade.value = "";
+    if (modo) modo.value = "PROVA"; // NOVO: padrão
+    if (comImagem) comImagem.checked = false;
+    if (soPlacas) soPlacas.checked = false;
+    if (qtd) qtd.value = "10";
   }
 
   async function fetchJSON(url) {
@@ -134,6 +137,7 @@
     setEnabled(comImagem, true);
     setEnabled(soPlacas, true);
     setEnabled(btnLimpar, true);
+    if (modo) setEnabled(modo, true); // NOVO
 
     // Ajusta max de qtd dinamicamente (UX)
     const max = Math.min(50, Number(totalDisponivel || 0));
@@ -158,6 +162,7 @@
     setEnabled(comImagem, enabled);
     setEnabled(soPlacas, enabled);
     setEnabled(btnLimpar, enabled);
+    if (modo) setEnabled(modo, enabled); // NOVO
 
     if (!cursoId) {
       modulo.innerHTML = `<option value="">Selecione um curso primeiro...</option>`;
@@ -206,6 +211,7 @@
   setEnabled(soPlacas, false);
   setEnabled(btnIniciar, false);
   setEnabled(btnLimpar, false);
+  if (modo) setEnabled(modo, false); // NOVO
   resetStatsUI();
 
   // Início rápido: preenche filtros e envia com o curso padrão
@@ -220,6 +226,7 @@
           curso.value = quickCursoId;
           modulo.value = "";
           dificuldade.value = "";
+          if (modo) modo.value = "PROVA"; // NOVO
           comImagem.checked = false;
           soPlacas.checked = false;
           qtd.value = "10";
@@ -232,6 +239,7 @@
           setEnabled(soPlacas, true);
           setEnabled(btnLimpar, true);
           setEnabled(btnIniciar, true);
+          if (modo) setEnabled(modo, true); // NOVO
 
           // tenta carregar módulos/stats, mas não bloqueia o submit
           try { await loadModulos(quickCursoId); } catch (e) { /* ignore */ }
