@@ -14,10 +14,11 @@ Aqui vai uma descrição bem completa, organizada por visão geral, estrutura e 
 
 ## Estrutura de pastas (nível principal)
 
-- `manage.py` — entrypoint Django.
-- `config/` — projeto Django (settings, URLs, ASGI/WSGI).
-- `banco_questoes/` — app principal (modelos, views do simulado, admin, importadores, management commands, templates).
-- `static/` — CSS do simulado e imagens de placas.
+- `manage.py`: entrypoint Django.
+- `config/`: projeto Django (settings, URLs, ASGI/WSGI).
+- `banco_questoes/`: app principal (modelos, views do simulado, admin, importadores, management commands, templates).
+- `static/`: CSS do simulado e imagens de placas.
+- `config_simulado.json`: defaults/textos do simulado (curso padrão, filtros, limites, hint/label do início rápido).
 - `.env`, `.env.example`, `.editorconfig`, `.gitignore`, `README.md`.
 
 ---
@@ -41,6 +42,10 @@ Aqui vai uma descrição bem completa, organizada por visão geral, estrutura e 
 
 - **.env.example**
   - Chaves obrigatórias (segredo Django, debug, PostgreSQL).
+
+- **config_simulado.json / banco_questoes/simulado_config.py**
+  - JSON de defaults do simulado (curso padrão por id/slug/nome, modo/dificuldade, filtros, limites min/max, labels/hint do início rápido).
+  - Loader cacheado em `get_simulado_config()` com fallback para defaults internos quando o arquivo está ausente ou inválido.
 
 - **README.md**
   - Passos de setup (migrar, seed opcional e `runserver`).
@@ -113,9 +118,9 @@ Controla todo o fluxo do simulador usando sessão `simulado_state_v1`.
 
 - Helpers: `_get_state`, `_set_state`, `_clear_state`
 - **simulado_config (GET)**  
-  Lista cursos ativos e renderiza a configuração.
+  Carrega `config_simulado.json` via `get_simulado_config()`, resolve curso padrão (id/slug/nome), mescla defaults e overrides do início rápido, injeta limites/mensagens e JSON para o front.
 - **simulado_iniciar (POST)**  
-  Valida curso/módulo, limita quantidade (1..50), monta queryset de `Questao`, faz `random.sample` dos IDs, grava estado na sessão e redireciona para a primeira questão.
+  Valida curso/módulo, aplica limites `qtd_min/qtd_max` e modos permitidos do config, monta queryset de `Questao`, faz `random.sample` dos IDs, grava estado na sessão e redireciona para a primeira questão.
 - **simulado_questao (GET)**  
   Lê estado, carrega questão atual com `select_related` e alternativas embaralhadas; renderiza tela; ao fim do fluxo redireciona para resultado.
 - **simulado_responder (POST)**  
@@ -125,7 +130,6 @@ Controla todo o fluxo do simulador usando sessão `simulado_state_v1`.
   `POST` limpa estado e volta para configuração.
 - **api_modulos_por_curso (GET JSON)**  
   Recebe `curso_id` e retorna módulos ativos (`id`, `ordem`, `nome`) ou erro 400.
-
 ### views.py
 
 - Placeholder vazio.
@@ -135,11 +139,10 @@ Controla todo o fluxo do simulador usando sessão `simulado_state_v1`.
 ## Templates do simulado
 
 - **config.html**
-  - Formulário de seleção de curso, módulo (carregado via `fetch` na API) e quantidade.
-  - Habilita campos após `fetch`.
-  - Link para admin.
-  - Mensagens de status em JS.
-
+  - Formulário de seleção de curso, módulo (carregado via `fetch` na API), filtros e quantidade.
+  - Recebe do backend o JSON de config (`<script id="simulado-config">`) com defaults, limites, mensagens e curso do início rápido.
+  - Botão de início rápido usa filtros/label/hint do config e desabilita se não houver curso padrão ou se estiver desativado.
+  - Painel de stats e mensagens de status controlados pelo JS.
 - **questao.html**
   - Exibe enunciado, módulo, imagem opcional (`static/placas/<arquivo>`),
   - Alternativas em radio,
@@ -168,6 +171,10 @@ Controla todo o fluxo do simulador usando sessão `simulado_state_v1`.
     enquanto o arquivo está em `static/Simulado/`.  
     Alinhar nome/pasta se necessário.
 
+- **simulado.js**
+  - Lê o JSON injetado no `<script id="simulado-config">` para defaults, limites, mensagens e curso padrão.
+  - Reseta filtros com esses valores, aplica min/max configuráveis e usa mensagens do config para hints/erros.
+  - Botão de início rápido aplica overrides de filtros/label/hint e desabilita sem curso padrão ou se desativado no config.
 - **\*.png**
   - Biblioteca de imagens de placas (centenas),
   - Usadas quando `Questao.imagem_arquivo` está preenchido.

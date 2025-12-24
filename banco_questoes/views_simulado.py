@@ -303,9 +303,40 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
     answers[qid] = {"alt_id": str(alt_id), "is_correct": is_correct}
     state["answers"] = answers
 
-    # Próxima questão
+    # Próxima questão (avan?a o índice; feedback do modo ESTUDO ? renderizado antes de seguir)
     state["index"] = idx + 1
     _set_state(request, state)
+
+    if state.get("mode") == "ESTUDO":
+        questao = alt.questao
+        alternativas = list(
+            Alternativa.objects.filter(questao=questao).order_by("ordem")
+        )
+        correta = next((a for a in alternativas if a.is_correta), None)
+        next_url = (
+            reverse("simulado:resultado")
+            if state["index"] >= len(qids)
+            else reverse("simulado:questao")
+        )
+        return render(
+            request,
+            "simulado/questao.html",
+            {
+                "idx": idx,
+                "total": len(qids),
+                "questao": questao,
+                "alternativas": alternativas,
+                "answered": answers.get(qid),
+                "feedback": {
+                    "is_correct": is_correct,
+                    "comentario": questao.comentario,
+                    "correta": correta,
+                    "selecionada": alt,
+                    "next_url": next_url,
+                    "is_last": state["index"] >= len(qids),
+                },
+            },
+        )
 
     if state["index"] >= len(qids):
         return redirect(reverse("simulado:resultado"))

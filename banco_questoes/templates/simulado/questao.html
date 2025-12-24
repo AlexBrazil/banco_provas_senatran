@@ -30,29 +30,58 @@
     </div>
   {% endif %}
 
-  <form method="post" action="{% url 'simulado:responder' %}" class="simulado-form">
-    {% csrf_token %}
+  {% if feedback %}
+    {% if feedback.is_correct %}
+      <p class="feedback-ok">Você acertou!</p>
+      {% if feedback.selecionada %}
+        <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
+      {% endif %}
+      {% if feedback.comentario %}
+        <p class="feedback-tip"><strong>Comentário:</strong> {{ feedback.comentario }}</p>
+      {% endif %}
+    {% endif %}
+    <div class="feedback">
+      {% if not feedback.is_correct %}
+        <p class="feedback-error">Não foi desta vez, estude mais um pouco.</p>
+        {% if feedback.selecionada %}
+          <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
+        {% endif %}
+        {% if feedback.correta %}
+          <p class="feedback-tip"><strong>Resposta correta:</strong> {{ feedback.correta.texto }}</p>
+        {% endif %}
+        {% if feedback.comentario %}
+          <p class="feedback-tip"><strong>Comentário:</strong> {{ feedback.comentario }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+    <a class="btn-simulado" href="{{ feedback.next_url }}">
+      {% if feedback.is_last %}Ver resultado{% else %}Próxima questão{% endif %}
+    </a>
+  {% else %}
+    <form method="post" action="{% url 'simulado:responder' %}" class="simulado-form">
+      {% csrf_token %}
 
-    {% for a in alternativas %}
-      <div class="alternativa">
-        <label class="alternativa-label">
-          <input
-            type="radio"
-            name="alternativa_id"
-            value="{{ a.id }}"
-            required
-            class="alternativa-radio"
-          >
-          <span class="alternativa-texto">
-            {{ a.texto }}
-          </span>
-        </label>
-      </div>
-    {% endfor %}
+      {% for a in alternativas %}
+        <div class="alternativa">
+          <label class="alternativa-label">
+            <input
+              type="radio"
+              name="alternativa_id"
+              value="{{ a.id }}"
+              required
+              class="alternativa-radio"
+            >
+            <span class="alternativa-texto">
+              {{ a.texto }}
+            </span>
+          </label>
+        </div>
+      {% endfor %}
 
-    <button type="submit" class="btn-simulado">
-      Responder
-    </button>
-  </form>
+      <button type="submit" class="btn-simulado">
+        Responder
+      </button>
+    </form>
+  {% endif %}
 
 </div>
