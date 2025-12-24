@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "defaults": {
+    "curso": { "nome": "Primeira Habilitação" },
+    "modo": "PROVA",
+    "dificuldade": "",
+    "com_imagem": false,
+    "so_placas": false,
+    "qtd": 10
+  },
+  "inicio_rapido": {
+    "habilitado": true,
+    "label": "Início Rápido",
+    "hint": "Primeira Habilitação · Modo Prova · Misturado · 10 questões",
+    "tooltip": "Curso padrão não encontrado",
+    "override_filtros": {}
+  },
+  "ui": {
+    "messages": {
+      "selecione_curso": "Selecione um curso para ver as estatísticas.",
+      "carregando_stats": "Carregando estatísticas...",
+      "pronto": "Pronto para iniciar.",
+      "sem_questoes": "Não há questões para os filtros selecionados.",
+      "erro_generico": "Falha ao carregar dados."
+    }
+  },
+  "limits": {
+    "qtd_min": 1,
+    "qtd_max": 50,
+    "modes": ["PROVA", "ESTUDO"]
+  }
+}

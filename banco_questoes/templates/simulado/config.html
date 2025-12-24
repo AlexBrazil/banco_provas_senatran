@@ -25,22 +25,25 @@
                     class="btn-rapido"
                     data-curso-id="{{ quick_curso_id|default_if_none:'' }}"
                     data-form-id="form-inicio-rapido"
-                    {% if not quick_curso_id %}disabled title="Curso padrão não encontrado"{% endif %}
+                    {% if not quick_curso_id or not inicio_rapido.habilitado %}
+                        disabled
+                        title="{{ inicio_rapido.tooltip|default:'Curso padr?o n?o encontrado' }}"
+                    {% endif %}
                 >
-                    Início rápido
+                    {{ inicio_rapido.label|default:"In?cio r?pido" }}
                 </button>
-                <p class="simulado-quick-hint">Primeira Habilitação · Modo Prova · Misturado · 10 questões</p>
+                <p class="simulado-quick-hint">{{ inicio_rapido.hint|default_if_none:"" }}</p>
 
-                <!-- FORM DEDICADO DO INÍCIO RÁPIDO (POST) -->
+                <!-- FORM DEDICADO DO IN?CIO R?PIDO (POST) -->
                 <form id="form-inicio-rapido" method="post" action="{% url 'simulado:iniciar' %}" class="is-hidden">
                     {% csrf_token %}
                     <input type="hidden" name="curso_id" value="{{ quick_curso_id|default_if_none:'' }}">
                     <input type="hidden" name="modulo_id" value="">
-                    <input type="hidden" name="modo" value="PROVA">
-                    <input type="hidden" name="dificuldade" value="">
-                    <input type="hidden" name="com_imagem" value="0">
-                    <input type="hidden" name="so_placas" value="0">
-                    <input type="hidden" name="qtd" value="10">
+                    <input type="hidden" name="modo" value="{{ quick_filters.modo }}">
+                    <input type="hidden" name="dificuldade" value="{{ quick_filters.dificuldade }}">
+                    <input type="hidden" name="com_imagem" value="{{ quick_filters.com_imagem|yesno:'1,0' }}">
+                    <input type="hidden" name="so_placas" value="{{ quick_filters.so_placas|yesno:'1,0' }}">
+                    <input type="hidden" name="qtd" value="{{ quick_filters.qtd }}">
                 </form>
             </div>
         </div>
@@ -72,8 +75,8 @@
                     <div class="form-group">
                         <label for="modo">Modo</label>
                         <select name="modo" id="modo">
-                            <option value="PROVA" selected>Prova (sem feedback imediato)</option>
-                            <option value="ESTUDO">Estudo (com feedback imediato)</option>
+                            <option value="PROVA" {% if simulado_defaults.modo == "PROVA" %}selected{% endif %}>Prova (sem feedback imediato)</option>
+                            <option value="ESTUDO" {% if simulado_defaults.modo == "ESTUDO" %}selected{% endif %}>Estudo (com feedback imediato)</option>
                         </select>
                         <p class="field-hint">
                             Prova: você responde e vê o resultado no final. Estudo: mostra se acertou logo após responder.
@@ -83,34 +86,35 @@
                     <div class="form-group">
                         <label for="dificuldade">Dificuldade</label>
                         <select name="dificuldade" id="dificuldade">
-                            <option value="">Misturado</option>
-                            <option value="FACIL">Fácil</option>
-                            <option value="INTERMEDIARIO">Intermediário</option>
-                            <option value="DIFICIL">Difícil</option>
+                            <option value="" {% if not simulado_defaults.dificuldade %}selected{% endif %}>Misturado</option>
+                            <option value="FACIL" {% if simulado_defaults.dificuldade == "FACIL" %}selected{% endif %}>F?cil</option>
+                            <option value="INTERMEDIARIO" {% if simulado_defaults.dificuldade == "INTERMEDIARIO" %}selected{% endif %}>Intermedi?rio</option>
+                            <option value="DIFICIL" {% if simulado_defaults.dificuldade == "DIFICIL" %}selected{% endif %}>Dif?cil</option>
                         </select>
+
                     </div>
 
                     <div class="form-group form-group--full check-group">
                         <label>
-                            <input type="checkbox" name="com_imagem" id="com_imagem" value="1">
+                            <input type="checkbox" name="com_imagem" id="com_imagem" value="1" {% if simulado_defaults.com_imagem %}checked{% endif %}>
                             Somente questões com imagem
                         </label>
 
                         <label>
-                            <input type="checkbox" name="so_placas" id="so_placas" value="1">
+                            <input type="checkbox" name="so_placas" id="so_placas" value="1" {% if simulado_defaults.so_placas %}checked{% endif %}>
                             Somente questões de placas
                         </label>
                     </div>
 
                     <div class="form-group form-group--short">
-                        <label for="qtd">Quantidade de questões</label>
+                        <label for="qtd">Quantidade de quest?es</label>
                         <input
                             type="number"
                             name="qtd"
                             id="qtd"
-                            value="10"
-                            min="1"
-                            max="50"
+                            value="{{ simulado_defaults.qtd }}"
+                            min="{{ simulado_limits.qtd_min }}"
+                            max="{{ simulado_limits.qtd_max }}"
                             required
                         >
                     </div>
@@ -171,6 +175,9 @@
     <!-- ========================= -->
     <!-- JS DO SIMULADO (AJAX) -->
     <!-- ========================= -->
+    <script id="simulado-config" type="application/json">
+        {{ simulado_config_json|safe }}
+    </script>
     <script>
         window.SIMULADO_ENDPOINTS = {
             modulos: "{% url 'simulado:api_modulos' %}",

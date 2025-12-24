@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import random
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -7,6 +8,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_GET
 from banco_questoes.models import Curso, CursoModulo, Questao, Alternativa
 from django.db.models import Count, Q
+from banco_questoes.simulado_config import get_simulado_config
 
 
 SESSION_KEY = "simulado_state_v1"
@@ -26,23 +28,117 @@ def _clear_state(request: HttpRequest) -> None:
     request.session.modified = True
 
 
+def _resolve_quick_curso_id(curso_cfg: dict | None) -> str | None:
+    if not curso_cfg:
+        return None
+
+    base_qs = Curso.objects.filter(ativo=True)
+
+    cid = curso_cfg.get("id")
+    if cid:
+        found = base_qs.filter(id=cid).values_list("id", flat=True).first()
+        if found:
+            return found
+
+    slug = curso_cfg.get("slug")
+    if slug:
+        found = base_qs.filter(slug__iexact=slug).values_list("id", flat=True).first()
+        if found:
+            return found
+
+    nome = curso_cfg.get("nome")
+    if nome:
+        found = base_qs.filter(nome__iexact=nome).values_list("id", flat=True).first()
+        if found:
+            return found
+
+    return None
+
+
+def _merge_filtros(defaults_cfg: dict, override_cfg: dict | None) -> dict:
+    override_cfg = override_cfg or {}
+    return {
+        "modo": override_cfg.get("modo") or defaults_cfg.get("modo") or "PROVA",
+        "dificuldade": override_cfg.get("dificuldade") or defaults_cfg.get("dificuldade") or "",
+        "com_imagem": bool(override_cfg.get("com_imagem", defaults_cfg.get("com_imagem", False))),
+        "so_placas": bool(override_cfg.get("so_placas", defaults_cfg.get("so_placas", False))),
+        "qtd": int(override_cfg.get("qtd", defaults_cfg.get("qtd", 10)) or 10),
+    }
+
+
 @require_http_methods(["GET"])
 def simulado_config(request: HttpRequest) -> HttpResponse:
+    cfg = get_simulado_config()
+    defaults_cfg = cfg.get("defaults", {}) or {}
+    inicio_cfg = cfg.get("inicio_rapido", {}) or {}
+    limits_cfg = cfg.get("limits", {}) or {}
+
     cursos = Curso.objects.filter(ativo=True).order_by("nome")
-    quick_curso_id = (
-        Curso.objects.filter(ativo=True, nome__iexact="Primeira Habilitação")
-        .values_list("id", flat=True)
-        .first()
-    )
+    quick_curso_id = _resolve_quick_curso_id(defaults_cfg.get("curso"))
+    quick_filters = _merge_filtros(defaults_cfg, inicio_cfg.get("override_filtros"))
+
+    frontend_config = {
+        "defaults": {
+            "modo": defaults_cfg.get("modo", "PROVA"),
+            "dificuldade": defaults_cfg.get("dificuldade", ""),
+            "com_imagem": bool(defaults_cfg.get("com_imagem", False)),
+            "so_placas": bool(defaults_cfg.get("so_placas", False)),
+            "qtd": defaults_cfg.get("qtd", 10),
+        },
+        "inicio_rapido": {
+            "habilitado": bool(inicio_cfg.get("habilitado", True)),
+            "label": inicio_cfg.get("label", "In?cio r?pido"),
+            "hint": inicio_cfg.get("hint", ""),
+            "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
+            "override_filtros": quick_filters,
+        },
+        "ui": {"messages": (cfg.get("ui", {}) or {}).get("messages", {})},
+        "limits": {
+            "qtd_min": limits_cfg.get("qtd_min", 1),
+            "qtd_max": limits_cfg.get("qtd_max", 50),
+            "modes": limits_cfg.get("modes", ["PROVA", "ESTUDO"]),
+        },
+        "quick_curso_id": str(quick_curso_id or ""),
+    }
     return render(
         request,
         "simulado/config.html",
-        {"cursos": cursos, "quick_curso_id": quick_curso_id},
+        {
+            "cursos": cursos,
+            "quick_curso_id": quick_curso_id,
+            "simulado_defaults": frontend_config["defaults"],
+            "simulado_limits": frontend_config["limits"],
+            "inicio_rapido": frontend_config["inicio_rapido"],
+            "simulado_config_json": json.dumps(frontend_config, ensure_ascii=False),
+            "quick_filters": quick_filters,
+        },
     )
 
 @require_http_methods(["POST"])
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:
-    # Inputs obrigatórios e básicos
+    cfg = get_simulado_config()
+    limits_cfg = cfg.get("limits", {}) or {}
+    try:
+        qtd_min = int(limits_cfg.get("qtd_min", 1) or 1)
+    except (TypeError, ValueError):
+        qtd_min = 1
+    try:
+        qtd_max = int(limits_cfg.get("qtd_max", 50) or 50)
+    except (TypeError, ValueError):
+        qtd_max = 50
+    if qtd_min < 1:
+        qtd_min = 1
+    if qtd_max < qtd_min:
+        qtd_max = qtd_min
+
+    raw_modes = limits_cfg.get("modes", ["PROVA", "ESTUDO"])
+    if not isinstance(raw_modes, (list, tuple, set)):
+        raw_modes = [raw_modes]
+    allowed_modes = {str(m).upper() for m in raw_modes if m}
+    if not allowed_modes:
+        allowed_modes = {"PROVA", "ESTUDO"}
+
+    # Inputs obrigat??rios e b??sicos
     curso_id = (request.POST.get("curso_id") or "").strip()
     modulo_id = (request.POST.get("modulo_id") or "").strip()
 
@@ -54,7 +150,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
 
     # Modo (NOVO): PROVA | ESTUDO
     modo = (request.POST.get("modo") or "PROVA").strip().upper()
-    if modo not in {"PROVA", "ESTUDO"}:
+    if modo not in allowed_modes:
         modo = "PROVA"
 
     # Filtros (opcionais)
@@ -66,10 +162,10 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return redirect(reverse("simulado:config"))
 
     # Limites simples
-    if qtd < 1:
-        qtd = 1
-    if qtd > 50:
-        qtd = 50
+    if qtd < qtd_min:
+        qtd = qtd_min
+    if qtd > qtd_max:
+        qtd = qtd_max
 
     # Base queryset
     qs = Questao.objects.filter(curso_id=curso_id)
@@ -91,14 +187,14 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Não existem questões para esse filtro (curso/módulo/filtros)."},
+            {"msg": "N??o existem quest??es para esse filtro (curso/m??dulo/filtros)."},
             status=400,
         )
 
     if qtd > total:
         qtd = total
 
-    # Seleção aleatória eficiente
+    # Sele????o aleat??ria eficiente
     ids = list(qs.values_list("id", flat=True))
     chosen = random.sample(ids, k=qtd)
 
@@ -123,7 +219,6 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
 
     _set_state(request, state)
     return redirect(reverse("simulado:questao"))
-
 
 @require_http_methods(["GET"])
 def simulado_questao(request: HttpRequest) -> HttpResponse:
