@@ -5,6 +5,8 @@ import random
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_GET
 from banco_questoes.models import Curso, CursoModulo, Questao, Alternativa
 from django.db.models import Count, Q
@@ -64,6 +66,19 @@ def _merge_filtros(defaults_cfg: dict, override_cfg: dict | None) -> dict:
         "so_placas": bool(override_cfg.get("so_placas", defaults_cfg.get("so_placas", False))),
         "qtd": int(override_cfg.get("qtd", defaults_cfg.get("qtd", 10)) or 10),
     }
+
+
+def _now_iso() -> str:
+    return timezone.now().isoformat()
+
+
+def _parse_ts(value: str | None):
+    if not value:
+        return None
+    dt = parse_datetime(value)
+    if dt and timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
 
 
 @require_http_methods(["GET"])
@@ -229,6 +244,10 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
             "com_imagem": com_imagem,    # bool
             "so_placas": so_placas,      # bool
         },
+
+        # Auditoria simples de tempo
+        "started_at": _now_iso(),
+        "finished_at": "",
     }
 
     _set_state(request, state)
@@ -311,6 +330,8 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
 
     # Próxima questão (avan?a o índice; feedback do modo ESTUDO ? renderizado antes de seguir)
     state["index"] = idx + 1
+    if state["index"] >= len(qids) and not state.get("finished_at"):
+        state["finished_at"] = _now_iso()
     _set_state(request, state)
 
     if state.get("mode") == "ESTUDO":
@@ -367,15 +388,44 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
 
     qids = state["question_ids"]
     answers = state.get("answers", {})
+    mode = state.get("mode") or "PROVA"
+    filters = state.get("filters", {}) or {}
 
     acertos = sum(1 for qid in qids if answers.get(qid, {}).get("is_correct") is True)
     total = len(qids)
 
     # Se quiser listar revisões, buscamos as questões respondidas
     questoes = list(
-        Questao.objects.filter(id__in=qids).select_related("modulo").order_by("numero_no_modulo")
+        Questao.objects.filter(id__in=qids).select_related("modulo", "curso").order_by("numero_no_modulo")
     )
     questoes_map = {str(q.id): q for q in questoes}
+
+    alternativas = list(
+        Alternativa.objects.filter(questao_id__in=qids).order_by("ordem")
+    )
+    alts_map: dict[str, list[Alternativa]] = {}
+    for alt in alternativas:
+        key = str(alt.questao_id)
+        alts_map.setdefault(key, []).append(alt)
+
+    respondidas = sum(1 for qid in qids if answers.get(str(qid)))
+    erros = max(respondidas - acertos, 0)
+    nao_respondidas = max(total - respondidas, 0)
+
+    started_at = _parse_ts(state.get("started_at"))
+    finished_at = _parse_ts(state.get("finished_at"))
+    if not finished_at:
+        finished_at = timezone.now()
+        state["finished_at"] = finished_at.isoformat()
+        _set_state(request, state)
+
+    tempo_total_segundos = None
+    tempo_total_human = None
+    if started_at and finished_at:
+        delta = finished_at - started_at
+        tempo_total_segundos = max(int(delta.total_seconds()), 0)
+        mins, secs = divmod(tempo_total_segundos, 60)
+        tempo_total_human = f"{mins}m {secs:02d}s" if mins else f"{secs}s"
 
     revisao = []
     for qid in qids:
@@ -383,11 +433,16 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
         if not q:
             continue
         info = answers.get(str(qid), {})
+        alts = alts_map.get(str(qid), [])
+        selecionada = next((a for a in alts if str(a.id) == str(info.get("alt_id"))), None)
+        correta = next((a for a in alts if a.is_correta), None)
         revisao.append(
             {
                 "questao": q,
                 "respondida": bool(info),
                 "acertou": info.get("is_correct"),
+                "selecionada": selecionada,
+                "correta": correta,
             }
         )
 
@@ -404,6 +459,15 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
             "total": total,
             "percent": round((acertos / total) * 100, 2) if total else 0,
             "revisao": revisao,
+            "respondidas": respondidas,
+            "erros": erros,
+            "nao_respondidas": nao_respondidas,
+            "modo": mode,
+            "filters": filters,
+            "curso": questoes[0].curso if questoes else None,
+            "modulo": next((q.modulo for q in questoes if str(q.modulo_id) == str(state.get("modulo_id"))), None) if state.get("modulo_id") else None,
+            "tempo_total_segundos": tempo_total_segundos,
+            "tempo_total_human": tempo_total_human,
         },
     )
 

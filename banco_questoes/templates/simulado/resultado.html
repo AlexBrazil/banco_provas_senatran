@@ -1,33 +1,77 @@
+{% load static %}
 <!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <title>Resultado do Simulado</title>
+  <link rel="stylesheet" href="{% static 'Simulado/simulado.css' %}">
 </head>
-<body>
-  <h1>Resultado</h1>
+<body class="simulado-container simulado-questao">
+  <div class="simulado-card">
+    <h1 class="simulado-title">Resultado do Simulado</h1>
+    <p class="simulado-subtitle">Modo: {{ modo|default:"PROVA" }}</p>
 
-  <p>Acertos: <strong>{{ acertos }}</strong> / {{ total }} ({{ percent }}%)</p>
+    <div class="score">
+      <span class="big">{{ percent|default:0 }}%</span>
+      <span class="pill">{{ acertos|default:0 }} de {{ total|default:0 }} acertos</span>
+      <span class="pill">Tempo: {{ tempo_total_human|default:"--" }}</span>
+    </div>
+    <p class="simulado-contagem">
+      Respondidas: {{ respondidas|default:0 }} | Erros: {{ erros|default:0 }} | Nao respondidas: {{ nao_respondidas|default:0 }}
+    </p>
+  </div>
 
-  <h3>Revisão (resumo)</h3>
-  <ul>
-    {% for item in revisao %}
-      <li>
-        #{{ item.questao.numero_no_modulo }} — {{ item.questao.modulo.nome }} —
-        {% if item.respondida %}
-          {% if item.acertou %}✅ Acertou{% else %}❌ Errou{% endif %}
-        {% else %}
-          ⚠️ Não respondida
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
+  <div class="simulado-card">
+    <h3>Filtros usados</h3>
+    <ul class="stats-list">
+      <li><span class="stats-label">Curso</span><span class="stats-value">{{ curso.nome|default:"-" }}</span></li>
+      <li><span class="stats-label">Modulo</span><span class="stats-value">{% if modulo %}{{ modulo.nome }}{% else %}Todos{% endif %}</span></li>
+      <li><span class="stats-label">Dificuldade</span><span class="stats-value">{% if filters.dificuldade %}{{ filters.dificuldade }}{% else %}Misturado{% endif %}</span></li>
+      <li><span class="stats-label">Com imagem</span><span class="stats-value">{{ filters.com_imagem|yesno:"Sim,Nao" }}</span></li>
+      <li><span class="stats-label">So placas</span><span class="stats-value">{{ filters.so_placas|yesno:"Sim,Nao" }}</span></li>
+      <li><span class="stats-label">Quantidade sorteada</span><span class="stats-value">{{ total|default:0 }}</span></li>
+    </ul>
+  </div>
 
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">Novo simulado</button>
-  </form>
+  <div class="simulado-card">
+    <h3>Revisao</h3>
+    <ul class="stats-list">
+      {% for item in revisao %}
+        <li class="alternativa">
+          <div class="alternativa-label">
+            <div class="alternativa-texto">
+              <strong>#{{ item.questao.numero_no_modulo }}</strong> - {{ item.questao.modulo.nome }}
+              <div class="simulado-enunciado">{{ item.questao.enunciado }}</div>
 
-  <p><a href="{% url 'simulado:config' %}">Voltar para configuração</a></p>
+              <p class="feedback-tip">
+                {% if item.respondida %}
+                  {% if item.acertou %}<span class="feedback-ok">Acertou</span>{% else %}<span class="feedback-error">Errou</span>{% endif %}
+                {% else %}
+                  <span class="feedback-error">Nao respondida</span>
+                {% endif %}
+                {% if item.selecionada %}<br>Sua resposta: {{ item.selecionada.texto }}{% endif %}
+                {% if item.correta %}<br>Resposta correta: {{ item.correta.texto }}{% endif %}
+                {% if item.questao.comentario %}<br>Comentario: {{ item.questao.comentario }}{% endif %}
+              </p>
+
+              {% if item.questao.imagem_arquivo %}
+                <small class="questao-imagem-label">
+                  Imagem: <a href="{% static 'placas/' %}{{ item.questao.imagem_arquivo }}" target="_blank">{{ item.questao.imagem_arquivo }}</a>
+                </small>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="simulado-card">
+    <form method="post" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn-simulado">Novo simulado</button>
+      <a class="btn-simulado" href="{% url 'simulado:config' %}">Voltar para configuracao</a>
+    </form>
+  </div>
 </body>
 </html>
