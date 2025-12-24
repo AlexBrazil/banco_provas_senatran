@@ -118,29 +118,44 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     cfg = get_simulado_config()
     limits_cfg = cfg.get("limits", {}) or {}
+
+    # --------
+    # Limites (qtd)
+    # --------
     try:
         qtd_min = int(limits_cfg.get("qtd_min", 1) or 1)
     except (TypeError, ValueError):
         qtd_min = 1
+
     try:
         qtd_max = int(limits_cfg.get("qtd_max", 50) or 50)
     except (TypeError, ValueError):
         qtd_max = 50
+
     if qtd_min < 1:
         qtd_min = 1
     if qtd_max < qtd_min:
         qtd_max = qtd_min
 
+    # --------
+    # Modos permitidos
+    # --------
     raw_modes = limits_cfg.get("modes", ["PROVA", "ESTUDO"])
     if not isinstance(raw_modes, (list, tuple, set)):
         raw_modes = [raw_modes]
+
     allowed_modes = {str(m).upper() for m in raw_modes if m}
     if not allowed_modes:
         allowed_modes = {"PROVA", "ESTUDO"}
 
-    # Inputs obrigat??rios e b??sicos
+    # --------
+    # Inputs obrigatórios e básicos
+    # --------
     curso_id = (request.POST.get("curso_id") or "").strip()
     modulo_id = (request.POST.get("modulo_id") or "").strip()
+
+    if not curso_id:
+        return redirect(reverse("simulado:config"))
 
     # Quantidade
     try:
@@ -148,7 +163,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     except (TypeError, ValueError):
         qtd = 10
 
-    # Modo (NOVO): PROVA | ESTUDO
+    # Modo: PROVA | ESTUDO
     modo = (request.POST.get("modo") or "PROVA").strip().upper()
     if modo not in allowed_modes:
         modo = "PROVA"
@@ -158,16 +173,15 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     com_imagem = (request.POST.get("com_imagem") == "1")
     so_placas = (request.POST.get("so_placas") == "1")
 
-    if not curso_id:
-        return redirect(reverse("simulado:config"))
-
-    # Limites simples
+    # Aplica limites
     if qtd < qtd_min:
         qtd = qtd_min
     if qtd > qtd_max:
         qtd = qtd_max
 
+    # --------
     # Base queryset
+    # --------
     qs = Questao.objects.filter(curso_id=curso_id)
 
     if modulo_id:
@@ -187,14 +201,14 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "N??o existem quest??es para esse filtro (curso/m??dulo/filtros)."},
+            {"msg": "Não existem questões para esse filtro (curso/módulo/filtros)."},
             status=400,
         )
 
     if qtd > total:
         qtd = total
 
-    # Sele????o aleat??ria eficiente
+    # Seleção aleatória eficiente
     ids = list(qs.values_list("id", flat=True))
     chosen = random.sample(ids, k=qtd)
 
@@ -206,19 +220,20 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         "question_ids": [str(x) for x in chosen],
         "answers": {},  # {question_id: {"alt_id": "...", "is_correct": True/False}}
 
-        # NOVO: modo do simulado
+        # Modo do simulado
         "mode": modo,  # "PROVA" | "ESTUDO"
 
-        # guarda filtros usados (bom para exibir no resultado e depurar)
+        # Guarda filtros usados (bom para exibir no resultado e depurar)
         "filters": {
-            "dificuldade": dificuldade,   # "", FACIL, INTERMEDIARIO, DIFICIL
-            "com_imagem": com_imagem,     # bool
-            "so_placas": so_placas,       # bool
+            "dificuldade": dificuldade,  # "", FACIL, INTERMEDIARIO, DIFICIL
+            "com_imagem": com_imagem,    # bool
+            "so_placas": so_placas,      # bool
         },
     }
 
     _set_state(request, state)
     return redirect(reverse("simulado:questao"))
+
 
 @require_http_methods(["GET"])
 def simulado_questao(request: HttpRequest) -> HttpResponse:

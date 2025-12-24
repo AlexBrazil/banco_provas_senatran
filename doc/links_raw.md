@@ -41,7 +41,10 @@
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/tests.py
 - **__init__.py**  
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/banco_questoes/__init__.py
-
+- **config_simulado.json**  
+  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/refs/heads/main/config_simulado.json
+- **simulado_config.py**  
+  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/refs/heads/main/banco_questoes/simulado_config.py
 ---
 
 ## Templates do simulado
