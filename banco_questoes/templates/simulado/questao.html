@@ -5,8 +5,12 @@
 <div class="simulado-container simulado-questao">
 
   <h2 class="simulado-titulo">
-    Questão {{ idx|add:1 }} de {{ total }}
+    Questão {{ idx|add:1 }} de {{ total }} ({{ acertos|default:0 }} acertos / {{ erros|default:0 }} erros)
   </h2>
+
+  <p class="simulado-contagem">
+    Acertos: {{ acertos|default:0 }} · Erros: {{ erros|default:0 }}
+  </p>
 
   <p class="simulado-modulo">
     <strong>{{ questao.modulo.nome }}</strong>
@@ -42,7 +46,13 @@
     {% endif %}
     <div class="feedback">
       {% if not feedback.is_correct %}
-        <p class="feedback-error">Não foi desta vez, estude mais um pouco.</p>
+        {% if feedback.percent_acerto <= 50 %}
+          <p class="feedback-error">Não foi desta vez, estude mais um pouco.</p>
+        {% elif feedback.percent_acerto <= 70 %}
+          <p class="feedback-error">Essa você errou, mas está indo bem, na próxima preste mais atenção na questão.</p>
+        {% else %}
+          <p class="feedback-error">Essa você errou, mas caso se esforce mais, irá gabaritar a prova.</p>
+        {% endif %}
         {% if feedback.selecionada %}
           <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
         {% endif %}

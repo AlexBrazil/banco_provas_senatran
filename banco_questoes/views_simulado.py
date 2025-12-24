@@ -249,6 +249,10 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
 
     qid = qids[idx]
 
+    answers = state.get("answers", {})
+    acertos = sum(1 for v in answers.values() if v.get("is_correct"))
+    erros = sum(1 for v in answers.values() if v.get("is_correct") is False)
+
     questao = (
         Questao.objects
         .select_related("modulo", "curso")
@@ -269,6 +273,8 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
         {
             "idx": idx,
             "total": len(qids),
+            "acertos": acertos,
+            "erros": erros,
             "questao": questao,
             "alternativas": alternativas,
             "answered": answered,
@@ -313,6 +319,12 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
             Alternativa.objects.filter(questao=questao).order_by("ordem")
         )
         correta = next((a for a in alternativas if a.is_correta), None)
+        answers_map = state.get("answers", {}) or {}
+        total_respostas = len(qids) or 1  # usa total planejado para evitar % inflado no início
+        total_answered = len(answers_map) or 1  # usado só para contar erros/acertos
+        acertos_so_far = sum(1 for data in answers_map.values() if data.get("is_correct"))
+        erros_so_far = sum(1 for data in answers_map.values() if data.get("is_correct") is False)
+        percent_acerto = round((acertos_so_far / total_respostas) * 100, 2)
         next_url = (
             reverse("simulado:resultado")
             if state["index"] >= len(qids)
@@ -324,6 +336,8 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
             {
                 "idx": idx,
                 "total": len(qids),
+                "acertos": acertos_so_far,
+                "erros": erros_so_far,
                 "questao": questao,
                 "alternativas": alternativas,
                 "answered": answers.get(qid),
@@ -334,6 +348,7 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
                     "selecionada": alt,
                     "next_url": next_url,
                     "is_last": state["index"] >= len(qids),
+                    "percent_acerto": percent_acerto,
                 },
             },
         )
