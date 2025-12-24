@@ -36,7 +36,10 @@
 
   {% if feedback %}
     {% if feedback.is_correct %}
-      <p class="feedback-ok">Você acertou!</p>
+      <p class="feedback-ok">
+        <span class="feedback-icon">✓</span>
+        Você acertou!
+      </p>
       {% if feedback.selecionada %}
         <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
       {% endif %}
@@ -44,14 +47,23 @@
         <p class="feedback-tip"><strong>Comentário:</strong> {{ feedback.comentario }}</p>
       {% endif %}
     {% endif %}
-    <div class="feedback">
+    <div class="feedback {% if feedback.is_correct %}feedback--ok{% else %}feedback--error{% endif %}">
       {% if not feedback.is_correct %}
         {% if feedback.percent_acerto <= 50 %}
-          <p class="feedback-error">Não foi desta vez, estude mais um pouco.</p>
+          <p class="feedback-error">
+            <span class="feedback-icon">✖</span>
+            Não foi desta vez, estude mais um pouco.
+          </p>
         {% elif feedback.percent_acerto <= 70 %}
-          <p class="feedback-error">Essa você errou, mas está indo bem, na próxima preste mais atenção na questão.</p>
+          <p class="feedback-error">
+            <span class="feedback-icon">✖</span>
+            Essa você errou, mas está indo bem, na próxima preste mais atenção na questão.
+          </p>
         {% else %}
-          <p class="feedback-error">Essa você errou, mas caso se esforce mais, irá gabaritar a prova.</p>
+          <p class="feedback-error">
+            <span class="feedback-icon">✖</span>
+            Essa você errou, mas caso se esforce mais, irá gabaritar a prova.
+          </p>
         {% endif %}
         {% if feedback.selecionada %}
           <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
