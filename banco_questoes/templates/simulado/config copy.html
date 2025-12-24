@@ -24,24 +24,11 @@
                     id="btn-inicio-rapido"
                     class="btn-rapido"
                     data-curso-id="{{ quick_curso_id|default_if_none:'' }}"
-                    data-form-id="form-inicio-rapido"
                     {% if not quick_curso_id %}disabled title="Curso padrão não encontrado"{% endif %}
                 >
                     Início rápido
                 </button>
                 <p class="simulado-quick-hint">Primeira Habilitação · Modo Prova · Misturado · 10 questões</p>
-
-                <!-- FORM DEDICADO DO INÍCIO RÁPIDO (POST) -->
-                <form id="form-inicio-rapido" method="post" action="{% url 'simulado:iniciar' %}" class="is-hidden">
-                    {% csrf_token %}
-                    <input type="hidden" name="curso_id" value="{{ quick_curso_id|default_if_none:'' }}">
-                    <input type="hidden" name="modulo_id" value="">
-                    <input type="hidden" name="modo" value="PROVA">
-                    <input type="hidden" name="dificuldade" value="">
-                    <input type="hidden" name="com_imagem" value="0">
-                    <input type="hidden" name="so_placas" value="0">
-                    <input type="hidden" name="qtd" value="10">
-                </form>
             </div>
         </div>
 

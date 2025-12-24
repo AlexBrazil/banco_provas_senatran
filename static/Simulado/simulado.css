@@ -548,7 +548,9 @@ label{
   color: #b45309;
 }
 
-.is-hidden { display: none; }
+.is-hidden {
+  display: none !important;
+}
 .stats-hint { margin: 6px 0; color: #6b7280; }
 .stats-error { margin: 6px 0; color: #b45309; }
 
