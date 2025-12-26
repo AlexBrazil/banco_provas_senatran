@@ -87,9 +87,9 @@
                         <label for="dificuldade">Dificuldade</label>
                         <select name="dificuldade" id="dificuldade">
                             <option value="" {% if not simulado_defaults.dificuldade %}selected{% endif %}>Misturado</option>
-                            <option value="FACIL" {% if simulado_defaults.dificuldade == "FACIL" %}selected{% endif %}>F?cil</option>
-                            <option value="INTERMEDIARIO" {% if simulado_defaults.dificuldade == "INTERMEDIARIO" %}selected{% endif %}>Intermedi?rio</option>
-                            <option value="DIFICIL" {% if simulado_defaults.dificuldade == "DIFICIL" %}selected{% endif %}>Dif?cil</option>
+                            <option value="FACIL" {% if simulado_defaults.dificuldade == "FACIL" %}selected{% endif %}>Fácil</option>
+                            <option value="INTERMEDIARIO" {% if simulado_defaults.dificuldade == "INTERMEDIARIO" %}selected{% endif %}>Intermediário</option>
+                            <option value="DIFICIL" {% if simulado_defaults.dificuldade == "DIFICIL" %}selected{% endif %}>Difícil</option>
                         </select>
 
                     </div>
@@ -107,7 +107,7 @@
                     </div>
 
                     <div class="form-group form-group--short">
-                        <label for="qtd">Quantidade de quest?es</label>
+                        <label for="qtd">Quantidade de questões</label>
                         <input
                             type="number"
                             name="qtd"

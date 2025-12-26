@@ -13,28 +13,28 @@
 
     <div class="score">
       <span class="big">{{ percent|default:0 }}%</span>
-      <span class="pill">{{ acertos|default:0 }} de {{ total|default:0 }} acertos</span>
+      <span class="pill">{{ acertos|default:0 }} acertos em {{ total|default:0 }} questões</span>
       <span class="pill">Tempo: {{ tempo_total_human|default:"--" }}</span>
     </div>
     <p class="simulado-contagem">
-      Respondidas: {{ respondidas|default:0 }} | Erros: {{ erros|default:0 }} | Nao respondidas: {{ nao_respondidas|default:0 }}
+      Respondidas: {{ respondidas|default:0 }} | Erros: {{ erros|default:0 }}
     </p>
   </div>
 
   <div class="simulado-card">
     <h3>Filtros usados</h3>
     <ul class="stats-list">
-      <li><span class="stats-label">Curso</span><span class="stats-value">{{ curso.nome|default:"-" }}</span></li>
-      <li><span class="stats-label">Modulo</span><span class="stats-value">{% if modulo %}{{ modulo.nome }}{% else %}Todos{% endif %}</span></li>
-      <li><span class="stats-label">Dificuldade</span><span class="stats-value">{% if filters.dificuldade %}{{ filters.dificuldade }}{% else %}Misturado{% endif %}</span></li>
-      <li><span class="stats-label">Com imagem</span><span class="stats-value">{{ filters.com_imagem|yesno:"Sim,Nao" }}</span></li>
-      <li><span class="stats-label">So placas</span><span class="stats-value">{{ filters.so_placas|yesno:"Sim,Nao" }}</span></li>
-      <li><span class="stats-label">Quantidade sorteada</span><span class="stats-value">{{ total|default:0 }}</span></li>
+      <li><span class="stats-label">Curso: </span><span class="stats-value">{{ curso.nome|default:"-" }}</span></li>
+      <li><span class="stats-label">Módulo: </span><span class="stats-value">{% if modulo %}{{ modulo.nome }}{% else %}Todos{% endif %}</span></li>
+      <li><span class="stats-label">Dificuldade: </span><span class="stats-value">{% if filters.dificuldade %}{{ filters.dificuldade }}{% else %}Misturado{% endif %}</span></li>
+      <li><span class="stats-label">Com imagem: </span><span class="stats-value">{{ filters.com_imagem|yesno:"Sim,Nao" }}</span></li>
+      <li><span class="stats-label">Só placas: </span><span class="stats-value">{{ filters.so_placas|yesno:"Sim,Nao" }}</span></li>
+      <li><span class="stats-label">Quantidade sorteada:</span><span class="stats-value">{{ total|default:0 }}</span></li>
     </ul>
   </div>
 
   <div class="simulado-card">
-    <h3>Revisao</h3>
+    <h3>Revisão</h3>
     <ul class="stats-list">
       {% for item in revisao %}
         <li class="alternativa">
@@ -49,9 +49,9 @@
                 {% else %}
                   <span class="feedback-error">Nao respondida</span>
                 {% endif %}
-                {% if item.selecionada %}<br>Sua resposta: {{ item.selecionada.texto }}{% endif %}
-                {% if item.correta %}<br>Resposta correta: {{ item.correta.texto }}{% endif %}
-                {% if item.questao.comentario %}<br>Comentario: {{ item.questao.comentario }}{% endif %}
+                {% if item.selecionada %}<br><b>Sua resposta:</b> {{ item.selecionada.texto }}{% endif %}
+                {% if item.correta %}<br><b>Resposta correta:</b> {{ item.correta.texto }}{% endif %}
+                {% if item.questao.comentario %}<br><b>Comentario:</b> {{ item.questao.comentario }}{% endif %}
               </p>
 
               {% if item.questao.imagem_arquivo %}
