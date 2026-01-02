@@ -1,15 +1,15 @@
-{% load static %}
+﻿{% load static %}
 
 <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
 
 <div class="simulado-container simulado-questao">
 
   <h2 class="simulado-titulo">
-    Questão {{ idx|add:1 }} de {{ total }} ({{ acertos|default:0 }} acertos / {{ erros|default:0 }} erros)
+    QuestÃ£o {{ idx|add:1 }} de {{ total }} ({{ acertos|default:0 }} acertos / {{ erros|default:0 }} erros)
   </h2>
 
   <p class="simulado-contagem">
-    Acertos: {{ acertos|default:0 }} · Erros: {{ erros|default:0 }}
+    Acertos: {{ acertos|default:0 }} Â· Erros: {{ erros|default:0 }}
   </p>
 
   <p class="simulado-modulo">
@@ -24,7 +24,7 @@
     <div class="questao-imagem-wrapper">
       <img
         src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
-        alt="Imagem da questão"
+        alt="Imagem da questÃ£o"
         class="questao-imagem"
         onerror="this.closest('.questao-imagem-wrapper').style.display='none';"
       >
@@ -37,32 +37,32 @@
   {% if feedback %}
     {% if feedback.is_correct %}
       <p class="feedback-ok">
-        <span class="feedback-icon">✓</span>
-        Você acertou!
+        <span class="feedback-icon">âœ“</span>
+        VocÃª acertou!
       </p>
       {% if feedback.selecionada %}
         <p class="feedback-tip"><strong>Sua resposta:</strong> {{ feedback.selecionada.texto }}</p>
       {% endif %}
       {% if feedback.comentario %}
-        <p class="feedback-tip"><strong>Comentário:</strong> {{ feedback.comentario }}</p>
+        <p class="feedback-tip"><strong>ComentÃ¡rio:</strong> {{ feedback.comentario }}</p>
       {% endif %}
     {% endif %}
     <div class="feedback {% if feedback.is_correct %}feedback--ok{% else %}feedback--error{% endif %}">
       {% if not feedback.is_correct %}
         {% if feedback.percent_acerto <= 50 %}
           <p class="feedback-error">
-            <span class="feedback-icon">✖</span>
-            Não foi desta vez, estude mais um pouco.
+            <span class="feedback-icon">âœ–</span>
+            NÃ£o foi desta vez, estude mais um pouco.
           </p>
         {% elif feedback.percent_acerto <= 70 %}
           <p class="feedback-error">
-            <span class="feedback-icon">✖</span>
-            Essa você errou, mas está indo bem, na próxima preste mais atenção na questão.
+            <span class="feedback-icon">âœ–</span>
+            Essa vocÃª errou, mas estÃ¡ indo bem, na prÃ³xima preste mais atenÃ§Ã£o na questÃ£o.
           </p>
         {% else %}
           <p class="feedback-error">
-            <span class="feedback-icon">✖</span>
-            Essa você errou, mas caso se esforce mais, irá gabaritar a prova.
+            <span class="feedback-icon">âœ–</span>
+            Essa vocÃª errou, mas caso se esforce mais, irÃ¡ gabaritar a prova.
           </p>
         {% endif %}
         {% if feedback.selecionada %}
@@ -72,12 +72,12 @@
           <p class="feedback-tip"><strong>Resposta correta:</strong> {{ feedback.correta.texto }}</p>
         {% endif %}
         {% if feedback.comentario %}
-          <p class="feedback-tip"><strong>Comentário:</strong> {{ feedback.comentario }}</p>
+          <p class="feedback-tip"><strong>ComentÃ¡rio:</strong> {{ feedback.comentario }}</p>
         {% endif %}
       {% endif %}
     </div>
     <a class="btn-simulado" href="{{ feedback.next_url }}">
-      {% if feedback.is_last %}Ver resultado{% else %}Próxima questão{% endif %}
+      {% if feedback.is_last %}Ver resultado{% else %}PrÃ³xima questÃ£o{% endif %}
     </a>
   {% else %}
     <form method="post" action="{% url 'simulado:responder' %}" class="simulado-form">
