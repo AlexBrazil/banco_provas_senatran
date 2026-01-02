@@ -423,6 +423,22 @@ label{
 .alternativa-texto {
   line-height: 1.4;
   color: inherit;              /* <- evita branco inesperado */
+  display: inline-flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.alternativa-letra {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(43,108,255,.12);
+  color: #2b6cff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .alternativa:has(input:checked) {
