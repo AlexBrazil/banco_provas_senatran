@@ -27,14 +27,14 @@
                     data-form-id="form-inicio-rapido"
                     {% if not quick_curso_id or not inicio_rapido.habilitado %}
                         disabled
-                        title="{{ inicio_rapido.tooltip|default:'Curso padr?o n?o encontrado' }}"
+                        title="{{ inicio_rapido.tooltip|default:'Curso padrão não encontrado' }}"
                     {% endif %}
                 >
                     {{ inicio_rapido.label|default:"Início rápido" }}
                 </button>
                 <p class="simulado-quick-hint">{{ inicio_rapido.hint|default_if_none:"" }}</p>
 
-                <!-- FORM DEDICADO DO IN?CIO R?PIDO (POST) -->
+                <!-- FORM DEDICADO DO INÍCIO RÁPIDO (POST) -->
                 <form id="form-inicio-rapido" method="post" action="{% url 'simulado:iniciar' %}" class="is-hidden">
                     {% csrf_token %}
                     <input type="hidden" name="curso_id" value="{{ quick_curso_id|default_if_none:'' }}">
