@@ -20,6 +20,7 @@
     ui: {
       messages: {
         selecione_curso: "Selecione um curso para ver as estatísticas.",
+        selecione_curso_primeiro: "Selecione primeiro o curso para liberar os filtros.",
         carregando_stats: "Carregando estatísticas...",
         pronto: "Pronto para iniciar.",
         sem_questoes: "Não há questões para os filtros selecionados.",
@@ -89,6 +90,12 @@
   const btnLimpar = $("#btn-limpar");
   const btnInicioRapido = $("#btn-inicio-rapido");
 
+  const lockMsg = getMsg(
+    "selecione_curso_primeiro",
+    "Selecione primeiro o curso para liberar os filtros."
+  );
+  const lockTargets = [modulo, modo, dificuldade];
+
   const statTotalDisponivel = $("#stat-total");
   const statComImagem = $("#stat-imagem");
   const statPlacas = $("#stat-placas");
@@ -116,6 +123,27 @@
 
   function setHint(msg) {
     statsHint.textContent = msg;
+  }
+
+  function applyLockState(locked) {
+    lockTargets.forEach((el) => {
+      if (!el) return;
+      const group = el.closest(".form-group");
+      if (group) {
+        if (locked) {
+          group.dataset.locked = "true";
+          group.dataset.lockMsg = lockMsg;
+        } else {
+          group.dataset.locked = "false";
+          delete group.dataset.lockMsg;
+        }
+      }
+      if (locked) {
+        el.setAttribute("title", lockMsg);
+      } else {
+        el.removeAttribute("title");
+      }
+    });
   }
 
   function resetStatsUI() {
@@ -249,6 +277,7 @@
     setEnabled(soPlacas, enabled);
     setEnabled(btnLimpar, enabled);
     if (modo) setEnabled(modo, enabled);
+    applyLockState(!enabled);
 
     if (!cursoId) {
       modulo.innerHTML = `<option value="">Selecione um curso primeiro...</option>`;
@@ -296,6 +325,7 @@
   setEnabled(btnIniciar, false);
   setEnabled(btnLimpar, false);
   if (modo) setEnabled(modo, false);
+  applyLockState(true);
   resetStatsUI();
   setHint(getMsg("selecione_curso", "Selecione um curso para ver as estatísticas."));
 
@@ -327,6 +357,7 @@
           setEnabled(btnLimpar, true);
           setEnabled(btnIniciar, true);
           if (modo) setEnabled(modo, true);
+          applyLockState(false);
 
           try {
             await loadModulos(quickCursoId);

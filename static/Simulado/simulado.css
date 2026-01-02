@@ -335,6 +335,43 @@ label{
   color: var(--text);
 }
 
+.form-group[data-locked="true"] {
+  position: relative;
+}
+
+.form-group[data-locked="true"]::after {
+  content: attr(data-lock-msg);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  min-width: 240px;
+  max-width: 320px;
+  border-radius: 10px;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 2;
+}
+
+.form-group[data-locked="true"]:hover::after,
+.form-group[data-locked="true"]:focus-within::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.form-group[data-locked="true"] select {
+  cursor: not-allowed;
+}
+
 /* volta o layout padrão da tela de questão (itens em largura total) */
 .simulado-questao .simulado-form {
   align-items: stretch;
