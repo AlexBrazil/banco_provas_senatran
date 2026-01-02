@@ -1,0 +1,218 @@
+Configurar:
+
+Files: Encoding → utf8
+
+Files: Auto Guess Encoding → ativado
+
+Files: Eol → \n
+
+Essas opções garantem que novos arquivos sejam criados corretamente.
+
+3.2 Conferência via settings.json
+
+Abrir:
+
+Ctrl + Shift + P
+→ Preferences: Open Settings (JSON)
+
+
+Garantir a presença das seguintes entradas:
+
+{
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": true,
+    "files.eol": "\n"
+}
+
+3.3 Verificação por arquivo
+
+No canto inferior direito do VS Code, todo arquivo deve indicar:
+
+UTF-8   LF
+
+
+Caso apareça CRLF, o desenvolvedor deve:
+
+clicar no indicador
+
+selecionar LF
+
+salvar o arquivo
+
+4. .editorconfig — padrão oficial do projeto
+
+O projeto utiliza EditorConfig para garantir que todos os editores respeitem os mesmos padrões.
+
+O arquivo .editorconfig deve existir na raiz do repositório.
+
+4.1 Arquivo .editorconfig
+# EditorConfig para Simulado Digital
+# Garante UTF-8 sem BOM e LF em todos os editores
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+[*.{html,htm}]
+indent_style = space
+indent_size = 2
+
+[*.{js,css}]
+indent_style = space
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[Makefile]
+indent_style = tab
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.ps1]
+indent_size = 4
+end_of_line = lf
+
+[*.sh]
+end_of_line = lf
+
+[*.{bat,cmd}]
+end_of_line = crlf
+
+5. Configuração obrigatória do PowerShell
+
+O PowerShell deve estar configurado para ler e escrever UTF-8 corretamente.
+
+5.1 Profile do PowerShell
+
+Abrir o profile do usuário:
+
+notepad $PROFILE
+
+
+Adicionar o seguinte conteúdo:
+
+# UTF-8 sem BOM no PowerShell
+
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
+chcp 65001 | Out-Null
+
+Após salvar, fechar e reabrir o terminal.
+
+6. Configuração do Git (obrigatória)
+
+O projeto adota LF em todo o repositório, inclusive no Windows.
+
+Executar:
+git config --global core.autocrlf false
+git config --global core.eol lf
+
+7. .gitattributes — padrão oficial do projeto
+
+O arquivo .gitattributes garante que o Git trate corretamente texto vs binário e normalize o fim de linha.
+
+O arquivo .gitattributes deve existir na raiz do repositório.
+
+7.1 Arquivo .gitattributes
+* text=auto eol=lf
+
+*.py      text eol=lf
+*.js      text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.jsx     text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+*.cs      text eol=lf
+*.ps1     text eol=lf
+*.sh      text eol=lf
+
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.toml    text eol=lf
+*.env     text eol=lf
+*.ini     text eol=lf
+*.cfg     text eol=lf
+*.md      text eol=lf
+
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.mp3     binary
+*.wav     binary
+*.ogg     binary
+*.mp4     binary
+*.webm    binary
+*.zip     binary
+*.7z      binary
+*.pdf     binary
+*.exe     binary
+*.dll     binary
+*.so      binary
+*.unity   binary
+*.asset   binary
+*.prefab binary
+*.fbx     binary
+*.obj     binary
+8. Normalização do repositório (manutenção)
+
+Sempre que .editorconfig ou .gitattributes forem alterados:
+
+git add --renormalize .
+git commit -m "chore: normalize encoding and line endings"
+
+9. Verificação final
+
+Para validar se o repositório está conforme o padrão:
+
+git ls-files --eol
+
+
+Resultado esperado:
+
+i/lf   w/lf
+
+
+Não deve existir:
+
+w/mixed
+
+10. Conclusão
+
+Este padrão:
+
+elimina erros invisíveis de encoding
+
+garante compatibilidade Windows/Linux
+
+mantém o histórico Git limpo
+
+reduz problemas em produção e CI
+
+facilita colaboração e manutenção

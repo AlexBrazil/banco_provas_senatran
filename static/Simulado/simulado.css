@@ -247,7 +247,7 @@ label{
 
 /* Nome do módulo */
 .simulado-modulo {
-  color: #555;
+  color: #ffffff;
   margin-bottom: 14px;
 }
 
@@ -255,6 +255,27 @@ label{
 .simulado-enunciado {
   font-size: 1.05rem;
   margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.simulado-enunciado-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  padding: 0 10px;
+  background: rgba(43,108,255,.12);
+  color: #2b6cff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.simulado-enunciado-texto {
+  display: inline-block;
 }
 
 /* ===== Imagem da questão ===== */

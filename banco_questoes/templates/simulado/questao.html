@@ -17,7 +17,8 @@
   </p>
 
   <p class="simulado-enunciado">
-    {{ questao.enunciado }}
+    <span class="simulado-enunciado-numero">{{ idx|add:1 }}.</span>
+    <span class="simulado-enunciado-texto">{{ questao.enunciado }}</span>
   </p>
 
   {% if questao.imagem_arquivo %}
