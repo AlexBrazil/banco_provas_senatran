@@ -4,13 +4,17 @@
 
 <div class="simulado-container simulado-questao">
 
-  <h2 class="simulado-titulo">
-    Questão {{ idx|add:1 }} de {{ total }} ({{ acertos|default:0 }} acertos / {{ erros|default:0 }} erros)
-  </h2>
+  {% with modo_atual=mode|default:"PROVA" %}
+    <h2 class="simulado-titulo">
+      Questão {{ idx|add:1 }} de {{ total }}{% if modo_atual != "PROVA" %} ({{ acertos|default:0 }} acertos / {{ erros|default:0 }} erros){% endif %}
+    </h2>
 
-  <p class="simulado-contagem">
-    Acertos: {{ acertos|default:0 }} | Erros: {{ erros|default:0 }}
-  </p>
+    {% if modo_atual != "PROVA" %}
+      <p class="simulado-contagem">
+        Acertos: {{ acertos|default:0 }} | Erros: {{ erros|default:0 }}
+      </p>
+    {% endif %}
+  {% endwith %}
 
   <p class="simulado-modulo">
     <strong>{{ questao.modulo.nome }}</strong>
