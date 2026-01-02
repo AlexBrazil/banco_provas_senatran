@@ -102,7 +102,7 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
         },
         "inicio_rapido": {
             "habilitado": bool(inicio_cfg.get("habilitado", True)),
-            "label": inicio_cfg.get("label", "In?cio r?pido"),
+            "label": inicio_cfg.get("label", "Início rápido"),
             "hint": inicio_cfg.get("hint", ""),
             "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
             "override_filtros": quick_filters,

@@ -1,0 +1,64 @@
+# =========================
+# Padrão geral
+# =========================
+* text=auto eol=lf
+
+# =========================
+# Código-fonte
+# =========================
+*.py      text eol=lf
+*.js      text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.jsx     text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+*.cs      text eol=lf
+*.ps1     text eol=lf
+*.sh      text eol=lf
+
+
+
+# =========================
+# Configurações / Dados
+# =========================
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.toml    text eol=lf
+*.env     text eol=lf
+*.ini     text eol=lf
+*.cfg     text eol=lf
+*.md      text eol=lf
+
+# =========================
+# Windows scripts
+# =========================
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+# =========================
+# Assets binários (não mexer)
+# =========================
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.mp3     binary
+*.wav     binary
+*.ogg     binary
+*.mp4     binary
+*.webm    binary
+*.zip     binary
+*.7z      binary
+*.pdf     binary
+*.exe     binary
+*.dll     binary
+*.so      binary
+*.unity   binary
+*.asset   binary
+*.prefab binary
+*.fbx     binary
+*.obj     binary
+*.pdf     binary
