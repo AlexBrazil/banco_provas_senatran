@@ -495,8 +495,8 @@ label{
 }
 
 .feedback--error {
-  background: linear-gradient(160deg, rgba(78, 19, 28, .95), rgba(138, 28, 41, .78));
-  border-color: rgba(255, 99, 71, .65);
+  background: linear-gradient(160deg, rgba(148, 148, 148, 0.95), rgba(255, 255, 255, 0.78));
+  border-color: rgba(255, 39, 1, 0.65);
   box-shadow:
     0 14px 34px rgba(255, 99, 71, .32),
     inset 0 1px 0 rgba(255,255,255,.16);
@@ -531,8 +531,17 @@ label{
 
 .feedback-tip {
   margin: 6px 0;
-  color: #3b3c3d;
+  color: #ffffff;
   line-height: 1.45;
+}
+
+.feedback-tip--revisao {
+  margin: 10px 0 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
 }
 
 .feedback::after {

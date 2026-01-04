@@ -113,3 +113,59 @@
   {% endif %}
 
 </div>
+
+<script>
+  (() => {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = AudioCtx ? new AudioCtx() : null;
+
+    function playTone(freq, duration, type = "sine", volume = 0.08) {
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration / 1000);
+    }
+
+    function resumeIfNeeded() {
+      if (ctx && ctx.state === "suspended") ctx.resume();
+    }
+
+    const playClick = () => playTone(360, 90, "square", 0.08);
+    const playSuccess = () => playTone(880, 180, "sine", 0.12);
+    const playError = () => playTone(220, 200, "sawtooth", 0.12);
+    const playSelect = () => playTone(520, 120, "triangle", 0.1);
+
+    document.querySelectorAll(".btn-simulado, button[type='submit'], a.btn-simulado").forEach((el) => {
+      el.addEventListener("click", () => {
+        resumeIfNeeded();
+        playClick();
+      });
+    });
+
+    document.querySelectorAll("input[name='alternativa_id']").forEach((el) => {
+      el.addEventListener("change", () => {
+        resumeIfNeeded();
+        playSelect();
+      });
+    });
+
+    {% if feedback %}
+    (() => {
+      const modoAtual = "{{ mode|default:'PROVA' }}";
+      if (modoAtual === "ESTUDO") {
+        const acertou = {{ feedback.is_correct|yesno:"true,false" }};
+        resumeIfNeeded();
+        acertou ? playSuccess() : playError();
+      }
+    })();
+    {% endif %}
+  })();
+</script>

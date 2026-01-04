@@ -185,5 +185,39 @@
         };
     </script>
     <script src="{% static 'simulado/simulado.js' %}"></script>
+    <script>
+      (() => {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = AudioCtx ? new AudioCtx() : null;
+
+        function playTone(freq, duration, type = "sine", volume = 0.08) {
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration / 1000);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration / 1000);
+        }
+
+        function resumeIfNeeded() {
+          if (ctx && ctx.state === "suspended") ctx.resume();
+        }
+
+        const playClick = () => playTone(360, 90, "square", 0.08);
+
+        document.querySelectorAll("button, .btn-simulado, a.btn-simulado").forEach((el) => {
+          el.addEventListener("click", () => {
+            resumeIfNeeded();
+            playClick();
+          });
+        });
+      })();
+    </script>
 </body>
 </html>
