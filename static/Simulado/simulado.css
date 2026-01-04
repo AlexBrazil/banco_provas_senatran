@@ -428,6 +428,13 @@ label{
   align-items: flex-start;
 }
 
+.stats-list .alternativa-texto {
+  display: grid;
+  gap: 6px;
+  align-items: start;
+  justify-items: start;
+}
+
 .alternativa-letra {
   display: inline-flex;
   align-items: center;
