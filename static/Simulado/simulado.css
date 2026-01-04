@@ -9,6 +9,9 @@
   --danger:#ff4d4d;
   --ok:#2ecc71;
   --radius:14px;
+  --questao-img-max: clamp(280px, 72vw, 720px);
+  --questao-img-padding: 10px;
+  --questao-img-radius: 10px;
 }
 
 *{ box-sizing:border-box }
@@ -280,26 +283,32 @@ label{
 
 /* ===== Imagem da questão ===== */
 
-.questao-imagem-wrapper {
-  margin: 16px 0;
-  text-align: center;
+.questao-imagem-questao-wrapper {
+  width: 100%;
+  margin: 16px 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-.questao-imagem {
-  max-width: 360px;     /* ~70% menor que o padrão anterior */
+.questao-imagem-questao {
   width: 100%;
+  max-width: var(--questao-img-max);
   height: auto;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: var(--questao-img-radius);
+  padding: var(--questao-img-padding);
   background: #fff;
+  object-fit: contain;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
 }
 
-.questao-imagem-label {
+.questao-imagem-questao-label {
   display: block;
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: #4b5563;
+  text-align: center;
 }
 
 /* ===== Alternativas ===== */

@@ -26,14 +26,14 @@
   </p>
 
   {% if questao.imagem_arquivo %}
-    <div class="questao-imagem-wrapper">
+    <div class="questao-imagem-questao-wrapper">
       <img
         src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
         alt="Imagem da questão"
-        class="questao-imagem"
-        onerror="this.closest('.questao-imagem-wrapper').style.display='none';"
+        class="questao-imagem-questao"
+        onerror="this.closest('.questao-imagem-questao-wrapper').style.display='none';"
       >
-      <small class="questao-imagem-label">
+      <small class="questao-imagem-questao-label">
         Arquivo: {{ questao.imagem_arquivo }}
       </small>
     </div>
@@ -114,8 +114,47 @@
 
 </div>
 
+<script id="simulado-imagens" type="application/json">
+  {{ imagens_cfg_json|default:"{}"|safe }}
+</script>
 <script>
   (() => {
+    // Aplica config de imagem responsiva a partir do JSON do backend
+    const imagensCfg = (() => {
+      const el = document.getElementById("simulado-imagens");
+      if (!el) return {};
+      try {
+        return JSON.parse(el.textContent || "{}");
+      } catch {
+        return {};
+      }
+    })();
+
+    function applyImagemCfg() {
+      const img = document.querySelector(".questao-imagem-questao");
+      if (!img) return;
+      const w = window.innerWidth || document.documentElement.clientWidth;
+      let variant = imagensCfg.desktop || {};
+      if (w < 640 && imagensCfg.mobile) {
+        variant = imagensCfg.mobile;
+      } else if (w < 1024 && imagensCfg.tablet) {
+        variant = imagensCfg.tablet;
+      }
+      const root = document.documentElement;
+      if (variant.max_width) {
+        root.style.setProperty("--questao-img-max", `${variant.max_width}px`);
+      }
+      if (variant.padding !== undefined) {
+        root.style.setProperty("--questao-img-padding", `${variant.padding}px`);
+      }
+      if (variant.border_radius !== undefined) {
+        root.style.setProperty("--questao-img-radius", `${variant.border_radius}px`);
+      }
+    }
+
+    applyImagemCfg();
+    window.addEventListener("resize", applyImagemCfg);
+
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const ctx = AudioCtx ? new AudioCtx() : null;
 

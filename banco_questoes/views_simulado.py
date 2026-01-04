@@ -256,6 +256,9 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(["GET"])
 def simulado_questao(request: HttpRequest) -> HttpResponse:
+    cfg = get_simulado_config()
+    imagens_cfg = cfg.get("imagens", {}) if isinstance(cfg, dict) else {}
+
     state = _get_state(request)
     if not state or not state.get("question_ids"):
         return redirect(reverse("simulado:config"))
@@ -298,6 +301,7 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
             "questao": questao,
             "alternativas": alternativas,
             "answered": answered,
+            "imagens_cfg_json": json.dumps(imagens_cfg, ensure_ascii=False),
         },
     )
 
@@ -336,6 +340,9 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
     _set_state(request, state)
 
     if state.get("mode") == "ESTUDO":
+        cfg = get_simulado_config()
+        imagens_cfg = cfg.get("imagens", {}) if isinstance(cfg, dict) else {}
+
         questao = alt.questao
         alternativas = list(
             Alternativa.objects.filter(questao=questao).order_by("ordem")
@@ -364,6 +371,7 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
                 "questao": questao,
                 "alternativas": alternativas,
                 "answered": answers.get(qid),
+                "imagens_cfg_json": json.dumps(imagens_cfg, ensure_ascii=False),
                 "feedback": {
                     "is_correct": is_correct,
                     "comentario": questao.comentario,
