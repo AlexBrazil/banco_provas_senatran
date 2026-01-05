@@ -12,10 +12,9 @@ body.inicio-body {
   max-width: 1180px;
   margin: 0 auto;
   padding: 42px 18px 56px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  align-items: start;
 }
 
 .inicio-hero {
@@ -209,7 +208,6 @@ body.inicio-body {
 
 @media (max-width: 768px) {
   .inicio-layout {
-    grid-template-columns: 1fr;
     padding: 24px 12px 36px;
   }
 
