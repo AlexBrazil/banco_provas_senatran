@@ -68,6 +68,42 @@ def _merge_filtros(defaults_cfg: dict, override_cfg: dict | None) -> dict:
     }
 
 
+def _build_frontend_config(cfg: dict) -> tuple[dict, dict, str | None]:
+    cfg = cfg or {}
+    defaults_cfg = cfg.get("defaults", {}) or {}
+    inicio_cfg = cfg.get("inicio_rapido", {}) or {}
+    limits_cfg = cfg.get("limits", {}) or {}
+
+    quick_curso_id = _resolve_quick_curso_id(defaults_cfg.get("curso"))
+    quick_filters = _merge_filtros(defaults_cfg, inicio_cfg.get("override_filtros"))
+
+    frontend_config = {
+        "defaults": {
+            "modo": defaults_cfg.get("modo", "PROVA"),
+            "dificuldade": defaults_cfg.get("dificuldade", ""),
+            "com_imagem": bool(defaults_cfg.get("com_imagem", False)),
+            "so_placas": bool(defaults_cfg.get("so_placas", False)),
+            "qtd": defaults_cfg.get("qtd", 10),
+        },
+        "inicio_rapido": {
+            "habilitado": bool(inicio_cfg.get("habilitado", True)),
+            "label": inicio_cfg.get("label", "InÇðcio rÇ­pido"),
+            "hint": inicio_cfg.get("hint", ""),
+            "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
+            "override_filtros": quick_filters,
+        },
+        "ui": {"messages": (cfg.get("ui", {}) or {}).get("messages", {})},
+        "limits": {
+            "qtd_min": limits_cfg.get("qtd_min", 1),
+            "qtd_max": limits_cfg.get("qtd_max", 50),
+            "modes": limits_cfg.get("modes", ["PROVA", "ESTUDO"]),
+        },
+        "quick_curso_id": str(quick_curso_id or ""),
+    }
+
+    return frontend_config, quick_filters, quick_curso_id
+
+
 def _now_iso() -> str:
     return timezone.now().isoformat()
 
@@ -79,6 +115,27 @@ def _parse_ts(value: str | None):
     if dt and timezone.is_naive(dt):
         dt = timezone.make_aware(dt, timezone.get_current_timezone())
     return dt
+
+
+@require_http_methods(["GET"])
+def simulado_inicio(request: HttpRequest) -> HttpResponse:
+    cfg = get_simulado_config()
+    frontend_config, quick_filters, quick_curso_id = _build_frontend_config(cfg)
+
+    # limpa sessao anterior para evitar retomar simulados ao entrar na tela inicial
+    _clear_state(request)
+
+    return render(
+        request,
+        "simulado/inicio.html",
+        {
+            "inicio_rapido": frontend_config["inicio_rapido"],
+            "quick_filters": quick_filters,
+            "quick_curso_id": quick_curso_id,
+            "simulado_limits": frontend_config["limits"],
+            "simulado_defaults": frontend_config["defaults"],
+        },
+    )
 
 
 @require_http_methods(["GET"])
@@ -170,7 +227,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     modulo_id = (request.POST.get("modulo_id") or "").strip()
 
     if not curso_id:
-        return redirect(reverse("simulado:config"))
+        return redirect(reverse("simulado:inicio"))
 
     # Quantidade
     try:
@@ -261,7 +318,7 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
 
     state = _get_state(request)
     if not state or not state.get("question_ids"):
-        return redirect(reverse("simulado:config"))
+        return redirect(reverse("simulado:inicio"))
 
     idx = int(state.get("index", 0))
     qids = state["question_ids"]
@@ -310,7 +367,7 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
 def simulado_responder(request: HttpRequest) -> HttpResponse:
     state = _get_state(request)
     if not state or not state.get("question_ids"):
-        return redirect(reverse("simulado:config"))
+        return redirect(reverse("simulado:inicio"))
 
     idx = int(state.get("index", 0))
     qids = state["question_ids"]
@@ -394,7 +451,7 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
 def simulado_resultado(request: HttpRequest) -> HttpResponse:
     state = _get_state(request)
     if not state or not state.get("question_ids"):
-        return redirect(reverse("simulado:config"))
+        return redirect(reverse("simulado:inicio"))
 
     qids = state["question_ids"]
     answers = state.get("answers", {})
@@ -459,7 +516,7 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         # botão "Novo simulado"
         _clear_state(request)
-        return redirect(reverse("simulado:config"))
+        return redirect(reverse("simulado:inicio"))
 
     return render(
         request,

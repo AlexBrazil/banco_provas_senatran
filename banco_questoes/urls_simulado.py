@@ -4,7 +4,8 @@ from . import views_simulado
 app_name = "simulado"
 
 urlpatterns = [
-    path("", views_simulado.simulado_config, name="config"),
+    path("", views_simulado.simulado_inicio, name="inicio"),
+    path("config/", views_simulado.simulado_config, name="config"),
     path("iniciar/", views_simulado.simulado_iniciar, name="iniciar"),
     path("questao/", views_simulado.simulado_questao, name="questao"),
     path("responder/", views_simulado.simulado_responder, name="responder"),

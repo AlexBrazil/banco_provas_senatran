@@ -1,0 +1,223 @@
+body.inicio-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: radial-gradient(1200px 720px at 18% 12%, rgba(43,108,255,0.18), transparent 60%),
+    radial-gradient(880px 520px at 84% 0%, rgba(46,204,113,0.16), transparent 60%),
+    #0b1220;
+  color: #e9eefc;
+}
+
+.inicio-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 42px 18px 56px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+}
+
+.inicio-hero {
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.36);
+}
+
+.inicio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(43,108,255,0.18);
+  color: #cbd5f5;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+}
+
+.inicio-title {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 3vw, 34px);
+  letter-spacing: -0.02em;
+}
+
+.inicio-subtitle {
+  margin: 0 0 18px;
+  color: #a9b3cf;
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.inicio-actions-inline {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inicio-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: stretch;
+}
+
+.inicio-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 20px 18px 18px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+}
+
+.inicio-card--primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.inicio-card--primary::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  background: radial-gradient(320px 240px at 88% 0%, rgba(43,108,255,0.18), transparent 55%);
+  pointer-events: none;
+}
+
+.inicio-card--secondary {
+  background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+
+.inicio-card-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.inicio-card-text {
+  margin: 0 0 12px;
+  color: #b8c2dc;
+  line-height: 1.5;
+}
+
+.inicio-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.inicio-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: #e9eefc;
+  border: 1px solid rgba(255,255,255,0.16);
+  font-size: 13px;
+}
+
+.inicio-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #2b6cff;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.inicio-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(43,108,255,0.35);
+}
+
+.inicio-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.inicio-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.inicio-btn--primary {
+  background: linear-gradient(120deg, #2b6cff, #3fa9f5);
+}
+
+.inicio-btn--outline {
+  background: transparent;
+  border-color: rgba(255,255,255,0.25);
+  color: #e9eefc;
+}
+
+.inicio-btn--ghost {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+  color: #e9eefc;
+}
+
+.inicio-hint {
+  margin: 8px 0 0;
+  color: #b8c2dc;
+  font-size: 13px;
+}
+
+.inicio-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+  color: #cbd5f5;
+}
+
+.inicio-list li {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 14px;
+}
+
+.inicio-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.inicio-label {
+  font-weight: 600;
+  color: #e9eefc;
+}
+
+.inicio-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 14px 0;
+}
+
+@media (max-width: 768px) {
+  .inicio-layout {
+    grid-template-columns: 1fr;
+    padding: 24px 12px 36px;
+  }
+
+  .inicio-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inicio-title {
+    font-size: 24px;
+  }
+}

@@ -66,18 +66,6 @@
     return SIMCFG.defaults || DEFAULT_SIMCFG.defaults;
   }
 
-  function getQuickFilters() {
-    const base = getDefaults();
-    const override = (SIMCFG.inicio_rapido && SIMCFG.inicio_rapido.override_filtros) || {};
-    return {
-      modo: override.modo || base.modo || "PROVA",
-      dificuldade: override.dificuldade || base.dificuldade || "",
-      com_imagem: Boolean(override.com_imagem ?? base.com_imagem ?? false),
-      so_placas: Boolean(override.so_placas ?? base.so_placas ?? false),
-      qtd: Number(override.qtd ?? base.qtd ?? 10),
-    };
-  }
-
   const curso = $("#curso_id");
   const modulo = $("#modulo_id");
   const modo = $("#modo");
@@ -88,7 +76,6 @@
 
   const btnIniciar = $("#btn-iniciar");
   const btnLimpar = $("#btn-limpar");
-  const btnInicioRapido = $("#btn-inicio-rapido");
 
   const lockMsg = getMsg(
     "selecione_curso_primeiro",
@@ -329,52 +316,4 @@
   resetStatsUI();
   setHint(getMsg("selecione_curso", "Selecione um curso para ver as estatísticas."));
 
-  if (btnInicioRapido) {
-    const quickCursoId = btnInicioRapido.dataset.cursoId || SIMCFG.quick_curso_id || "";
-    const quickFilters = getQuickFilters();
-    if (!quickCursoId) {
-      setEnabled(btnInicioRapido, false);
-    } else {
-      btnInicioRapido.addEventListener("click", async () => {
-        try {
-          clearError();
-          curso.value = quickCursoId;
-          modulo.value = "";
-          dificuldade.value = quickFilters.dificuldade || "";
-          if (modo) modo.value = quickFilters.modo || "PROVA";
-          comImagem.checked = Boolean(quickFilters.com_imagem);
-          soPlacas.checked = Boolean(quickFilters.so_placas);
-          const minQ = Number(limits.qtd_min || 1);
-          const maxQ = Number(limits.qtd_max || 50);
-          const valQ = Math.min(Math.max(Number(quickFilters.qtd || minQ), minQ), maxQ);
-          qtd.value = String(valQ);
-
-          setEnabled(modulo, true);
-          setEnabled(dificuldade, true);
-          setEnabled(qtd, true);
-          setEnabled(comImagem, true);
-          setEnabled(soPlacas, true);
-          setEnabled(btnLimpar, true);
-          setEnabled(btnIniciar, true);
-          if (modo) setEnabled(modo, true);
-          applyLockState(false);
-
-          try {
-            await loadModulos(quickCursoId);
-          } catch (e) {
-            /* ignore */
-          }
-          try {
-            await refreshStats();
-          } catch (e) {
-            /* ignore */
-          }
-
-          document.getElementById("simulado-form").submit();
-        } catch (e) {
-          showError(e.message);
-        }
-      });
-    }
-  }
 })();

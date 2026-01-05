@@ -1,0 +1,100 @@
+{% load static %}
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Simulado Digital</title>
+  <link rel="stylesheet" href="{% static 'simulado/inicio.css' %}">
+</head>
+<body class="inicio-body">
+  <main class="inicio-layout">
+    <section class="inicio-hero">
+      <p class="inicio-badge">Simulado digital</p>
+      <h1 class="inicio-title">Escolha como começar</h1>
+      <p class="inicio-subtitle">
+        Você pode iniciar direto com o pacote padrão ou abrir a tela de filtros para montar o treino antes de começar.
+      </p>
+      <div class="inicio-actions-inline">
+        <a href="{% url 'simulado:config' %}" class="inicio-btn inicio-btn--ghost">Início com filtros</a>
+      </div>
+    </section>
+
+    <section class="inicio-grid">
+      <form method="post" action="{% url 'simulado:iniciar' %}" class="inicio-card inicio-card--primary">
+        {% csrf_token %}
+        <h2 class="inicio-card-title">{{ inicio_rapido.label|default:"Início rápido" }}</h2>
+        <p class="inicio-card-text">
+          {{ inicio_rapido.hint|default:"Usa o curso e os filtros padrão definidos na configuração." }}
+        </p>
+
+        <div class="inicio-meta">
+          <span class="inicio-pill">Modo {{ quick_filters.modo|default:"PROVA" }}</span>
+          <span class="inicio-pill">{{ quick_filters.qtd|default:10 }} questões</span>
+          {% if quick_filters.dificuldade %}
+            <span class="inicio-pill">Dificuldade {{ quick_filters.dificuldade }}</span>
+          {% else %}
+            <span class="inicio-pill">Dificuldade mista</span>
+          {% endif %}
+          {% if quick_filters.com_imagem %}<span class="inicio-pill">Só com imagem</span>{% endif %}
+          {% if quick_filters.so_placas %}<span class="inicio-pill">Só placas</span>{% endif %}
+        </div>
+
+        <input type="hidden" name="curso_id" value="{{ quick_curso_id|default_if_none:'' }}">
+        <input type="hidden" name="modulo_id" value="">
+        <input type="hidden" name="modo" value="{{ quick_filters.modo|default:'PROVA' }}">
+        <input type="hidden" name="dificuldade" value="{{ quick_filters.dificuldade|default:'' }}">
+        <input type="hidden" name="com_imagem" value="{{ quick_filters.com_imagem|yesno:'1,0' }}">
+        <input type="hidden" name="so_placas" value="{{ quick_filters.so_placas|yesno:'1,0' }}">
+        <input type="hidden" name="qtd" value="{{ quick_filters.qtd|default:10 }}">
+
+        <button
+          type="submit"
+          class="inicio-btn inicio-btn--primary"
+          {% if not quick_curso_id or not inicio_rapido.habilitado %}
+            disabled
+            title="{{ inicio_rapido.tooltip|default:'Curso padrão não encontrado' }}"
+          {% endif %}
+        >
+          {{ inicio_rapido.label|default:"Início rápido" }}
+        </button>
+
+        <p class="inicio-hint">
+          {% if not quick_curso_id %}
+            Curso padrão não encontrado. Ajuste o config do simulado para habilitar.
+          {% else %}
+            Inicia imediatamente usando as preferências padrão.
+          {% endif %}
+        </p>
+      </form>
+
+      <div class="inicio-card inicio-card--secondary">
+        <h2 class="inicio-card-title">Início com filtros</h2>
+        <p class="inicio-card-text">
+          Monte o simulado escolhendo curso, módulo, quantidade e demais filtros antes de começar.
+        </p>
+        <div class="inicio-card-actions">
+          <a href="{% url 'simulado:config' %}" class="inicio-btn inicio-btn--outline">Abrir configuração</a>
+        </div>
+        <div class="inicio-divider"></div>
+        <ul class="inicio-list">
+          <li>Ver disponibilidade e estatísticas por dificuldade.</li>
+          <li>Selecionar modo Prova ou Estudo.</li>
+          <li>Filtrar por questões com imagem ou só placas.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+  </script>
+</body>
+</html>
