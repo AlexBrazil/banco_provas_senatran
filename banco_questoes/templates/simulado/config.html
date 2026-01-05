@@ -8,9 +8,10 @@
 
     <!-- CSS do simulado -->
     <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+    <link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
 </head>
 
-<body class="simulado-container">
+<body class="simulado-container simulado-container--center">
     <div class="simulado-card">
         <div class="simulado-header">
             <div>
@@ -193,6 +194,7 @@
         });
       })();
     </script>
+    <div class="scroll-hint__sentinel" aria-hidden="true"></div>
     <div vw class="enabled">
       <div vw-access-button class="active"></div>
       <div vw-plugin-wrapper>
@@ -203,5 +205,6 @@
     <script>
       new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
+    <script src="{% static 'simulado/scroll-hint.js' %}"></script>
 </body>
 </html>

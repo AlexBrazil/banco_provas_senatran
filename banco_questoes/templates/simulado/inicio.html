@@ -6,6 +6,7 @@
   <meta charset="utf-8">
   <title>Simulado Digital</title>
   <link rel="stylesheet" href="{% static 'simulado/inicio.css' %}">
+  <link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
 </head>
 <body class="inicio-body">
   <main class="inicio-layout">
@@ -83,6 +84,7 @@
     </section>
   </main>
 
+  <div class="scroll-hint__sentinel" aria-hidden="true"></div>
   <div vw class="enabled">
     <div vw-access-button class="active"></div>
     <div vw-plugin-wrapper>
@@ -93,5 +95,6 @@
   <script>
     new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
+  <script src="{% static 'simulado/scroll-hint.js' %}"></script>
 </body>
 </html>

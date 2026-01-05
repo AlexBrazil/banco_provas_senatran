@@ -148,9 +148,15 @@ label{
   margin: 0;
   padding: 32px 16px 40px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.simulado-container--center {
+  justify-content: center;
+  align-items: center;
 }
 
 .simulado-questao {

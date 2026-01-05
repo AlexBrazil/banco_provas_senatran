@@ -1,6 +1,7 @@
 {% load static %}
 
 <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+<link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
 
 <div class="simulado-container simulado-questao">
 
@@ -218,3 +219,5 @@
 <script>
   new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
+<div class="scroll-hint__sentinel" aria-hidden="true"></div>
+<script src="{% static 'simulado/scroll-hint.js' %}"></script>

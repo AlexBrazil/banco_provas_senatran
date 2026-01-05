@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <title>Resultado do Simulado</title>
   <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
 </head>
 <body class="simulado-container simulado-questao">
   <div class="simulado-card">
@@ -72,6 +73,7 @@
       <button type="submit" class="btn-simulado">Novo simulado</button>
     </form>
   </div>
+  <div class="scroll-hint__sentinel" aria-hidden="true"></div>
   <script>
     (() => {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -116,5 +118,6 @@
   <script>
     new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
+  <script src="{% static 'simulado/scroll-hint.js' %}"></script>
 </body>
 </html>
