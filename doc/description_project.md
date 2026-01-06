@@ -1,54 +1,48 @@
-# Descrição Geral do Projeto
+# Descricao Geral do Projeto
 
-Aqui vai uma descrição bem completa, organizada por visão geral, estrutura e detalhes de cada parte relevante.
+Resumo completo do app, cobrindo visao geral, estrutura, rotas, front-end e importacao de dados.
 
 ---
 
 ## O que o projeto faz
 
-- App **Django 6** (“Simulado Digital - Banco de Questões”) para importar o **PDF do Banco SENATRAN 2025**, mapear cursos/módulos e rodar **simulados na web** com sessão, contagem de acertos e revisão simples.
-- Banco obrigatório: **PostgreSQL** (variáveis no `.env`).
-- Estáticos incluem **centenas de imagens de placas** e um **CSS customizado** para as telas do simulado.
+- App **Django 6** para rodar **simulados web** com base no Banco SENATRAN 2025: escolhe curso/modulo/filtros, sorteia questoes, registra respostas em sessao e mostra resultado/revisao.
+- Usa **PostgreSQL** (variaveis no `.env`) como banco obrigatorio.
+- Estaticos incluem **CSS/JS custom** e **imagens de placas**.
 
 ---
 
-## Estrutura de pastas (nível principal)
+## Estrutura de pastas (nivel principal)
 
 - `manage.py`: entrypoint Django.
 - `config/`: projeto Django (settings, URLs, ASGI/WSGI).
 - `banco_questoes/`: app principal (modelos, views do simulado, admin, importadores, management commands, templates).
-- `static/`: CSS do simulado e imagens de placas.
-- `config_simulado.json`: defaults/textos do simulado (curso padrão, filtros, limites, hint/label do início rápido).
-- `.env`, `.env.example`, `.editorconfig`, `.gitignore`, `README.md`.
+- `static/`: CSS/JS do simulado (`static/simulado/`) e imagens de placas (`static/placas/`).
+- `config_simulado.json`: defaults/textos do simulado (curso padrao, filtros, limites, labels/hints).
+- Arquivos de suporte: `.env`, `.env.example`, `.editorconfig`, `.gitattributes`, `.gitignore`, `README.md`.
+- `doc/`: documentacao auxiliar.
 
 ---
 
-## Configuração e infraestrutura
+## Configuracao e infraestrutura
 
-- **settings.py**
-  - Carrega `.env` com `python-dotenv`.
-  - Exige `DJANGO_SECRET_KEY` e credenciais `DB_*`.
-  - `DEBUG` via `DJANGO_DEBUG`.
-  - `LANGUAGE_CODE` / `TIME_ZONE` default: `pt-BR` / `America/Sao_Paulo`.
-  - Templates em `BASE_DIR/templates` + diretórios dos apps.
-  - Estáticos em `BASE_DIR/static`.
-  - `INSTALLED_APPS` inclui o app `banco_questoes`.
+- **config/settings.py**
+  - Carrega `.env` via `python-dotenv`.
+  - Exige `DJANGO_SECRET_KEY`, `DB_*` (PostgreSQL), `DJANGO_DEBUG`.
+  - `LANGUAGE_CODE` / `TIME_ZONE`: `pt-BR` / `America/Sao_Paulo`.
+  - Templates: `BASE_DIR/templates` + dirs dos apps.
+  - Estaticos: `BASE_DIR/static`.
+  - `INSTALLED_APPS` inclui `banco_questoes`.
 
-- **urls.py**
-  - Rota de admin e `include` do namespace `simulado`.
+- **config/urls.py**
+  - Admin (`/admin/`) e include do namespace `simulado` em `/simulado/`.
 
-- **asgi.py / wsgi.py**
-  - Entrypoints padrão.
-
-- **.env.example**
-  - Chaves obrigatórias (segredo Django, debug, PostgreSQL).
-
-- **config_simulado.json / banco_questoes/simulado_config.py**
-  - JSON de defaults do simulado (curso padrão por id/slug/nome, modo/dificuldade, filtros, limites min/max, labels/hint do início rápido).
-  - Loader cacheado em `get_simulado_config()` com fallback para defaults internos quando o arquivo está ausente ou inválido.
+- **config_simulado.json** / **banco_questoes/simulado_config.py**
+  - JSON com defaults (curso padrao por id/slug/nome, modo/dificuldade, filtros, limites min/max, labels/hint do inicio rapido e mensagens UI).
+  - Loader cacheado em `get_simulado_config()` com merge profundo e fallback para defaults internos se arquivo faltar ou estiver invalido.
 
 - **README.md**
-  - Passos de setup (migrar, seed opcional e `runserver`).
+  - Passos de setup: instalar deps, configurar Postgres, `migrate`, `seed_modulos_senatran2025` (opcional) e `runserver`.
 
 ---
 
@@ -56,184 +50,89 @@ Aqui vai uma descrição bem completa, organizada por visão geral, estrutura e 
 
 ### models.py
 
-- **Curso**
-  - UUID, nome/slug únicos, ativo.
-
-- **CursoModulo**
-  - Ordem, nome, categoria `CONTEUDO` / `SIMULADO`,
-  - Faixa de páginas,
-  - Ativo,
-  - Constraints de ordem e nome por curso.
-
-- **Documento**
-  - Título/ano,
-  - Hash e nome de arquivo opcionais,
-  - Hash único quando preenchido.
-
-- **Questao**
-  - Curso, módulo, documento,
-  - Número por módulo,
-  - Dificuldade,
-  - Enunciado,
-  - Comentário,
-  - Código de placa,
-  - Nome do arquivo da imagem,
-  - Páginas de origem,
-  - `raw_block`,
-  - `import_hash` único quando presente.
-
-- **Alternativa**
-  - Texto,
-  - Ordem,
-  - Flag correta,
-  - Garante **exatamente uma alternativa correta** por questão.
+- **Curso**: UUID, nome/slug unicos, ativo.
+- **CursoModulo**: ordem, nome, categoria (`CONTEUDO`/`SIMULADO`), faixa de paginas, ativo; constraints de ordem/nome por curso.
+- **Documento**: titulo/ano, hash/nome de arquivo opcionais, hash unico quando presente.
+- **Questao**: curso, modulo, documento, numero por modulo, dificuldade, enunciado, comentario, codigo de placa, arquivo de imagem, paginas de origem, `raw_block`, `import_hash` unico quando presente.
+- **Alternativa**: texto, ordem, flag correta; garante **exatamente uma alternativa correta** por questao.
 
 ### admin.py
-
-- Registra os modelos com listagens, filtros e buscas básicas.
+- Registra os modelos com listagem/filtros/busca basicos.
 
 ### migrations
-
-- **0001_initial.py**
-  - Cria tabelas, índices e constraints descritas acima.
+- `0001_initial.py`: cria tabelas, indices e constraints.
 
 ---
 
 ## Views do simulado e URLs
 
-### urls_simulado.py
+### banco_questoes/urls_simulado.py (namespace `simulado`, montado em `/simulado/`)
+- `""` → `simulado_inicio` (tela inicial com escolha de inicio rapido ou com filtros).
+- `"config/"` → `simulado_config` (form de filtros).
+- `"iniciar/"` → `simulado_iniciar` (POST que sorteia questoes e cria sessao).
+- `"questao/"` → `simulado_questao`.
+- `"responder/"` → `simulado_responder` (POST).
+- `"resultado/"` → `simulado_resultado` (GET/POST).
+- `"api/modulos/"` → `api_modulos_por_curso` (AJAX).
+- `"api/stats/"` → `api_stats` (AJAX).
 
-Namespace `simulado` com rotas:
-
-- `""` → `simulado_config`
-- `iniciar/` → `simulado_iniciar`
-- `questao/` → `simulado_questao`
-- `responder/` → `simulado_responder`
-- `resultado/` → `simulado_resultado`
-- `api/modulos/` → `api_modulos_por_curso` (AJAX)
-
-### views_simulado.py
-
-Controla todo o fluxo do simulador usando sessão `simulado_state_v1`.
-
-- Helpers: `_get_state`, `_set_state`, `_clear_state`
-- **simulado_config (GET)**  
-  Carrega `config_simulado.json` via `get_simulado_config()`, resolve curso padrão (id/slug/nome), mescla defaults e overrides do início rápido, injeta limites/mensagens e JSON para o front.
-- **simulado_iniciar (POST)**  
-  Valida curso/módulo, aplica limites `qtd_min/qtd_max` e modos permitidos do config, monta queryset de `Questao`, faz `random.sample` dos IDs, grava estado na sessão e redireciona para a primeira questão.
-- **simulado_questao (GET)**  
-  Lê estado, carrega questão atual com `select_related` e alternativas embaralhadas; renderiza tela; ao fim do fluxo redireciona para resultado.
-- **simulado_responder (POST)**  
-  Valida alternativa, marca acerto/erro na sessão, avança índice e redireciona para próxima ou resultado.
-- **simulado_resultado (GET/POST)**  
-  Calcula acertos/percentual, prepara lista de revisão (questão + status respondida/acertou).  
-  `POST` limpa estado e volta para configuração.
-- **api_modulos_por_curso (GET JSON)**  
-  Recebe `curso_id` e retorna módulos ativos (`id`, `ordem`, `nome`) ou erro 400.
-### views.py
-
-- Placeholder vazio.
+### banco_questoes/views_simulado.py
+- Usa sessao `simulado_state_v1` com helpers `_get_state`, `_set_state`, `_clear_state`.
+- `_build_frontend_config`: merge de defaults/hints/limites e resolve curso padrao (id/slug/nome) para inicio rapido.
+- **simulado_inicio (GET)**: limpa sessao ao entrar, mostra cards de "inicio rapido" (POST direto para iniciar) e "inicio com filtros" (link para config) usando defaults do JSON.
+- **simulado_config (GET)**: carrega cursos ativos, injeta JSON de config (defaults/limites/mensagens) e dados de inicio rapido para o front.
+- **simulado_iniciar (POST)**: valida curso/modulo, aplica limites `qtd_min/qtd_max` e modos permitidos, filtra questoes por dificuldade/imagem/placas, sorteia IDs (`random.sample`), grava estado (modo, filtros, auditoria de tempo) e redireciona para `questao`. Se curso ausente → volta para `inicio`; se filtro sem questoes → renderiza `erro.html`.
+- **simulado_questao (GET)**: exige sessao; carrega questao atual (`select_related` + alternativas embaralhadas), mostra contador de acertos/erros. Se acabou → `resultado`.
+- **simulado_responder (POST)**: valida alternativa, marca acerto/erro na sessao, avanca indice. No modo ESTUDO renderiza feedback imediato; senao redireciona para proxima/resultado. Sessao ausente → `inicio`.
+- **simulado_resultado (GET/POST)**: calcula acertos/percentual/tempos, monta revisao com alternativas; `POST` limpa sessao e volta para `inicio`. Sessao ausente → `inicio`.
+- **api_modulos_por_curso (GET JSON)**: recebe `curso_id`, retorna modulos ativos (`id`, `ordem`, `nome`) ou 400.
+- **api_stats (GET JSON)**: contagens por filtro atual (total, com imagem, placas, por dificuldade) para preencher painel da config.
 
 ---
 
-## Templates do simulado
+## Templates e UI
 
-- **config.html**
-  - Formulário de seleção de curso, módulo (carregado via `fetch` na API), filtros e quantidade.
-  - Recebe do backend o JSON de config (`<script id="simulado-config">`) com defaults, limites, mensagens e curso do início rápido.
-  - Botão de início rápido usa filtros/label/hint do config e desabilita se não houver curso padrão ou se estiver desativado.
-  - Painel de stats e mensagens de status controlados pelo JS.
-- **questao.html**
-  - Exibe enunciado, módulo, imagem opcional (`static/placas/<arquivo>`),
-  - Alternativas em radio,
-  - Botão de submit.
-
-- **resultado.html**
-  - Mostra acertos / total / percentual,
-  - Resumo textual de revisão,
-  - Botão “Novo simulado” (POST limpa sessão),
-  - Link de retorno.
-
-- **erro.html**
-  - Mensagem simples de erro + link de retorno.
+- **simulado/inicio.html**: landing antes da config; mostra card de inicio rapido (POST direto com defaults/overrides) e card “inicio com filtros” (link para config). Limpa sessao ao entrar. Usa `inicio.css` e `scroll-hint.css/js`.
+- **simulado/config.html**: formulario de curso/modulo/modo/dificuldade/filtros/quantidade, painel de stats via AJAX, link para voltar ao inicio. Card centralizado na viewport. Injeta JSON de config em `<script id="simulado-config">`.
+- **simulado/questao.html**: enunciado + alternativas (radio), imagem opcional de `static/placas/`, feedback opcional no modo ESTUDO, stats de acertos/erros.
+- **simulado/resultado.html**: percentuais, contagens, revisao de questoes/alternativas e botao “Novo simulado” (POST limpa sessao e volta ao inicio).
+- **simulado/erro.html**: mensagem simples + link para `inicio`.
+- **simulado/config copy.html**: versao antiga guardada como referencia.
 
 ---
 
-## Front-end e arquivos estáticos
+## Front-end e arquivos estaticos
 
-- **simulado.css**
-  - Tema escuro com gradiente,
-  - Cards,
-  - Estilos para alternativas e imagem de questão,
-  - Comentários sobre imagem 70% menor.
-  - ⚠️ Atenção: templates referenciam  
-    `{% static 'simulado.css' %}` (case-sensitive em produção Linux),  
-    enquanto o arquivo está em `static/Simulado/`.  
-    Alinhar nome/pasta se necessário.
-
-- **simulado.js**
-  - Lê o JSON injetado no `<script id="simulado-config">` para defaults, limites, mensagens e curso padrão.
-  - Reseta filtros com esses valores, aplica min/max configuráveis e usa mensagens do config para hints/erros.
-  - Botão de início rápido aplica overrides de filtros/label/hint e desabilita sem curso padrão ou se desativado no config.
-- **\*.png**
-  - Biblioteca de imagens de placas (centenas),
-  - Usadas quando `Questao.imagem_arquivo` está preenchido.
+- `static/simulado/simulado.css`: tema escuro, layout dos cards/form/stats/questoes; classe `simulado-container--center` para centralizar card; responsividade de imagens de questao por variaveis CSS.
+- `static/simulado/simulado.js`: logica do config (carrega JSON injetado, reseta filtros com defaults, min/max de qtd, bloqueio de campos sem curso, AJAX de modulos e stats). Nao tem mais handler de inicio rapido (migrado para a landing).
+- `static/simulado/inicio.css`: estilos da landing (hero + cards de inicio rapido/filtros).
+- `static/simulado/scroll-hint.css` / `scroll-hint.js`: seta flutuante no canto inferior direito que aparece se houver overflow vertical; clique faz scroll suave ate o sentinel no final da pagina.
+- `static/simulado/simulado copy*.js`: copias antigas.
+- `static/placas/`: biblioteca de imagens usadas quando `Questao.imagem_arquivo` esta preenchido.
 
 ---
 
-## Importação SENATRAN 2025
+## Importacao SENATRAN 2025
 
-- **extractor.py**
-  - Usa **PyMuPDF (fitz)** para abrir PDF e extrair texto por página em `PageText`.
+### banco_questoes/importers/senatran2025
+- **extractor.py**: usa PyMuPDF (`fitz`) para extrair texto por pagina em `PageText`.
+- **normalizer.py**: limpa rodapes, normaliza quebras de linha, remove vazios.
+- **parser.py**: regex/mquitetas para identificar inicio de questao, dificuldade, codigo de placa, alternativas correta/incorretas, comentario; maquina de estados monta `ParsedQuestion`; normaliza dificuldade e marca correta.
+- **persist.py / report.py**: ganchos vazios.
+- **docs/**: documentos de apoio (se houver).
 
-- **normalizer.py**
-  - Limpa rodapés conhecidos,
-  - Normaliza quebras de linha,
-  - Remove vazios.
-
-- **parser.py**
-  - Regex específicas do PDF,
-  - Detecta início de questão, dificuldade, código de placa,
-  - Alternativa correta, comentário e incorretas,
-  - Máquina de estados acumula linhas em `ParsedQuestion`,
-  - Normaliza dificuldade e marca alternativa correta.
-
-- **persist.py / report.py**
-  - Vazios (ganchos futuros).
-
-- **Banco_SENATRAN.pdf**
-  - PDF de referência.
-
-- **import_senatran_pdf.py**
-  - Comando:
-    ```bash
-    python manage.py import_senatran_pdf <pdf> --curso --documento \
-      [--ano --pages A-B --dry-run --strict-modulo --max-errors]
-    ```
-  - Resolve curso/documento,
-  - Mapeia página → módulo via faixas (`CursoModulo.pagina_inicio/fim`),
-  - Executa extractor/normalizer/parser,
-  - Monta `import_hash`,
-  - Upsert de `Questao` e recriação de `Alternativa`,
-  - Contabiliza estatísticas e imprime resumo.
-
-- **seed_modulos_senatran2025.py**
-  - Cria/atualiza o curso **“Primeira Habilitação”**
-  - Oito módulos (4 conteúdo, 4 simulados),
-  - Com ordens e faixas de página.
+### Management commands
+- **import_senatran_pdf.py**  
+  `python manage.py import_senatran_pdf <pdf> --curso --documento [--ano --pages A-B --dry-run --strict-modulo --max-errors]`  
+  Resolve curso/documento, mapeia pagina→modulo via `CursoModulo.pagina_inicio/fim`, roda extractor/normalizer/parser, monta `import_hash`, upsert de `Questao` e recria `Alternativa`, imprime estatisticas.
+- **seed_modulos_senatran2025.py**  
+  Cria/atualiza curso “Primeira Habilitacao” com 8 modulos (conteudo e simulados) e faixas de paginas.
 
 ---
 
 ## Outros arquivos
 
-- **apps.py**
-  - `AppConfig` do app.
-
-- **tests.py**
-  - Stub vazio.
-
-- `__init__.py`
-  - Vazios.
-
-- `.venv/` e `__pycache__/`
-  - Artefatos locais (não relevantes ao código-fonte).
+- **apps.py**: `AppConfig` do app.
+- **tests.py**: stub vazio.
+- `__init__.py`: vazios.
+- `.venv/` e `__pycache__/`: artefatos locais (ignorar).
