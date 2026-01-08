@@ -23,12 +23,14 @@ Fornecer ao ChatGPT contexto completo para montar um plano detalhado de publicac
 - Servidor de codigo (manager01)
   - IP publico: 178.156.147.79
   - Rede privada: 10.0.0.2
+- Sistema operacional da VPS: Debian GNU/Linux 12 (bookworm)
+- PostgreSQL 16.11 ja instalado no servidor de banco e configurado para aceitar conexoes do servidor de codigo via rede privada (10.0.0.x)
 - Firewalls ja liberados com portas necessarias
 - Dominio: simulado.cnhdobrasil.net.br
 
 ## Estrutura do repositorio (raiz)
 - `manage.py` (entrypoint)
-- `config/` (settings, urls, wsgi, asgi)
+- `config/` (settings, urls, wsgi, asgi, local_settings.py)
 - `banco_questoes/` (app principal)
 - `static/` (css/js + imagens de placas)
 - `config_simulado.json` (defaults e textos do simulado)
@@ -45,9 +47,12 @@ Fornecer ao ChatGPT contexto completo para montar um plano detalhado de publicac
 ## Configuracao atual do Django (pontos relevantes)
 - `.env` carregado via `python-dotenv` (arquivo esperado na raiz do projeto).
 - `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` (default `*`).
+- `SECURE_SSL_REDIRECT` vem de `DJANGO_SECURE_SSL_REDIRECT` (default `0`).
+- `CSRF_TRUSTED_ORIGINS` vem de `DJANGO_CSRF_TRUSTED_ORIGINS` (lista por virgula).
 - Banco configurado com Postgres via `DB_*`.
-- `STATICFILES_DIRS = [BASE_DIR / "static"]`.
-- `STATIC_ROOT` esta comentado e precisa ser definido em producao se usar `collectstatic`.
+- `STATICFILES_DIRS` usa `BASE_DIR / "static"` quando existir.
+- `STATIC_ROOT` aponta para `BASE_DIR.parent / "shared" / "staticfiles"`.
+- `config/local_settings.py` e importado ao final do settings para overrides por ambiente (dev ja possui valores locais).
 
 ## Variaveis de ambiente (producao)
 Obrigatorias (ja usadas no codigo):
@@ -61,12 +66,12 @@ Obrigatorias (ja usadas no codigo):
 
 Recomendadas/auxiliares:
 - `DJANGO_ALLOWED_HOSTS` (ex: `simulado.cnhdobrasil.net.br`)
+- `DJANGO_CSRF_TRUSTED_ORIGINS` (ex: `https://simulado.cnhdobrasil.net.br`)
 - `DJANGO_LANGUAGE_CODE` (default `pt-br`)
 - `DJANGO_TIME_ZONE` (default `America/Sao_Paulo`)
 
-Requisito novo para producao:
+Requisito para producao:
 - `DJANGO_SECURE_SSL_REDIRECT=0` (SSL sera feito no Cloudflare)
-  - Observacao: o settings.py atual nao le essa variavel; pode ser necessario adicionar essa leitura no settings.
 
 Observacao sobre segredos:
 - Ao compartilhar .env de desenvolvimento, mascarar valores reais.
@@ -159,6 +164,10 @@ Exemplo em `/srv/simulado_digital/`:
 
 ## O que sera enviado ao ChatGPT junto desta descricao
 - Conteudo completo de `config/settings.py`.
+- Conteudo completo de `config/local_settings.py`.
 - Conteudo completo de `requirements.txt`.
 - `.env` de desenvolvimento (com segredos mascarados).
 - `.env` modelo para producao (incluindo `DJANGO_SECURE_SSL_REDIRECT=0`).
+
+
+
