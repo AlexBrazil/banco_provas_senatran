@@ -147,44 +147,12 @@ USE_TZ = True
 # Static files
 # -----------------------------------------------------------------------------
 STATIC_URL = "static/"
-
-# Em desenvolvimento, se BASE_DIR/static existir, ele é usado como diretório de
-# estáticos "do projeto".
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
-
-# Em produção, o collectstatic irá copiar tudo para STATIC_ROOT.
-# Pensando na estrutura da VPS:
-#   /srv/simulado_digital/app    -> BASE_DIR
-#   /srv/simulado_digital/shared -> BASE_DIR.parent / "shared"
-STATIC_ROOT = BASE_DIR.parent / "shared" / "staticfiles"
-
-
-# -----------------------------------------------------------------------------
-# Segurança / Proxy / Cloudflare
-# -----------------------------------------------------------------------------
-# Redirect para HTTPS controlado por env (Cloudflare faz o SSL)
-SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", "0")
-
-# CSRF_TRUSTED_ORIGINS pode vir do .env (separado por vírgula)
-_raw_csrf_origins = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
-if _raw_csrf_origins:
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _raw_csrf_origins.split(",") if origin.strip()]
-else:
-    CSRF_TRUSTED_ORIGINS = []
+# Em produção você pode usar:
+# STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # -----------------------------------------------------------------------------
 # Defaults
 # -----------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-# -----------------------------------------------------------------------------
-# local_settings.py (overrides por ambiente)
-# -----------------------------------------------------------------------------
-# Permite que cada servidor/ambiente faça overrides sem mexer neste arquivo
-try:
-    from .local_settings import *  # type: ignore[unused-ignore]
-except ImportError:
-    # Em ambientes sem local_settings.py (ex.: CI), segue apenas com as configs acima.
-    pass

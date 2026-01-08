@@ -1,0 +1,164 @@
+# Descricao do projeto para plano de deploy em VPS
+
+## Objetivo
+Fornecer ao ChatGPT contexto completo para montar um plano detalhado de publicacao do projeto em VPS com Nginx + Gunicorn, usando PostgreSQL remoto e deploy via repositorio bare + hook.
+
+## Visao geral do projeto
+- Aplicacao web em Django 6 para rodar simulados com questoes do banco SENATRAN 2025.
+- Usa sessao para guardar estado do simulado (questoes sorteadas, respostas, tempo, etc.).
+- Possui importador de PDF SENATRAN (PyMuPDF) para ingestao de questoes.
+- Estaticos incluem CSS/JS do front e imagens de placas em `static/placas/`.
+
+## Stack
+- Python + Django 6
+- Gunicorn (WSGI)
+- Nginx (proxy reverso e arquivos estaticos)
+- PostgreSQL (desenvolvimento ja usa Postgres, nao SQLite)
+- Cloudflare faz o SSL/HTTPS
+
+## Infraestrutura
+- Servidor de banco (bancodedados01)
+  - IP publico: 5.161.48.185
+  - Rede privada: 10.0.0.3
+- Servidor de codigo (manager01)
+  - IP publico: 178.156.147.79
+  - Rede privada: 10.0.0.2
+- Firewalls ja liberados com portas necessarias
+- Dominio: simulado.cnhdobrasil.net.br
+
+## Estrutura do repositorio (raiz)
+- `manage.py` (entrypoint)
+- `config/` (settings, urls, wsgi, asgi)
+- `banco_questoes/` (app principal)
+- `static/` (css/js + imagens de placas)
+- `config_simulado.json` (defaults e textos do simulado)
+- `.env` / `.env.example`
+
+## Apps e principais modulos
+- `banco_questoes/models.py`: Curso, CursoModulo, Documento, Questao, Alternativa.
+- `banco_questoes/views_simulado.py`: inicio/config/iniciar/questao/responder/resultado + APIs.
+- `banco_questoes/importers/senatran2025/`: extractor/normalizer/parser.
+- `banco_questoes/management/commands/`:
+  - `seed_modulos_senatran2025`
+  - `import_senatran_pdf`
+
+## Configuracao atual do Django (pontos relevantes)
+- `.env` carregado via `python-dotenv` (arquivo esperado na raiz do projeto).
+- `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` (default `*`).
+- Banco configurado com Postgres via `DB_*`.
+- `STATICFILES_DIRS = [BASE_DIR / "static"]`.
+- `STATIC_ROOT` esta comentado e precisa ser definido em producao se usar `collectstatic`.
+
+## Variaveis de ambiente (producao)
+Obrigatorias (ja usadas no codigo):
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_HOST`
+- `DB_PORT`
+
+Recomendadas/auxiliares:
+- `DJANGO_ALLOWED_HOSTS` (ex: `simulado.cnhdobrasil.net.br`)
+- `DJANGO_LANGUAGE_CODE` (default `pt-br`)
+- `DJANGO_TIME_ZONE` (default `America/Sao_Paulo`)
+
+Requisito novo para producao:
+- `DJANGO_SECURE_SSL_REDIRECT=0` (SSL sera feito no Cloudflare)
+  - Observacao: o settings.py atual nao le essa variavel; pode ser necessario adicionar essa leitura no settings.
+
+Observacao sobre segredos:
+- Ao compartilhar .env de desenvolvimento, mascarar valores reais.
+
+## Pacotes Python (requirements.txt atual)
+Usar os pacotes abaixo no servidor (idealmente via `pip install -r requirements.txt`):
+- annotated-types==0.7.0
+- asgiref==3.11.0
+- cachetools==6.2.4
+- certifi==2025.11.12
+- charset-normalizer==3.4.4
+- colorama==0.4.6
+- defusedxml==0.7.1
+- Django==6.0
+- fonttools==4.61.1
+- fpdf2==2.8.5
+- google-ai-generativelanguage==0.6.15
+- google-api-core==2.28.1
+- google-api-python-client==2.187.0
+- google-auth==2.45.0
+- google-auth-httplib2==0.3.0
+- google-generativeai==0.8.6
+- googleapis-common-protos==1.72.0
+- grpcio==1.76.0
+- grpcio-status==1.71.2
+- httplib2==0.31.0
+- idna==3.11
+- pillow==12.0.0
+- proto-plus==1.27.0
+- protobuf==5.29.5
+- psycopg==3.3.2
+- psycopg-binary==3.3.2
+- pyasn1==0.6.1
+- pyasn1_modules==0.4.2
+- pydantic==2.12.5
+- pydantic_core==2.41.5
+- PyMuPDF==1.26.7
+- pyparsing==3.3.1
+- python-dotenv==1.2.1
+- requests==2.32.5
+- rsa==4.9.1
+- sqlparse==0.5.4
+- tqdm==4.67.1
+- typing-inspection==0.4.2
+- typing_extensions==4.15.0
+- tzdata==2025.3
+- uritemplate==4.2.0
+- urllib3==2.6.2
+
+Notas:
+- Gunicorn nao esta no requirements.txt atual; incluir `gunicorn` para producao.
+- Existem `psycopg` e `psycopg-binary` juntos; em producao normalmente usa-se apenas um.
+
+## Versao do PostgreSQL
+- Desenvolvimento usa PostgreSQL 16.11.
+- Banco em producao deve ser compativel (PostgreSQL 16.x).
+
+## Estrutura de pastas sugerida na VPS (servidor de codigo)
+Exemplo em `/srv/simulado_digital/`:
+- `app/` -> clone do repo (codigo)
+- `venv/` -> virtualenv
+- `shared/` -> dados persistentes e runtime
+  - `.env`
+  - `config_simulado.json` (se quiser fora do repo)
+  - `staticfiles/` (saida do collectstatic)
+  - `media/` (uploads futuros)
+  - `logs/` (logs do gunicorn/app)
+  - `run/` (socket/pid do gunicorn)
+
+## Deploy via repositorio bare + hook
+- Criar repo bare em ex: `/srv/git/simulado_digital.git`.
+- Hook `post-receive` faz checkout para `/srv/simulado_digital/app`.
+- No hook, executar:
+  - ativar venv
+  - `pip install -r requirements.txt`
+  - `python manage.py migrate`
+  - `python manage.py collectstatic` (se configurado)
+  - restart do gunicorn (systemd)
+
+## Usuario de sistema
+- Criar usuario `simulado` sem privilegios de admin, com senha para login por terminal.
+- Permissoes minimas em `/srv/simulado_digital` e no repo bare.
+
+## Nginx + Gunicorn
+- Gunicorn usa `config.wsgi:application`.
+- Nginx serve:
+  - `/static/` -> `shared/staticfiles/`
+  - Proxy para socket do gunicorn em `shared/run/`.
+- Cloudflare faz SSL; Nginx pode escutar em 80/443 conforme politica local.
+
+## O que sera enviado ao ChatGPT junto desta descricao
+- Conteudo completo de `config/settings.py`.
+- Conteudo completo de `requirements.txt`.
+- `.env` de desenvolvimento (com segredos mascarados).
+- `.env` modelo para producao (incluindo `DJANGO_SECURE_SSL_REDIRECT=0`).
