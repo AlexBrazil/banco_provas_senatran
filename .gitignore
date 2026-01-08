@@ -3,3 +3,4 @@
 __pycache__/
 *.pyc
 local_settings.py
+senhas_credenciais.txt
