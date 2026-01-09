@@ -23,4 +23,4 @@ Chaves suportadas (todas obrigatorias):
 2. Configure o banco PostgreSQL conforme as variaveis acima.
 3. Execute migracoes: `python manage.py migrate`.
 4. (Opcional) Popule os modulos SENATRAN 2025: `python manage.py seed_modulos_senatran2025`.
-5. Suba o servidor: `python manage.py runserver`.
+5. Suba o servidor: `python manage.py runserver`..
