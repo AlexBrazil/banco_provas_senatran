@@ -782,13 +782,6 @@ label{
     height: 22px;
     margin-right: 6px;
   }
-
-  [vw],
-  [vw-access-button],
-  [vw-plugin-wrapper],
-  .vw-access-button {
-    display: none !important;
-  }
 }
 .is-hidden {
   display: none !important;

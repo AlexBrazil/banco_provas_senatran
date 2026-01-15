@@ -10,7 +10,6 @@ Resumo completo do app, cobrindo visao geral, estrutura, rotas, front-end, regra
 - Permite escolher curso/modulo/filtros, sorteia questoes, registra respostas em sessao e mostra resultado/revisao.
 - Banco obrigatorio: PostgreSQL (variaveis no `.env`).
 - Estaticos incluem CSS/JS do simulado e imagens de placas em `static/placas/`.
-- Inclui o plugin de acessibilidade VLibras nas telas principais.
 
 ---
 
@@ -142,7 +141,7 @@ Registra modelos com listagem, filtros e busca basica.
 - `simulado/resultado.html`: resumo, filtros usados e revisao.
 - `simulado/erro.html`: mensagem simples com link para inicio.
 - `simulado/base.html`: layout basico (nao utilizado nos templates atuais).
-- Todas as telas principais carregam VLibras e `scroll-hint`.
+- Todas as telas principais carregam `scroll-hint`.
 
 ---
 
@@ -167,7 +166,6 @@ Registra modelos com listagem, filtros e busca basica.
 
 ### Audio e acessibilidade
 - `config.html`, `questao.html` e `resultado.html` usam WebAudio para feedback sonoro.
-- VLibras e carregado via script externo em `inicio`, `config`, `questao` e `resultado`.
 
 ---
 
