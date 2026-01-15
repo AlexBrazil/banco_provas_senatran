@@ -243,6 +243,126 @@ label{
   }
 }
 
+@media (min-width: 641px) and (max-width: 800px) {
+  .simulado-questao .simulado-titulo {
+    font-size: 23px;
+  }
+
+  .simulado-questao .simulado-contagem {
+    font-size: 14px;
+  }
+
+  .simulado-questao .simulado-modulo {
+    font-size: 1.03rem;
+  }
+
+  .simulado-questao .simulado-enunciado {
+    font-size: 1.08rem;
+    line-height: 1.5;
+  }
+
+  .simulado-questao .simulado-enunciado-numero {
+    font-size: 0.98rem;
+  }
+
+  .simulado-questao .alternativa {
+    font-size: 1.04rem;
+  }
+
+  .simulado-questao .alternativa-texto {
+    line-height: 1.5;
+  }
+
+  .simulado-questao .btn-simulado {
+    font-size: 1.04rem;
+  }
+
+  .simulado-questao .feedback,
+  .simulado-questao .feedback-tip {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 960px) {
+  .simulado-questao .simulado-titulo {
+    font-size: 24px;
+  }
+
+  .simulado-questao .simulado-contagem {
+    font-size: 15px;
+  }
+
+  .simulado-questao .simulado-modulo {
+    font-size: 1.05rem;
+  }
+
+  .simulado-questao .simulado-enunciado {
+    font-size: 1.12rem;
+    line-height: 1.5;
+  }
+
+  .simulado-questao .simulado-enunciado-numero {
+    font-size: 1rem;
+  }
+
+  .simulado-questao .alternativa {
+    font-size: 1.07rem;
+  }
+
+  .simulado-questao .alternativa-texto {
+    line-height: 1.5;
+  }
+
+  .simulado-questao .btn-simulado {
+    font-size: 1.07rem;
+  }
+
+  .simulado-questao .feedback,
+  .simulado-questao .feedback-tip {
+    font-size: 1.02rem;
+  }
+}
+
+@media (min-width: 961px) and (max-width: 1080px) {
+  .simulado-questao .simulado-titulo {
+    font-size: 25px;
+  }
+
+  .simulado-questao .simulado-contagem {
+    font-size: 15px;
+  }
+
+  .simulado-questao .simulado-modulo {
+    font-size: 1.06rem;
+  }
+
+  .simulado-questao .simulado-enunciado {
+    font-size: 1.14rem;
+    line-height: 1.5;
+  }
+
+  .simulado-questao .simulado-enunciado-numero {
+    font-size: 1.02rem;
+  }
+
+  .simulado-questao .alternativa {
+    font-size: 1.1rem;
+  }
+
+  .simulado-questao .alternativa-texto {
+    line-height: 1.5;
+  }
+
+  .simulado-questao .btn-simulado {
+    font-size: 1.1rem;
+  }
+
+  .simulado-questao .feedback,
+  .simulado-questao .feedback-tip {
+    font-size: 1.03rem;
+  }
+}
+
 /* Título */
 .simulado-titulo {
   margin-bottom: 6px;
@@ -390,6 +510,15 @@ label{
 /* volta o layout padrão da tela de questão (itens em largura total) */
 .simulado-questao .simulado-form {
   align-items: stretch;
+}
+
+.simulado-questao .alternativas-list {
+  display: grid;
+  gap: 10px;
+}
+
+.simulado-questao .alternativas-list .alternativa {
+  margin: 0;
 }
 
 .simulado-form select:focus,
@@ -739,38 +868,107 @@ label{
     padding: 20px 12px 28px;
   }
 
+  .simulado-container.simulado-questao {
+    padding: 14px 10px 20px;
+    min-height: 100dvh;
+  }
+
   .simulado-questao {
-    gap: 10px;
+    gap: 8px;
   }
 
   .simulado-titulo {
+    font-size: 23px;
+  }
+
+  .simulado-questao .simulado-titulo {
     font-size: 22px;
+    margin-bottom: 4px;
   }
 
   .simulado-contagem {
-    font-size: 13px;
+    font-size: 14px;
+  }
+
+  .simulado-questao .simulado-contagem {
+    margin-bottom: 6px;
+  }
+
+  .simulado-questao .simulado-modulo {
+    font-size: 1rem;
+    margin-bottom: 10px;
   }
 
   .simulado-enunciado {
-    font-size: 1rem;
-    line-height: 1.45;
+    font-size: 1.08rem;
+    line-height: 1.5;
+  }
+
+  .simulado-questao .simulado-enunciado {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .simulado-questao .simulado-enunciado-numero {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    font-size: 0.98rem;
   }
 
   .questao-imagem {
     max-width: 100%;
   }
 
+  .simulado-questao .questao-imagem-questao-wrapper {
+    margin: 10px 0 8px;
+  }
+
+  .simulado-questao .questao-imagem-questao {
+    max-height: clamp(160px, 32vh, 260px);
+    max-height: clamp(160px, 32dvh, 260px);
+  }
+
+  .simulado-questao .simulado-form {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .simulado-questao .alternativas-list {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
   .alternativa {
     padding: 12px;
+  }
+
+  .simulado-questao .alternativa {
+    font-size: 1.0rem;
+    padding: 10px;
   }
 
   .alternativa-label {
     gap: 12px;
   }
 
+  .simulado-questao .alternativa-texto {
+    line-height: 1.5;
+  }
+
   .btn-simulado {
     width: 100%;
     max-width: 340px;
+  }
+
+  .simulado-questao .btn-simulado {
+    max-width: none;
+    font-size: 1.05rem;
   }
 
   .feedback {
@@ -781,6 +979,35 @@ label{
     width: 22px;
     height: 22px;
     margin-right: 6px;
+  }
+
+  .feedback,
+  .feedback-tip {
+    font-size: 1rem;
+  }
+
+  .simulado-title {
+    font-size: 30px;
+  }
+
+  .simulado-subtitle {
+    font-size: 16px;
+  }
+
+  .stats-label {
+    font-size: 1rem;
+  }
+
+  .stats-value {
+    font-size: 1.05rem;
+  }
+
+  .pill {
+    font-size: 14px;
+  }
+
+  .field-hint {
+    font-size: 0.95rem;
   }
 }
 .is-hidden {

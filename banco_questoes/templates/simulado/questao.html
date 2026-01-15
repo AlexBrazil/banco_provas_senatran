@@ -1,8 +1,15 @@
 {% load static %}
 
-<link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
-<link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
-
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Questao do Simulado</title>
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'simulado/scroll-hint.css' %}">
+</head>
+<body>
 <div class="simulado-container simulado-questao">
 
   {% with modo_atual=mode|default:"PROVA" %}
@@ -89,23 +96,25 @@
     <form method="post" action="{% url 'simulado:responder' %}" class="simulado-form">
       {% csrf_token %}
 
-      {% for a in alternativas %}
-        <div class="alternativa">
-          <label class="alternativa-label">
-            <input
-              type="radio"
-              name="alternativa_id"
-              value="{{ a.id }}"
-              required
-              class="alternativa-radio"
-            >
-            <span class="alternativa-texto">
-              <span class="alternativa-letra">{% cycle 'A)' 'B)' 'C)' 'D)' %}</span>
-              {{ a.texto }}
-            </span>
-          </label>
-        </div>
-      {% endfor %}
+      <div class="alternativas-list">
+        {% for a in alternativas %}
+          <div class="alternativa">
+            <label class="alternativa-label">
+              <input
+                type="radio"
+                name="alternativa_id"
+                value="{{ a.id }}"
+                required
+                class="alternativa-radio"
+              >
+              <span class="alternativa-texto">
+                <span class="alternativa-letra">{% cycle 'A)' 'B)' 'C)' 'D)' %}</span>
+                {{ a.texto }}
+              </span>
+            </label>
+          </div>
+        {% endfor %}
+      </div>
 
       <button type="submit" class="btn-simulado">
         Responder
@@ -211,3 +220,5 @@
 </script>
 <div class="scroll-hint__sentinel" aria-hidden="true"></div>
 <script src="{% static 'simulado/scroll-hint.js' %}"></script>
+</body>
+</html>
