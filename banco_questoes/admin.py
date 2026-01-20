@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django import forms
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -96,6 +97,19 @@ class AssinaturaAdmin(admin.ModelAdmin):
     search_fields = ("usuario__email", "usuario__username", "nome_plano_snapshot")
     list_select_related = ("usuario", "plano")
 
+    class AssinaturaForm(forms.ModelForm):
+        class Meta:
+            model = Assinatura
+            fields = "__all__"
+
+        def clean_inicio(self):
+            inicio = self.cleaned_data.get("inicio")
+            if self.instance and self.instance.pk and not inicio:
+                raise forms.ValidationError("Informe a data de inicio.")
+            return inicio
+
+    form = AssinaturaForm
+
     def save_model(self, request, obj, form, change):
         old_preco = old_valid = None
         if change:
@@ -111,12 +125,12 @@ class AssinaturaAdmin(admin.ModelAdmin):
                 obj.validade_dias_snapshot = obj.plano.validade_dias
                 obj.ciclo_cobranca_snapshot = obj.plano.ciclo_cobranca
                 obj.preco_snapshot = obj.plano.preco
-        if obj.plano:
-            inicio = timezone.now()
-            obj.inicio = inicio
+            if not obj.inicio:
+                obj.inicio = timezone.now()
+        if obj.plano and obj.inicio:
             if obj.plano.validade_dias:
-                obj.valid_until = inicio + timedelta(days=obj.plano.validade_dias)
-            else:
+                obj.valid_until = obj.inicio + timedelta(days=obj.plano.validade_dias)
+            elif not change:
                 obj.valid_until = None
         super().save_model(request, obj, form, change)
         if change and (old_preco != obj.preco_snapshot or old_valid != obj.valid_until):

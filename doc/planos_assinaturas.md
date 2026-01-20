@@ -51,5 +51,6 @@ Regras importantes:
 Observacao:
 - Ao criar uma Assinatura no admin com um plano selecionado, os campos `_snapshot`
   sao preenchidos automaticamente com os dados do plano.
-- Ao salvar a Assinatura no admin, `inicio` e `valid_until` sao recalculados com base
-  no plano (sobrescreve mesmo em edicao).
+- Ao criar a Assinatura, `inicio` e `valid_until` sao preenchidos automaticamente.
+- Ao editar a Assinatura, `inicio` passa a ser obrigatorio e `valid_until` e
+  recalculado **apenas** quando o plano possui `validade_dias`.
