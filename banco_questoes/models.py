@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
@@ -191,3 +192,138 @@ class Alternativa(models.Model):
     def __str__(self) -> str:
         prefixo = "[correta]" if self.is_correta else "[incorreta]"
         return f"{prefixo} {self.texto[:60]}"
+
+
+class Plano(models.Model):
+    class Periodo(models.TextChoices):
+        DIARIO = "DIARIO", "Diario"
+        SEMANAL = "SEMANAL", "Semanal"
+        MENSAL = "MENSAL", "Mensal"
+        ANUAL = "ANUAL", "Anual"
+
+    class CicloCobranca(models.TextChoices):
+        MENSAL = "MENSAL", "Mensal"
+        ANUAL = "ANUAL", "Anual"
+        NAO_RECORRENTE = "NAO_RECORRENTE", "Nao recorrente"
+
+    nome = models.CharField(max_length=120, unique=True)
+    limite_qtd = models.PositiveIntegerField(null=True, blank=True)
+    limite_periodo = models.CharField(max_length=20, choices=Periodo.choices, null=True, blank=True)
+    validade_dias = models.PositiveIntegerField(null=True, blank=True)
+    ciclo_cobranca = models.CharField(
+        max_length=20,
+        choices=CicloCobranca.choices,
+        default=CicloCobranca.NAO_RECORRENTE,
+    )
+    preco = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+
+class Assinatura(models.Model):
+    class Status(models.TextChoices):
+        ATIVO = "ATIVO", "Ativo"
+        EXPIRADO = "EXPIRADO", "Expirado"
+        PAUSADO = "PAUSADO", "Pausado"
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="assinaturas",
+    )
+    plano = models.ForeignKey(
+        Plano,
+        on_delete=models.SET_NULL,
+        related_name="assinaturas",
+        null=True,
+        blank=True,
+    )
+
+    nome_plano_snapshot = models.CharField(max_length=120, default="", blank=True)
+    limite_qtd_snapshot = models.PositiveIntegerField(null=True, blank=True)
+    limite_periodo_snapshot = models.CharField(
+        max_length=20,
+        choices=Plano.Periodo.choices,
+        null=True,
+        blank=True,
+    )
+    validade_dias_snapshot = models.PositiveIntegerField(null=True, blank=True)
+    ciclo_cobranca_snapshot = models.CharField(
+        max_length=20,
+        choices=Plano.CicloCobranca.choices,
+        default=Plano.CicloCobranca.NAO_RECORRENTE,
+    )
+    preco_snapshot = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ATIVO)
+    inicio = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        indexes = [
+            models.Index(fields=["usuario", "status"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.usuario} :: {self.nome_plano_snapshot or self.plano_id}"
+
+
+class SimuladoUso(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="simulado_uso",
+    )
+    janela_inicio = models.DateTimeField()
+    janela_fim = models.DateTimeField()
+    contador = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "janela_inicio", "janela_fim"],
+                name="uniq_uso_por_usuario_janela",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["usuario", "janela_fim"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.usuario} :: {self.janela_inicio.date()}-{self.janela_fim.date()}"
+
+
+class EventoAuditoria(models.Model):
+    tipo = models.CharField(max_length=60)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="eventos_auditoria",
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    device_id = models.CharField(max_length=64, blank=True, default="")
+    contexto_json = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+        indexes = [
+            models.Index(fields=["tipo"]),
+            models.Index(fields=["timestamp"]),
+            models.Index(fields=["ip"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tipo} @ {self.timestamp.isoformat()}"

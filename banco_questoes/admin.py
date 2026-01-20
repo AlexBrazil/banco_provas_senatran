@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import Alternativa, Curso, CursoModulo, Documento, Questao
+from .models import (
+    Alternativa,
+    Assinatura,
+    Curso,
+    CursoModulo,
+    Documento,
+    EventoAuditoria,
+    Plano,
+    Questao,
+    SimuladoUso,
+)
 
 
 @admin.register(Curso)
@@ -37,3 +47,31 @@ class AlternativaAdmin(admin.ModelAdmin):
     list_display = ("questao", "ordem", "is_correta")
     list_filter = ("is_correta",)
     search_fields = ("texto", "questao__enunciado")
+
+
+@admin.register(Plano)
+class PlanoAdmin(admin.ModelAdmin):
+    list_display = ("nome", "limite_qtd", "limite_periodo", "validade_dias", "ciclo_cobranca", "preco", "ativo")
+    list_filter = ("ativo", "limite_periodo", "ciclo_cobranca")
+    search_fields = ("nome",)
+
+
+@admin.register(Assinatura)
+class AssinaturaAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "plano", "status", "valid_until", "preco_snapshot", "limite_qtd_snapshot")
+    list_filter = ("status", "plano")
+    search_fields = ("usuario__email", "nome_plano_snapshot")
+
+
+@admin.register(SimuladoUso)
+class SimuladoUsoAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "janela_inicio", "janela_fim", "contador")
+    list_filter = ("janela_fim",)
+    search_fields = ("usuario__email",)
+
+
+@admin.register(EventoAuditoria)
+class EventoAuditoriaAdmin(admin.ModelAdmin):
+    list_display = ("tipo", "usuario", "timestamp", "ip", "device_id")
+    list_filter = ("tipo", "timestamp", "ip")
+    search_fields = ("usuario__email", "tipo", "device_id")
