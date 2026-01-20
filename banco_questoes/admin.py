@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.contrib import admin
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .auditoria import log_event
@@ -100,6 +103,21 @@ class AssinaturaAdmin(admin.ModelAdmin):
             if old:
                 old_preco = old.preco_snapshot
                 old_valid = old.valid_until
+        else:
+            if obj.plano:
+                obj.nome_plano_snapshot = obj.plano.nome
+                obj.limite_qtd_snapshot = obj.plano.limite_qtd
+                obj.limite_periodo_snapshot = obj.plano.limite_periodo
+                obj.validade_dias_snapshot = obj.plano.validade_dias
+                obj.ciclo_cobranca_snapshot = obj.plano.ciclo_cobranca
+                obj.preco_snapshot = obj.plano.preco
+        if obj.plano:
+            inicio = timezone.now()
+            obj.inicio = inicio
+            if obj.plano.validade_dias:
+                obj.valid_until = inicio + timedelta(days=obj.plano.validade_dias)
+            else:
+                obj.valid_until = None
         super().save_model(request, obj, form, change)
         if change and (old_preco != obj.preco_snapshot or old_valid != obj.valid_until):
             log_event(
