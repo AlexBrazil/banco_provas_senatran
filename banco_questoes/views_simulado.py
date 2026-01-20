@@ -2,18 +2,49 @@ from __future__ import annotations
 
 import json
 import random
-from django.shortcuts import render, redirect
+from datetime import timedelta
+
+from functools import wraps
+
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
+from django.db import transaction
+from django.db.models import Count, Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_GET
-from banco_questoes.models import Curso, CursoModulo, Questao, Alternativa
-from django.db.models import Count, Q
+
+from banco_questoes.auditoria import log_event
+from banco_questoes.models import (
+    Alternativa,
+    Assinatura,
+    Curso,
+    CursoModulo,
+    Questao,
+    SimuladoUso,
+)
 from banco_questoes.simulado_config import get_simulado_config
 
 
 SESSION_KEY = "simulado_state_v1"
+
+
+def login_required_audit(view_func):
+    @wraps(view_func)
+    def _wrapped(request: HttpRequest, *args, **kwargs):
+        if request.user.is_authenticated:
+            return view_func(request, *args, **kwargs)
+        log_event(
+            request,
+            "auth_required",
+            contexto={"path": request.path, "next": request.get_full_path()},
+        )
+        return redirect_to_login(request.get_full_path(), login_url=settings.LOGIN_URL)
+
+    return _wrapped
 
 
 def _get_state(request: HttpRequest) -> dict:
@@ -117,10 +148,130 @@ def _parse_ts(value: str | None):
     return dt
 
 
+def _get_active_assinatura(user) -> Assinatura | None:
+    now = timezone.now()
+    return (
+        Assinatura.objects
+        .filter(usuario=user, status=Assinatura.Status.ATIVO)
+        .filter(Q(valid_until__isnull=True) | Q(valid_until__gte=now))
+        .order_by("-inicio", "-criado_em")
+        .first()
+    )
+
+
+def _get_period_seconds(periodo: str | None) -> int | None:
+    if not periodo:
+        return None
+    return {
+        "DIARIO": 24 * 60 * 60,
+        "SEMANAL": 7 * 24 * 60 * 60,
+        "MENSAL": 30 * 24 * 60 * 60,
+        "ANUAL": 365 * 24 * 60 * 60,
+    }.get(periodo)
+
+
+def _get_janela_atual(inicio: timezone.datetime, period_seconds: int) -> tuple[timezone.datetime, timezone.datetime]:
+    now = timezone.now()
+    elapsed = max((now - inicio).total_seconds(), 0)
+    index = int(elapsed // period_seconds)
+    janela_inicio = inicio + timedelta(seconds=index * period_seconds)
+    janela_fim = janela_inicio + timedelta(seconds=period_seconds)
+    return janela_inicio, janela_fim
+
+
+def _check_and_increment_uso(user, assinatura: Assinatura) -> tuple[bool, str | None]:
+    limite = assinatura.limite_qtd_snapshot
+    if limite is None:
+        return True, None
+    if limite <= 0:
+        return False, "Limite de simulados indisponivel para este plano."
+
+    period_seconds = _get_period_seconds(assinatura.limite_periodo_snapshot)
+    if not period_seconds:
+        return False, "Plano sem periodo de limite configurado."
+
+    inicio = assinatura.inicio or timezone.now()
+    if assinatura.inicio is None:
+        assinatura.inicio = inicio
+        assinatura.save(update_fields=["inicio"])
+
+    janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+
+    with transaction.atomic():
+        uso, _ = (
+            SimuladoUso.objects
+            .select_for_update()
+            .get_or_create(
+                usuario=user,
+                janela_inicio=janela_inicio,
+                janela_fim=janela_fim,
+                defaults={"contador": 0},
+            )
+        )
+        if uso.contador >= limite:
+            return False, "Limite de simulados atingido para o periodo atual."
+        uso.contador += 1
+        uso.save(update_fields=["contador"])
+
+    return True, None
+
+
+def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | None:
+    if not user.is_authenticated:
+        return None
+
+    assinatura = assinatura or _get_active_assinatura(user)
+    if not assinatura:
+        return {"ativo": False}
+
+    limite = assinatura.limite_qtd_snapshot
+    periodo = assinatura.limite_periodo_snapshot
+    ilimitado = limite is None
+    usos = 0
+    restantes = None
+    janela_inicio = None
+    janela_fim = None
+    periodo_label = assinatura.get_limite_periodo_snapshot_display() if periodo else ""
+
+    if not ilimitado and periodo:
+        period_seconds = _get_period_seconds(periodo)
+        if period_seconds:
+            inicio = assinatura.inicio
+            if inicio:
+                janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+                uso = (
+                    SimuladoUso.objects
+                    .filter(usuario=user, janela_inicio=janela_inicio, janela_fim=janela_fim)
+                    .first()
+                )
+                usos = uso.contador if uso else 0
+                restantes = max(limite - usos, 0)
+            else:
+                usos = 0
+                restantes = limite
+
+    nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
+    return {
+        "ativo": True,
+        "nome": nome_plano,
+        "limite_qtd": limite,
+        "limite_periodo": periodo,
+        "limite_periodo_label": periodo_label,
+        "ilimitado": ilimitado,
+        "usos": usos,
+        "restantes": restantes,
+        "janela_inicio": janela_inicio,
+        "janela_fim": janela_fim,
+        "valid_until": assinatura.valid_until,
+    }
+
+
+@login_required_audit
 @require_http_methods(["GET"])
 def simulado_inicio(request: HttpRequest) -> HttpResponse:
     cfg = get_simulado_config()
     frontend_config, quick_filters, quick_curso_id = _build_frontend_config(cfg)
+    plano_status = _build_plano_status(request.user)
 
     # limpa sessao anterior para evitar retomar simulados ao entrar na tela inicial
     _clear_state(request)
@@ -134,10 +285,12 @@ def simulado_inicio(request: HttpRequest) -> HttpResponse:
             "quick_curso_id": quick_curso_id,
             "simulado_limits": frontend_config["limits"],
             "simulado_defaults": frontend_config["defaults"],
+            "plano_status": plano_status,
         },
     )
 
 
+@login_required_audit
 @require_http_methods(["GET"])
 def simulado_config(request: HttpRequest) -> HttpResponse:
     cfg = get_simulado_config()
@@ -172,6 +325,8 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
         },
         "quick_curso_id": str(quick_curso_id or ""),
     }
+    plano_status = _build_plano_status(request.user)
+    plano_bloqueado = bool(plano_status and plano_status.get("restantes") == 0)
     return render(
         request,
         "simulado/config.html",
@@ -183,11 +338,29 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
             "inicio_rapido": frontend_config["inicio_rapido"],
             "simulado_config_json": json.dumps(frontend_config, ensure_ascii=False),
             "quick_filters": quick_filters,
+            "plano_status": plano_status,
+            "plano_bloqueado": plano_bloqueado,
         },
     )
 
+@login_required_audit
 @require_http_methods(["POST"])
 def simulado_iniciar(request: HttpRequest) -> HttpResponse:
+    assinatura = _get_active_assinatura(request.user)
+    if not assinatura:
+        log_event(
+            request,
+            "assinatura_inativa",
+            user=request.user,
+            contexto={"path": request.path},
+        )
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            status=403,
+        )
+
     cfg = get_simulado_config()
     limits_cfg = cfg.get("limits", {}) or {}
 
@@ -273,12 +446,30 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Não existem questões para esse filtro (curso/módulo/filtros)."},
+            {
+                "msg": "Não existem questões para esse filtro (curso/módulo/filtros).",
+                "plano_status": _build_plano_status(request.user, assinatura),
+            },
             status=400,
         )
 
     if qtd > total:
         qtd = total
+
+    allowed, error_msg = _check_and_increment_uso(request.user, assinatura)
+    if not allowed:
+        log_event(
+            request,
+            "limite_excedido",
+            user=request.user,
+            contexto={"plano": assinatura.nome_plano_snapshot, "limite": assinatura.limite_qtd_snapshot},
+        )
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": error_msg, "plano_status": _build_plano_status(request.user, assinatura)},
+            status=403,
+        )
 
     # Seleção aleatória eficiente
     ids = list(qs.values_list("id", flat=True))
@@ -308,11 +499,38 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     }
 
     _set_state(request, state)
+    log_event(
+        request,
+        "simulado_iniciado",
+        user=request.user,
+        contexto={
+            "curso_id": str(curso_id),
+            "modulo_id": str(modulo_id) if modulo_id else "",
+            "qtd": qtd,
+            "modo": modo,
+        },
+    )
     return redirect(reverse("simulado:questao"))
 
 
+@login_required_audit
 @require_http_methods(["GET"])
 def simulado_questao(request: HttpRequest) -> HttpResponse:
+    assinatura = _get_active_assinatura(request.user)
+    if not assinatura:
+        log_event(
+            request,
+            "assinatura_inativa",
+            user=request.user,
+            contexto={"path": request.path},
+        )
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            status=403,
+        )
+
     cfg = get_simulado_config()
     imagens_cfg = cfg.get("imagens", {}) if isinstance(cfg, dict) else {}
 
@@ -363,8 +581,24 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
     )
 
 
+@login_required_audit
 @require_http_methods(["POST"])
 def simulado_responder(request: HttpRequest) -> HttpResponse:
+    assinatura = _get_active_assinatura(request.user)
+    if not assinatura:
+        log_event(
+            request,
+            "assinatura_inativa",
+            user=request.user,
+            contexto={"path": request.path},
+        )
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            status=403,
+        )
+
     state = _get_state(request)
     if not state or not state.get("question_ids"):
         return redirect(reverse("simulado:inicio"))
@@ -447,8 +681,24 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
     return redirect(reverse("simulado:questao"))
 
 
+@login_required_audit
 @require_http_methods(["GET", "POST"])
 def simulado_resultado(request: HttpRequest) -> HttpResponse:
+    assinatura = _get_active_assinatura(request.user)
+    if not assinatura:
+        log_event(
+            request,
+            "assinatura_inativa",
+            user=request.user,
+            contexto={"path": request.path},
+        )
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            status=403,
+        )
+
     state = _get_state(request)
     if not state or not state.get("question_ids"):
         return redirect(reverse("simulado:inicio"))
@@ -542,6 +792,7 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
 # recebe curso_id
 # busca módulos ativos
 # retorna JSON limpo e fácil pro front usar.
+@login_required_audit
 @require_GET
 def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
     curso_id = (request.GET.get("curso_id") or "").strip()
@@ -563,6 +814,7 @@ def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse({"ok": True, "modulos": modulos})
 
+@login_required_audit
 @require_GET
 def api_stats(request: HttpRequest) -> JsonResponse:
     """

@@ -1,0 +1,20 @@
+{% extends "simulado/base.html" %}
+{% load static %}
+
+{% block title %}Sessao encerrada{% endblock %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+{% endblock %}
+
+{% block body_class %}simulado-container simulado-container--center{% endblock %}
+
+{% block content %}
+  <div class="simulado-card">
+    <h1 class="simulado-title">Sessao encerrada</h1>
+    <p class="simulado-subtitle">Voce saiu da sua conta.</p>
+    <div class="form-actions">
+      <a class="btn-simulado" href="{% url 'login' %}">Entrar novamente</a>
+    </div>
+  </div>
+{% endblock %}

@@ -14,11 +14,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 
+from .auditoria import DEVICE_COOKIE_NAME, get_client_ip, log_event
 from .forms import EmailAuthenticationForm, RegistroForm
 from .models import Assinatura, EventoAuditoria, Plano
 
 
-DEVICE_COOKIE_NAME = "device_id"
 DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2
 REGISTER_COOLDOWN_SECONDS = 2 * 60 * 60
 
@@ -31,15 +31,22 @@ class EmailLoginView(auth_views.LoginView):
     def form_valid(self, form):
         response = super().form_valid(form)
         self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+        log_event(
+            self.request,
+            "auth_login",
+            user=self.request.user,
+            contexto={"next": self.get_redirect_url()},
+        )
         return response
 
 
 class EmailLogoutView(auth_views.LogoutView):
-    next_page = "login"
+    template_name = "registration/logged_out.html"
 
-
-def _get_client_ip(request: HttpRequest) -> str:
-    return (request.META.get("REMOTE_ADDR") or "").strip()
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            log_event(request, "auth_logout", user=request.user)
+        return super().dispatch(request, *args, **kwargs)
 
 
 def _get_device_id(request: HttpRequest) -> tuple[str, bool]:
@@ -129,18 +136,19 @@ def registrar(request: HttpRequest) -> HttpResponse:
         return redirect(_safe_next_url(request))
 
     device_id, new_device = _get_device_id(request)
-    ip = _get_client_ip(request)
+    ip = get_client_ip(request)
     next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
 
     if request.method == "POST":
         remaining = _cooldown_remaining(ip, device_id)
         if remaining:
-            EventoAuditoria.objects.create(
-                tipo="auth_register_blocked",
-                usuario=None,
+            log_event(
+                request,
+                "auth_register_blocked",
+                user=None,
                 ip=ip or None,
                 device_id=device_id,
-                contexto_json={"motivo": "cooldown", "restante": _format_remaining(remaining)},
+                contexto={"motivo": "cooldown", "restante": _format_remaining(remaining)},
             )
             form = RegistroForm()
             msg = f"Aguarde { _format_remaining(remaining) } para cadastrar outra conta."
@@ -163,12 +171,13 @@ def registrar(request: HttpRequest) -> HttpResponse:
                 assinatura = _create_free_assinatura(user, plano_free)
                 login(request, user)
                 request.session.set_expiry(settings.SESSION_COOKIE_AGE)
-                EventoAuditoria.objects.create(
-                    tipo="auth_register",
-                    usuario=user,
+                log_event(
+                    request,
+                    "auth_register",
+                    user=user,
                     ip=ip or None,
                     device_id=device_id,
-                    contexto_json={"plano": assinatura.nome_plano_snapshot},
+                    contexto={"plano": assinatura.nome_plano_snapshot},
                 )
                 response = redirect(_safe_next_url(request))
                 if new_device:

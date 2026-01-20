@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
+from .auditoria import log_event
+
 from .models import (
     Alternativa,
     Assinatura,
@@ -70,6 +72,19 @@ class PlanoAdmin(admin.ModelAdmin):
     list_filter = ("ativo", "limite_periodo", "ciclo_cobranca")
     search_fields = ("nome",)
 
+    def save_model(self, request, obj, form, change):
+        old_preco = None
+        if change:
+            old_preco = Plano.objects.filter(pk=obj.pk).values_list("preco", flat=True).first()
+        super().save_model(request, obj, form, change)
+        if change and old_preco is not None and old_preco != obj.preco:
+            log_event(
+                request,
+                "plano_preco_atualizado",
+                user=request.user,
+                contexto={"plano": obj.nome, "preco_anterior": str(old_preco), "preco_novo": str(obj.preco)},
+            )
+
 
 @admin.register(Assinatura)
 class AssinaturaAdmin(admin.ModelAdmin):
@@ -77,6 +92,29 @@ class AssinaturaAdmin(admin.ModelAdmin):
     list_filter = ("status", "plano")
     search_fields = ("usuario__email", "usuario__username", "nome_plano_snapshot")
     list_select_related = ("usuario", "plano")
+
+    def save_model(self, request, obj, form, change):
+        old_preco = old_valid = None
+        if change:
+            old = Assinatura.objects.filter(pk=obj.pk).first()
+            if old:
+                old_preco = old.preco_snapshot
+                old_valid = old.valid_until
+        super().save_model(request, obj, form, change)
+        if change and (old_preco != obj.preco_snapshot or old_valid != obj.valid_until):
+            log_event(
+                request,
+                "assinatura_renovada",
+                user=request.user,
+                contexto={
+                    "usuario_id": obj.usuario_id,
+                    "plano": obj.nome_plano_snapshot,
+                    "preco_anterior": str(old_preco),
+                    "preco_novo": str(obj.preco_snapshot),
+                    "valid_until_anterior": old_valid.isoformat() if old_valid else "",
+                    "valid_until_novo": obj.valid_until.isoformat() if obj.valid_until else "",
+                },
+            )
 
 
 @admin.register(SimuladoUso)

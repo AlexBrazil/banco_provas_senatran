@@ -29,6 +29,55 @@
             <form method="post" action="{% url 'simulado:iniciar' %}" id="simulado-form" class="simulado-form">
                 {% csrf_token %}
 
+                {% if plano_status and plano_status.ativo %}
+                    <div class="form-group form-group--full">
+                        <h3>Seu plano</h3>
+                        <ul class="stats-list">
+                            <li>
+                                <span class="stats-label">Plano</span>
+                                <span class="stats-value">{{ plano_status.nome }}</span>
+                            </li>
+                            {% if plano_status.ilimitado %}
+                                <li>
+                                    <span class="stats-label">Limite</span>
+                                    <span class="stats-value">Ilimitado</span>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <span class="stats-label">Limite</span>
+                                    <span class="stats-value">
+                                        {{ plano_status.limite_qtd }} / {{ plano_status.limite_periodo_label }}
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Usados</span>
+                                    <span class="stats-value">{{ plano_status.usos }}</span>
+                                </li>
+                                <li>
+                                    <span class="stats-label">Restantes</span>
+                                    <span class="stats-value">{{ plano_status.restantes }}</span>
+                                </li>
+                            {% endif %}
+                            {% if plano_status.janela_fim %}
+                                <li>
+                                    <span class="stats-label">Janela atual</span>
+                                    <span class="stats-value">ate {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</span>
+                                </li>
+                            {% endif %}
+                            {% if plano_status.valid_until %}
+                                <li>
+                                    <span class="stats-label">Valido ate</span>
+                                    <span class="stats-value">{{ plano_status.valid_until|date:"d/m/Y H:i" }}</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        {% if plano_bloqueado %}
+                            <p class="stats-error">Limite de simulados atingido para esta janela.</p>
+                            <p class="stats-msg is-warn">Para alterar o plano, contate o administrador.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="curso_id">Curso</label>

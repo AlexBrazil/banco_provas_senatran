@@ -67,6 +67,30 @@
         </p>
       </form>
 
+      {% if plano_status and plano_status.ativo %}
+        <div class="inicio-card inicio-card--secondary">
+          <h2 class="inicio-card-title">Seu plano</h2>
+          <p class="inicio-card-text">Plano {{ plano_status.nome }}</p>
+          <div class="inicio-meta">
+            {% if plano_status.ilimitado %}
+              <span class="inicio-pill">Simulados ilimitados</span>
+            {% else %}
+              <span class="inicio-pill">
+                Limite {{ plano_status.limite_qtd }} / {{ plano_status.limite_periodo_label }}
+              </span>
+              <span class="inicio-pill">Usados {{ plano_status.usos }}</span>
+              <span class="inicio-pill">Restantes {{ plano_status.restantes }}</span>
+            {% endif %}
+          </div>
+          {% if plano_status.janela_fim %}
+            <p class="inicio-hint">Janela atual ate {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+          {% if plano_status.valid_until %}
+            <p class="inicio-hint">Valido ate {{ plano_status.valid_until|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
       <div class="inicio-card inicio-card--secondary">
         <h2 class="inicio-card-title">Início com filtros</h2>
         <p class="inicio-card-text">
