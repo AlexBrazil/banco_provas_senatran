@@ -1,6 +1,7 @@
 # Local secrets and environment configuration
 .env
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 local_settings.py
 senhas_credenciais.txt
