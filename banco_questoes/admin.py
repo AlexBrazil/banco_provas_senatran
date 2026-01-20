@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import (
     Alternativa,
@@ -11,6 +12,20 @@ from .models import (
     Questao,
     SimuladoUso,
 )
+
+
+class PlanoFilter(admin.SimpleListFilter):
+    title = _("plano")
+    parameter_name = "plano"
+
+    def lookups(self, request, model_admin):
+        return [(str(p.id), p.nome) for p in Plano.objects.order_by("nome")]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if not value:
+            return queryset
+        return queryset.filter(usuario__assinaturas__plano_id=value).distinct()
 
 
 @admin.register(Curso)
@@ -60,18 +75,22 @@ class PlanoAdmin(admin.ModelAdmin):
 class AssinaturaAdmin(admin.ModelAdmin):
     list_display = ("usuario", "plano", "status", "valid_until", "preco_snapshot", "limite_qtd_snapshot")
     list_filter = ("status", "plano")
-    search_fields = ("usuario__email", "nome_plano_snapshot")
+    search_fields = ("usuario__email", "usuario__username", "nome_plano_snapshot")
+    list_select_related = ("usuario", "plano")
 
 
 @admin.register(SimuladoUso)
 class SimuladoUsoAdmin(admin.ModelAdmin):
     list_display = ("usuario", "janela_inicio", "janela_fim", "contador")
     list_filter = ("janela_fim",)
-    search_fields = ("usuario__email",)
+    search_fields = ("usuario__email", "usuario__username")
+    list_select_related = ("usuario",)
 
 
 @admin.register(EventoAuditoria)
 class EventoAuditoriaAdmin(admin.ModelAdmin):
     list_display = ("tipo", "usuario", "timestamp", "ip", "device_id")
-    list_filter = ("tipo", "timestamp", "ip")
-    search_fields = ("usuario__email", "tipo", "device_id")
+    list_filter = ("tipo", "timestamp", "ip", PlanoFilter)
+    search_fields = ("usuario__email", "usuario__username", "tipo", "device_id")
+    list_select_related = ("usuario",)
+    date_hierarchy = "timestamp"
