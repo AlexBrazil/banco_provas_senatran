@@ -1,0 +1,56 @@
+{% extends "simulado/base.html" %}
+{% load static %}
+
+{% block title %}Cadastro{% endblock %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+{% endblock %}
+
+{% block body_class %}simulado-container simulado-container--center{% endblock %}
+
+{% block content %}
+  <div class="simulado-card">
+    <h1 class="simulado-title">Criar conta</h1>
+    <p class="simulado-subtitle">Cadastre seu email e senha.</p>
+
+    {% if cooldown_message %}
+      <p class="stats-error">{{ cooldown_message }}</p>
+    {% endif %}
+
+    <form method="post" class="simulado-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <p class="stats-error">{{ form.non_field_errors|striptags }}</p>
+      {% endif %}
+
+      <div class="form-group">
+        {{ form.username.label_tag }}
+        {{ form.username }}
+        {{ form.username.errors }}
+      </div>
+
+      <div class="form-group">
+        {{ form.password1.label_tag }}
+        {{ form.password1 }}
+        {{ form.password1.errors }}
+      </div>
+
+      <div class="form-group">
+        {{ form.password2.label_tag }}
+        {{ form.password2 }}
+        {{ form.password2.errors }}
+      </div>
+
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <button type="submit" class="btn-simulado">Criar conta</button>
+    </form>
+
+    <div class="form-actions">
+      <a class="btn-simulado" href="{% url 'login' %}">Ja tenho conta</a>
+    </div>
+  </div>
+{% endblock %}

@@ -20,6 +20,7 @@ from banco_questoes import views_simulado
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("", include("banco_questoes.urls_auth")),
     # path("simulado/", include("banco_questoes.urls_simulado", namespace="simulado")),
     path("", include("banco_questoes.urls_simulado", namespace="simulado")),
 ]

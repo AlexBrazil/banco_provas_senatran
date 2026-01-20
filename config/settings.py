@@ -133,6 +133,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# -----------------------------------------------------------------------------
+# Auth / Session
+# -----------------------------------------------------------------------------
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/login/"
+SESSION_COOKIE_AGE = 20 * 24 * 60 * 60  # 20 dias
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 
 # -----------------------------------------------------------------------------
 # Internationalization
