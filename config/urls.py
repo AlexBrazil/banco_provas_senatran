@@ -23,4 +23,5 @@ urlpatterns = [
     path("", include("banco_questoes.urls_auth")),
     # path("simulado/", include("banco_questoes.urls_simulado", namespace="simulado")),
     path("", include("banco_questoes.urls_simulado", namespace="simulado")),
+    path("webhooks/", include("banco_questoes.urls_webhooks")),
 ]
