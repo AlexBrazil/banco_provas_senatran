@@ -47,7 +47,7 @@ def verify_woovi_signature(request) -> bool:
 
 
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def openpix_webhook(request):
     # =====================================================================
     # TEMPORÁRIO (REMOVER APÓS APROVAÇÃO DO WEBHOOK NA WOOVI)
