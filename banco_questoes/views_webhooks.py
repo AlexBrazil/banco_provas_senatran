@@ -49,19 +49,41 @@ def verify_woovi_signature(request) -> bool:
 @csrf_exempt
 @require_http_methods(["POST"])
 def openpix_webhook(request):
-    # 1) Validar assinatura (SEMPRE antes de parsear JSON)
-    if not verify_woovi_signature(request):
-        return HttpResponse(status=401)
+    # =====================================================================
+    # TEMPORÁRIO (REMOVER APÓS APROVAÇÃO DO WEBHOOK NA WOOVI)
+    # A Woovi pode validar o endpoint no cadastro exigindo HTTP 200,
+    # porém o POST de validação pode não trazer x-webhook-signature.
+    # Este "bootstrap" permite retornar 200 durante o cadastro.
+    #
+    # COMO REVERTER:
+    # 1) Após o webhook ser registrado com sucesso, apague este bloco
+    #    (ou deixe OPENPIX_WEBHOOK_BOOTSTRAP=False no settings).
+    # 2) A validação volta a ser estrita (401 sem assinatura válida).
+    # =====================================================================
+    bootstrap = getattr(settings, "OPENPIX_WEBHOOK_BOOTSTRAP", False)
+
+    if not bootstrap:
+        # 1) Validar assinatura (SEMPRE antes de parsear JSON)
+        if not verify_woovi_signature(request):
+            return HttpResponse(status=401)
+    # =====================================================================
+    # FIM DO BLOCO TEMPORÁRIO
+    # =====================================================================
 
     # 2) Parse do JSON
+    # Obs.: no bootstrap, o body pode ser vazio/não-JSON; então não falhe.
     try:
-        payload = json.loads((request.body or b"").decode("utf-8"))
+        payload = json.loads((request.body or b"{}").decode("utf-8"))
     except Exception:
-        return HttpResponse(status=400)
+        if bootstrap:
+            payload = {}
+        else:
+            return HttpResponse(status=400)
 
     # 3) Log informativo (útil para descobrir o shape real do payload)
     logger.info(
-        "Woovi webhook recebido | event=%s",
+        "Woovi webhook recebido | bootstrap=%s | event=%s",
+        bootstrap,
         payload.get("event")
         or payload.get("type")
         or payload.get("name")
