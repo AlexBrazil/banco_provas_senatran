@@ -181,9 +181,6 @@ if _raw_csrf_origins:
 else:
     CSRF_TRUSTED_ORIGINS = []
 
-# API / WebHook de pagamento PIX
-OPENPIX_WEBHOOK_SECRET = os.getenv("OPENPIX_WEBHOOK_SECRET", "")
-
 # -----------------------------------------------------------------------------
 # Defaults
 # -----------------------------------------------------------------------------
