@@ -49,41 +49,47 @@ def verify_woovi_signature(request) -> bool:
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def openpix_webhook(request):
-    # =====================================================================
-    # TEMPORÁRIO (REMOVER APÓS APROVAÇÃO DO WEBHOOK NA WOOVI)
-    # A Woovi pode validar o endpoint no cadastro exigindo HTTP 200,
-    # porém o POST de validação pode não trazer x-webhook-signature.
-    # Este "bootstrap" permite retornar 200 durante o cadastro.
-    #
-    # COMO REVERTER:
-    # 1) Após o webhook ser registrado com sucesso, apague este bloco
-    #    (ou deixe OPENPIX_WEBHOOK_BOOTSTRAP=False no settings).
-    # 2) A validação volta a ser estrita (401 sem assinatura válida).
-    # =====================================================================
     bootstrap = getattr(settings, "OPENPIX_WEBHOOK_BOOTSTRAP", False)
 
-    if not bootstrap:
-        # 1) Validar assinatura (SEMPRE antes de parsear JSON)
-        if not verify_woovi_signature(request):
-            return HttpResponse(status=401)
+    # =====================================================================
+    # TEMPORÁRIO (REMOVER APÓS APROVAÇÃO DO WEBHOOK NA WOOVI)
+    #
+    # A Woovi pode validar o endpoint no cadastro exigindo HTTP 200 e essa
+    # validação pode ocorrer via GET e/ou POST SEM assinatura.
+    #
+    # OBJETIVO: enquanto OPENPIX_WEBHOOK_BOOTSTRAP=True, retornar 200
+    # imediatamente (sem validar assinatura) para permitir o cadastro.
+    #
+    # COMO REVERTER:
+    # 1) Após o webhook ser registrado com sucesso, coloque no .env:
+    #    OPENPIX_WEBHOOK_BOOTSTRAP=false
+    # 2) Reinicie o Gunicorn.
+    # 3) (Opcional) Remova este bloco para voltar ao modo estrito sempre.
+    # =====================================================================
+    if bootstrap:
+        logger.info("Woovi webhook bootstrap | method=%s | retornando 200", request.method)
+        return JsonResponse({"ok": True, "bootstrap": True})
     # =====================================================================
     # FIM DO BLOCO TEMPORÁRIO
     # =====================================================================
 
+    # Fora do bootstrap: GET não é permitido (mantém o endpoint mais fechado)
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    # 1) Validar assinatura (SEMPRE antes de parsear JSON)
+    if not verify_woovi_signature(request):
+        return HttpResponse(status=401)
+
     # 2) Parse do JSON
-    # Obs.: no bootstrap, o body pode ser vazio/não-JSON; então não falhe.
     try:
-        payload = json.loads((request.body or b"{}").decode("utf-8"))
+        payload = json.loads((request.body or b"").decode("utf-8"))
     except Exception:
-        if bootstrap:
-            payload = {}
-        else:
-            return HttpResponse(status=400)
+        return HttpResponse(status=400)
 
     # 3) Log informativo (útil para descobrir o shape real do payload)
     logger.info(
-        "Woovi webhook recebido | bootstrap=%s | event=%s",
-        bootstrap,
+        "Woovi webhook recebido | event=%s",
         payload.get("event")
         or payload.get("type")
         or payload.get("name")
