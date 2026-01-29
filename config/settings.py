@@ -143,6 +143,9 @@ LOGOUT_REDIRECT_URL = "/login/"
 SESSION_COOKIE_AGE = 20 * 24 * 60 * 60  # o primeiri número: 20 dias
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
+# Toggle para cooldown de cadastro (IP + device)
+REGISTER_COOLDOWN_ENABLED = env_bool("REGISTER_COOLDOWN_ENABLED", "1")
+
 
 # -----------------------------------------------------------------------------
 # Internationalization

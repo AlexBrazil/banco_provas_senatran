@@ -74,6 +74,8 @@ def _safe_next_url(request: HttpRequest) -> str:
 
 
 def _cooldown_remaining(ip: str, device_id: str) -> timedelta | None:
+    if not settings.REGISTER_COOLDOWN_ENABLED:
+        return None
     if not ip and not device_id:
         return None
 

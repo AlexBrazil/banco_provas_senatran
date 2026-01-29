@@ -184,9 +184,9 @@ def upgrade_free(request: HttpRequest) -> HttpResponse:
                 amount_centavos=valor_centavos,
                 description=f"Upgrade {plano_upgrade.nome}",
                 metadata={
-                    "billing_ref": billing_ref,
-                    "user_id": request.user.id,
-                    "plano_id": plano_upgrade.id,
+                    "billing_ref": str(billing_ref),
+                    "user_id": str(request.user.id),
+                    "plano_id": str(plano_upgrade.id),
                 },
             )
         except AbacatePayError as exc:

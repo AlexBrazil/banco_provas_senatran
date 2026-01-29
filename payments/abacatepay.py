@@ -39,10 +39,13 @@ def create_pix_qrcode(
     url = f"{settings.ABACATEPAY_API_URL}/v1/pixQrCode/create"
     resp = requests.post(url, headers=_auth_headers(), json=payload, timeout=20)
     if resp.status_code >= 400:
-        raise AbacatePayError(f"HTTP {resp.status_code}")
-    data = resp.json()
+        raise AbacatePayError(f"HTTP {resp.status_code} - {resp.text}")
+    try:
+        data = resp.json()
+    except ValueError:
+        raise AbacatePayError(f"Resposta invalida (nao-JSON). HTTP {resp.status_code} - {resp.text}")
     if data.get("error"):
-        raise AbacatePayError(str(data["error"]))
+        raise AbacatePayError(f"{data.get('error')} - {data}")
     return data.get("data") or {}
 
 
@@ -52,10 +55,13 @@ def check_pix_qrcode(pix_id: str) -> dict:
     url = f"{settings.ABACATEPAY_API_URL}/v1/pixQrCode/check"
     resp = requests.get(url, headers=_auth_headers(), params={"id": pix_id}, timeout=20)
     if resp.status_code >= 400:
-        raise AbacatePayError(f"HTTP {resp.status_code}")
-    data = resp.json()
+        raise AbacatePayError(f"HTTP {resp.status_code} - {resp.text}")
+    try:
+        data = resp.json()
+    except ValueError:
+        raise AbacatePayError(f"Resposta invalida (nao-JSON). HTTP {resp.status_code} - {resp.text}")
     if data.get("error"):
-        raise AbacatePayError(str(data["error"]))
+        raise AbacatePayError(f"{data.get('error')} - {data}")
     return data.get("data") or {}
 
 
