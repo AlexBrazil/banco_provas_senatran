@@ -1,0 +1,120 @@
+.checkout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.checkout-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.checkout-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.checkout-title {
+  margin: 0;
+}
+
+.checkout-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.checkout-pill {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.checkout-qr-frame {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.checkout-qr-img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
+.checkout-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.checkout-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkout-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.checkout-textarea {
+  width: 100%;
+  background: rgba(11, 18, 32, 0.6);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  resize: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.checkout-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.checkout-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.checkout-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 0 0;
+}
+
+@media (max-width: 860px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+  .checkout-qr-frame {
+    min-height: 200px;
+  }
+}

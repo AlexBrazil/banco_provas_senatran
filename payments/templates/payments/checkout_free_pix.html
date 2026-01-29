@@ -1,0 +1,114 @@
+{% extends "simulado/base.html" %}
+{% load static %}
+
+{% block title %}Pagamento PIX{% endblock %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'payments/checkout_free_pix.css' %}">
+{% endblock %}
+
+{% block body_class %}simulado-container simulado-container--center{% endblock %}
+
+{% block content %}
+  <div class="simulado-card checkout-card">
+    <div class="checkout-header">
+      <div>
+        <p class="checkout-kicker">Pagamento PIX</p>
+        <h1 class="simulado-title checkout-title">Free Upgrade</h1>
+      </div>
+      <div class="checkout-badges">
+        <span class="pill checkout-pill">Valor R$ {{ plano.preco }}</span>
+        {% if plano.validade_dias %}
+          <span class="pill checkout-pill">Validade {{ plano.validade_dias }} dias</span>
+        {% else %}
+          <span class="pill checkout-pill">Validade ilimitada</span>
+        {% endif %}
+        {% if plano.limite_qtd %}
+          <span class="pill checkout-pill">Limite {{ plano.limite_qtd }}</span>
+        {% else %}
+          <span class="pill checkout-pill">Simulados ilimitados</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if error %}
+      <p class="stats-error">{{ error }}</p>
+    {% endif %}
+    {% if message %}
+      <p class="simulado-subtitle">{{ message }}</p>
+    {% endif %}
+
+    {% if billing %}
+      <div class="checkout-grid">
+        <div class="checkout-qr">
+          <div class="checkout-qr-frame">
+            <img src="{{ billing.pix_qrcode_base64 }}" alt="QRCode PIX" class="checkout-qr-img">
+          </div>
+          <p class="checkout-hint">Abra seu app de banco e escaneie o QRCode.</p>
+        </div>
+        <div class="checkout-copy">
+          <label class="checkout-label" for="brcode">Codigo copia e cola</label>
+          <textarea id="brcode" rows="4" class="checkout-textarea" readonly>{{ billing.pix_br_code }}</textarea>
+          <div class="checkout-actions">
+            <button type="button" class="btn-simulado" id="copy-btn">Copiar codigo</button>
+          </div>
+          <div class="checkout-actions">
+            <form method="post" action="{% url 'payments:upgrade_free_check' %}">
+              {% csrf_token %}
+              <input type="hidden" name="billing_id" value="{{ billing.id }}">
+              <button type="submit" class="btn-simulado" id="check-btn" {% if not show_manual_check %}style="display:none"{% endif %}>Ja paguei</button>
+            </form>
+          </div>
+          {% if not show_manual_check %}
+            <p class="checkout-note">
+              O botao "Ja paguei" fica disponivel em {{ manual_check_delay }}s.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="checkout-empty">
+        <p class="checkout-hint">Gere o QRCode para iniciar o pagamento.</p>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn-simulado">Gerar QRCode PIX</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a class="btn-simulado" href="{% url 'simulado:inicio' %}">Voltar ao inicio</a>
+    </div>
+  </div>
+
+  {% if billing %}
+  <script>
+    (function () {
+      var copyBtn = document.getElementById("copy-btn");
+      var brcode = document.getElementById("brcode");
+      if (copyBtn && brcode) {
+        copyBtn.addEventListener("click", function () {
+          var text = brcode.value || "";
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+          } else {
+            brcode.select();
+            document.execCommand("copy");
+          }
+        });
+      }
+
+      var checkBtn = document.getElementById("check-btn");
+      if (checkBtn && checkBtn.style.display === "none") {
+        var delay = {{ manual_check_delay|default:0 }};
+        if (delay > 0) {
+          setTimeout(function () {
+            checkBtn.style.display = "";
+          }, delay * 1000);
+        }
+      }
+    })();
+  </script>
+  {% endif %}
+{% endblock %}

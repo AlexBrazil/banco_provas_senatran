@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "banco_questoes",
+    "payments",
 ]
 
 
@@ -185,6 +186,18 @@ else:
 # Defaults
 # -----------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# -----------------------------------------------------------------------------
+# Payments / AbacatePay
+# -----------------------------------------------------------------------------
+ABACATEPAY_API_URL = os.getenv("ABACATEPAY_API_URL", "https://api.abacatepay.com")
+ABACATEPAY_API_TOKEN = os.getenv("ABACATEPAY_API_TOKEN", "")
+ABACATEPAY_WEBHOOK_SECRET = os.getenv("ABACATEPAY_WEBHOOK_SECRET", "")
+ABACATEPAY_WEBHOOK_SIGNATURE_HEADER = os.getenv(
+    "ABACATEPAY_WEBHOOK_SIGNATURE_HEADER",
+    "X-Abacatepay-Signature",
+)
 
 
 # -----------------------------------------------------------------------------

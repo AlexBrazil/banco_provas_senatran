@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import random
@@ -118,7 +118,7 @@ def _build_frontend_config(cfg: dict) -> tuple[dict, dict, str | None]:
         },
         "inicio_rapido": {
             "habilitado": bool(inicio_cfg.get("habilitado", True)),
-            "label": inicio_cfg.get("label", "InÇðcio rÇ­pido"),
+            "label": inicio_cfg.get("label", "InÃ‡Ã°cio rÃ‡Â­pido"),
             "hint": inicio_cfg.get("hint", ""),
             "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
             "override_filtros": quick_filters,
@@ -251,9 +251,11 @@ def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | No
                 restantes = limite
 
     nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
+    is_free = nome_plano.strip().lower() == "free"
     return {
         "ativo": True,
         "nome": nome_plano,
+        "is_free": is_free,
         "limite_qtd": limite,
         "limite_periodo": periodo,
         "limite_periodo_label": periodo_label,
@@ -263,6 +265,26 @@ def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | No
         "janela_inicio": janela_inicio,
         "janela_fim": janela_fim,
         "valid_until": assinatura.valid_until,
+    }
+
+
+def _build_error_context(
+    request: HttpRequest,
+    *,
+    msg: str,
+    assinatura: Assinatura | None = None,
+    allow_upgrade: bool = False,
+) -> dict:
+    plano_status = _build_plano_status(request.user, assinatura)
+    show_upgrade_cta = bool(
+        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("is_free")
+    )
+    upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
+    return {
+        "msg": msg,
+        "plano_status": plano_status,
+        "show_upgrade_cta": show_upgrade_cta,
+        "upgrade_url": upgrade_url,
     }
 
 
@@ -312,7 +334,7 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
         },
         "inicio_rapido": {
             "habilitado": bool(inicio_cfg.get("habilitado", True)),
-            "label": inicio_cfg.get("label", "Início rápido"),
+            "label": inicio_cfg.get("label", "InÃ­cio rÃ¡pido"),
             "hint": inicio_cfg.get("hint", ""),
             "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
             "override_filtros": quick_filters,
@@ -357,7 +379,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            _build_error_context(request, msg="Assinatura inativa ou expirada."),
             status=403,
         )
 
@@ -394,7 +416,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         allowed_modes = {"PROVA", "ESTUDO"}
 
     # --------
-    # Inputs obrigatórios e básicos
+    # Inputs obrigatÃ³rios e bÃ¡sicos
     # --------
     curso_id = (request.POST.get("curso_id") or "").strip()
     modulo_id = (request.POST.get("modulo_id") or "").strip()
@@ -446,10 +468,11 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {
-                "msg": "Não existem questões para esse filtro (curso/módulo/filtros).",
-                "plano_status": _build_plano_status(request.user, assinatura),
-            },
+            _build_error_context(
+                request,
+                msg="NÃ£o existem questÃµes para esse filtro (curso/mÃ³dulo/filtros).",
+                assinatura=assinatura,
+            ),
             status=400,
         )
 
@@ -467,11 +490,11 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": error_msg, "plano_status": _build_plano_status(request.user, assinatura)},
+            _build_error_context(request, msg=error_msg, assinatura=assinatura, allow_upgrade=True),
             status=403,
         )
 
-    # Seleção aleatória eficiente
+    # SeleÃ§Ã£o aleatÃ³ria eficiente
     ids = list(qs.values_list("id", flat=True))
     chosen = random.sample(ids, k=qtd)
 
@@ -527,7 +550,7 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            _build_error_context(request, msg="Assinatura inativa ou expirada."),
             status=403,
         )
 
@@ -595,7 +618,7 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            _build_error_context(request, msg="Assinatura inativa ou expirada."),
             status=403,
         )
 
@@ -616,7 +639,12 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
     # Valida alternativa e calcula correto
     alt = Alternativa.objects.select_related("questao").get(id=alt_id)
     if str(alt.questao_id) != str(qid):
-        return render(request, "simulado/erro.html", {"msg": "Alternativa inválida."}, status=400)
+        return render(
+            request,
+            "simulado/erro.html",
+            _build_error_context(request, msg="Alternativa invÃ¡lida."),
+            status=400,
+        )
 
     is_correct = bool(alt.is_correta)
 
@@ -624,7 +652,7 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
     answers[qid] = {"alt_id": str(alt_id), "is_correct": is_correct}
     state["answers"] = answers
 
-    # Próxima questão (avan?a o índice; feedback do modo ESTUDO ? renderizado antes de seguir)
+    # PrÃ³xima questÃ£o (avan?a o Ã­ndice; feedback do modo ESTUDO ? renderizado antes de seguir)
     state["index"] = idx + 1
     if state["index"] >= len(qids) and not state.get("finished_at"):
         state["finished_at"] = _now_iso()
@@ -640,8 +668,8 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
         )
         correta = next((a for a in alternativas if a.is_correta), None)
         answers_map = state.get("answers", {}) or {}
-        total_respostas = len(qids) or 1  # usa total planejado para evitar % inflado no início
-        total_answered = len(answers_map) or 1  # usado só para contar erros/acertos
+        total_respostas = len(qids) or 1  # usa total planejado para evitar % inflado no inÃ­cio
+        total_answered = len(answers_map) or 1  # usado sÃ³ para contar erros/acertos
         acertos_so_far = sum(1 for data in answers_map.values() if data.get("is_correct"))
         erros_so_far = sum(1 for data in answers_map.values() if data.get("is_correct") is False)
         percent_acerto = round((acertos_so_far / total_respostas) * 100, 2)
@@ -695,7 +723,7 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Assinatura inativa ou expirada.", "plano_status": _build_plano_status(request.user)},
+            _build_error_context(request, msg="Assinatura inativa ou expirada."),
             status=403,
         )
 
@@ -711,7 +739,7 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
     acertos = sum(1 for qid in qids if answers.get(qid, {}).get("is_correct") is True)
     total = len(qids)
 
-    # Se quiser listar revisões, buscamos as questões respondidas
+    # Se quiser listar revisÃµes, buscamos as questÃµes respondidas
     questoes = list(
         Questao.objects.filter(id__in=qids).select_related("modulo", "curso").order_by("numero_no_modulo")
     )
@@ -764,7 +792,7 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
         )
 
     if request.method == "POST":
-        # botão "Novo simulado"
+        # botÃ£o "Novo simulado"
         _clear_state(request)
         return redirect(reverse("simulado:inicio"))
 
@@ -790,8 +818,8 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
 
 # O que isso faz:
 # recebe curso_id
-# busca módulos ativos
-# retorna JSON limpo e fácil pro front usar.
+# busca mÃ³dulos ativos
+# retorna JSON limpo e fÃ¡cil pro front usar.
 @login_required_audit
 @require_GET
 def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
@@ -819,8 +847,8 @@ def api_modulos_por_curso(request: HttpRequest) -> JsonResponse:
 def api_stats(request: HttpRequest) -> JsonResponse:
     """
     Retorna contagens para o config do simulado.
-    Parâmetros (GET):
-      - curso_id (obrigatório)
+    ParÃ¢metros (GET):
+      - curso_id (obrigatÃ³rio)
       - modulo_id (opcional)
       - dificuldade (opcional): FACIL | INTERMEDIARIO | DIFICIL | "" (misturado)
       - com_imagem (opcional): 1/0
@@ -852,7 +880,7 @@ def api_stats(request: HttpRequest) -> JsonResponse:
     # Total do filtro atual
     total = qs.count()
 
-    # Contagens “de painel” (do mesmo recorte curso/modulo, mas separadas por critério)
+    # Contagens â€œde painelâ€ (do mesmo recorte curso/modulo, mas separadas por critÃ©rio)
     base = Questao.objects.filter(curso_id=curso_id)
     if modulo_id:
         base = base.filter(modulo_id=modulo_id)
@@ -892,3 +920,5 @@ def api_stats(request: HttpRequest) -> JsonResponse:
             },
         }
     )
+
+
