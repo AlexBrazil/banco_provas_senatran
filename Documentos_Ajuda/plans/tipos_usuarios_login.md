@@ -83,7 +83,7 @@ Backend:
 
 Templates/UX:
 - `banco_questoes/templates/simulado/inicio.html`: pagina inicial ja autenticada.
-- `banco_questoes/templates/simulado/config.html`: exibir limite/contagem e CTA de upgrade quando bloqueado.
+- `banco_questoes/templates/simulado/config.html`: exibir limite/contagem e CTA de upgrade quando bloqueado (apenas se plano atual for Free, oferecendo "Free Upgrade" via PIX).
 - `banco_questoes/templates/simulado/erro.html`: mensagem objetiva para limite estourado/assinatura expirada.
 
 JS:
@@ -136,7 +136,7 @@ Etapa D: enforce no backend
 - Verificar: sem login redireciona; com assinatura expirada ou limite estourado bloqueia.
 
 Etapa E: UX/templates
-- Entregas: mensagens e CTAs de bloqueio/upgrade; exibir limites/contagem em telas de inicio/config/erro.
+- Entregas: mensagens e CTAs de bloqueio/upgrade (Free -> "Free Upgrade" via PIX); exibir limites/contagem em telas de inicio/config/erro.
 - Verificar: mensagens corretas e sem bypass por URL.
 
 Etapa F: auditoria e roteiros
