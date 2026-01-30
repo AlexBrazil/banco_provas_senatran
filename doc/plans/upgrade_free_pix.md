@@ -78,6 +78,7 @@ Detalhe do "Ja paguei" (revalidacao manual):
   - Validar assinatura do webhook (conforme `doc/gateway_PIX.md`).
   - Registrar `WebhookEvent` com payload completo.
   - Processar eventos `billing.paid`.
+  - Parsear payload real: `data.pixQrCode.id` (pix_id) e `data.pixQrCode.metadata` (com `billing_ref`, `user_id`, `plano_id` em string).
 - Confirmar que o valor e o metadata batem com o plano esperado (anti-fraude basico).
 - Marcar `Billing` como pago e idempotente (evitar reprocesso).
 

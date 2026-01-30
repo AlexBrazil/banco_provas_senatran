@@ -360,18 +360,36 @@ def webhook_abacatepay(request: HttpRequest) -> HttpResponse:
     pix_id = ""
     metadata = {}
     if isinstance(payload.get("data"), dict):
-        data = payload.get("data")
-        metadata = data.get("metadata") or {}
+        data = payload.get("data") or {}
+        pix_qrcode = data.get("pixQrCode") or {}
+        metadata = (
+            data.get("metadata")
+            or pix_qrcode.get("metadata")
+            or (data.get("billing") or {}).get("metadata")
+            or {}
+        )
         pix_id = (
-            str(data.get("id") or "")
+            str((pix_qrcode or {}).get("id") or "")
             or str((data.get("pix") or {}).get("id") or "")
-            or str((data.get("pixQrCode") or {}).get("id") or "")
+            or str((data.get("billing") or {}).get("id") or "")
+            or str(data.get("id") or "")
         )
     else:
         metadata = payload.get("metadata") or {}
         pix_id = str(payload.get("pix_id") or payload.get("pixId") or "")
 
     billing_ref = str(metadata.get("billing_ref") or "")
+    log_event(
+        request,
+        "webhook_billing_paid",
+        user=None,
+        contexto={
+            "event_id": event_id,
+            "event_type": event_type,
+            "billing_ref": billing_ref,
+            "pix_id": pix_id,
+        },
+    )
     billing = None
     if billing_ref:
         billing = Billing.objects.filter(billing_ref=billing_ref).select_related("plano_destino", "usuario").first()

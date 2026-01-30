@@ -1,23 +1,23 @@
-# AbacatePay - Guia de Integração para Modelos de Linguagem (Atualizado e Sincronizado)
+﻿# AbacatePay - Guia de IntegraÃ§Ã£o para Modelos de Linguagem (Atualizado e Sincronizado)
 
-## Visão Geral
+## VisÃ£o Geral
 
-A AbacatePay é um gateway de pagamento que permite a criação e gestão de cobranças de forma eficiente.
-Atualmente, aceita pagamentos via **PIX** e **Cartão**.
-Outros métodos (boleto, crypto, etc.) poderão ser implementados futuramente.
+A AbacatePay Ã© um gateway de pagamento que permite a criaÃ§Ã£o e gestÃ£o de cobranÃ§as de forma eficiente.
+Atualmente, aceita pagamentos via **PIX** e **CartÃ£o**.
+Outros mÃ©todos (boleto, crypto, etc.) poderÃ£o ser implementados futuramente.
 
-## Autenticação
+## AutenticaÃ§Ã£o
 
-- **Método:** Bearer Token
-- **Detalhes:** Todas as requisições à API devem incluir um token JWT no cabeçalho de autorização.
-- **Exemplo de Cabeçalho:**
+- **MÃ©todo:** Bearer Token
+- **Detalhes:** Todas as requisiÃ§Ãµes Ã  API devem incluir um token JWT no cabeÃ§alho de autorizaÃ§Ã£o.
+- **Exemplo de CabeÃ§alho:**
   Authorization: Bearer {SEU_TOKEN_AQUI}
-- **Documentação:** [Authentication](https://docs.abacatepay.com/pages/authentication)
+- **DocumentaÃ§Ã£o:** [Authentication](https://docs.abacatepay.com/pages/authentication)
 
 ## Modo Desenvolvedor (Dev Mode)
 
-- **Descrição:** Ambiente para testes e desenvolvimento. Todas as operações realizadas neste modo são simuladas e não afetam o ambiente de produção.
-- **Documentação:** [Dev Mode](https://docs.abacatepay.com/pages/devmode)
+- **DescriÃ§Ã£o:** Ambiente para testes e desenvolvimento. Todas as operaÃ§Ãµes realizadas neste modo sÃ£o simuladas e nÃ£o afetam o ambiente de produÃ§Ã£o.
+- **DocumentaÃ§Ã£o:** [Dev Mode](https://docs.abacatepay.com/pages/devmode)
 
 ---
 
@@ -25,7 +25,7 @@ Outros métodos (boleto, crypto, etc.) poderão ser implementados futuramente.
 
 ### Clientes
 
-#### ➤ Criar Cliente
+#### âž¤ Criar Cliente
 
 - **Endpoint:** `POST /v1/customer/create`
 - **curl esperado como exemplo:**
@@ -44,14 +44,14 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro do Body:**
+**ExplicaÃ§Ã£o de cada parÃ¢metro do Body:**
 
-- **name** (string, obrigatório): Nome completo do cliente. Exemplo: "Fulano de tal".
-- **cellphone** (string, obrigatório): Telefone celular do cliente. Exemplo: "(00) 0000-0000".
-- **email** (string, obrigatório): Endereço de e-mail do cliente. Exemplo: "cliente@gmail.com".
-- **taxId** (string, obrigatório): CPF ou CNPJ válido do cliente. Exemplo: "123.456.789-01".
-- **Observacao:** CPF (taxId) agora é único; não são permitidos clientes com CPF duplicado.
-- **Observacao:** se você não tiver CPF/nome/email/telefone, prefira criar uma cobrança em modo Checkout para o cliente se cadastrar.
+- **name** (string, obrigatÃ³rio): Nome completo do cliente. Exemplo: "Fulano de tal".
+- **cellphone** (string, obrigatÃ³rio): Telefone celular do cliente. Exemplo: "(00) 0000-0000".
+- **email** (string, obrigatÃ³rio): EndereÃ§o de e-mail do cliente. Exemplo: "cliente@gmail.com".
+- **taxId** (string, obrigatÃ³rio): CPF ou CNPJ vÃ¡lido do cliente. Exemplo: "123.456.789-01".
+- **Observacao:** CPF (taxId) agora Ã© Ãºnico; nÃ£o sÃ£o permitidos clientes com CPF duplicado.
+- **Observacao:** se vocÃª nÃ£o tiver CPF/nome/email/telefone, prefira criar uma cobranÃ§a em modo Checkout para o cliente se cadastrar.
 
 **Observacao:** para evitar erros de validacao, envie `metadata` como objeto com valores string (ex.: `"user_id": "123"`).
 
@@ -72,11 +72,11 @@ curl --request POST \
 }
 ```
 
-- **Documentação:** [Criar Cliente](https://docs.abacatepay.com/pages/client/create)
+- **DocumentaÃ§Ã£o:** [Criar Cliente](https://docs.abacatepay.com/pages/client/create)
 
 ---
 
-#### ➤ Listar Clientes
+#### âž¤ Listar Clientes
 
 - **Endpoint:** `GET /v1/customer/list`
 - **curl esperado como exemplo:**
@@ -88,7 +88,7 @@ curl --request GET \
   --header 'authorization: Bearer {SEU_TOKEN_AQUI}'
 ```
 
-_Esta rota não necessita de body. Os parâmetros de autenticação via cabeçalho são obrigatórios._
+_Esta rota nÃ£o necessita de body. Os parÃ¢metros de autenticaÃ§Ã£o via cabeÃ§alho sÃ£o obrigatÃ³rios._
 
 **Modelo de resposta:**
 
@@ -109,13 +109,13 @@ _Esta rota não necessita de body. Os parâmetros de autenticação via cabeçal
 }
 ```
 
-- **Documentação:** [Listar Clientes](https://docs.abacatepay.com/pages/client/list)
+- **DocumentaÃ§Ã£o:** [Listar Clientes](https://docs.abacatepay.com/pages/client/list)
 
 ---
 
 ### Cupons de Desconto
 
-#### ➤ Criar Cupom
+#### âž¤ Criar Cupom
 
 - **Endpoint:** `POST /v1/coupon/create`
 - **curl esperado como exemplo:**
@@ -129,7 +129,7 @@ curl --request POST \
   --data '{
     "data": {
       "code": "DEYVIN_20",
-      "notes": "Cupom de desconto para meu público",
+      "notes": "Cupom de desconto para meu pÃºblico",
       "maxRedeems": 10,
       "discountKind": "PERCENTAGE",
       "discount": 20,
@@ -138,13 +138,13 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro do Body (dentro do objeto "data"):**
+**ExplicaÃ§Ã£o de cada parÃ¢metro do Body (dentro do objeto "data"):**
 
-- **code** (string, obrigatório): Identificador único do cupom. Exemplo: "DEYVIN_20".
-- **notes** (string): Descrição ou observação sobre o cupom. Exemplo: "Cupom de desconto para meu público".
-- **maxRedeems** (number, obrigatório): Número máximo de vezes que o cupom pode ser resgatado. Exemplo: 10. Use `-1` para ilimitado.
-- **discountKind** (string, obrigatório): Tipo de desconto, podendo ser "PERCENTAGE" ou "FIXED".
-- **discount** (number, obrigatório): Valor de desconto a ser aplicado. Exemplo: 20.
+- **code** (string, obrigatÃ³rio): Identificador Ãºnico do cupom. Exemplo: "DEYVIN_20".
+- **notes** (string): DescriÃ§Ã£o ou observaÃ§Ã£o sobre o cupom. Exemplo: "Cupom de desconto para meu pÃºblico".
+- **maxRedeems** (number, obrigatÃ³rio): NÃºmero mÃ¡ximo de vezes que o cupom pode ser resgatado. Exemplo: 10. Use `-1` para ilimitado.
+- **discountKind** (string, obrigatÃ³rio): Tipo de desconto, podendo ser "PERCENTAGE" ou "FIXED".
+- **discount** (number, obrigatÃ³rio): Valor de desconto a ser aplicado. Exemplo: 20.
 - **metadata** (object, opcional): Objeto para incluir metadados adicionais do cupom.
 
 **Modelo de resposta:**
@@ -153,7 +153,7 @@ curl --request POST \
 {
   "data": {
     "id": "DEYVIN_20",
-    "notes": "Cupom de desconto para meu público",
+    "notes": "Cupom de desconto para meu pÃºblico",
     "maxRedeems": 10,
     "redeemsCount": 0,
     "discountKind": "PERCENTAGE",
@@ -168,11 +168,11 @@ curl --request POST \
 }
 ```
 
-- **Documentação:** https://docs.abacatepay.com/api-reference/criar-um-novo-cupom
+- **DocumentaÃ§Ã£o:** https://docs.abacatepay.com/api-reference/criar-um-novo-cupom
 
 ---
 
-#### ➤ Listar Cupons
+#### âž¤ Listar Cupons
 
 - **Endpoint:** `GET /v1/coupon/list`
 - **curl esperado como exemplo:**
@@ -184,7 +184,7 @@ curl --request GET \
   --header 'authorization: Bearer {SEU_TOKEN_AQUI}'
 ```
 
-_Esta rota não necessita de parâmetros no body._
+_Esta rota nÃ£o necessita de parÃ¢metros no body._
 
 **Modelo de resposta:**
 
@@ -193,7 +193,7 @@ _Esta rota não necessita de parâmetros no body._
   "data": [
     {
       "id": "DEYVIN_20",
-      "notes": "Cupom de desconto para meu público",
+      "notes": "Cupom de desconto para meu pÃºblico",
       "maxRedeems": -1,
       "redeemsCount": 0,
       "discountKind": "PERCENTAGE",
@@ -209,13 +209,13 @@ _Esta rota não necessita de parâmetros no body._
 }
 ```
 
-- **Documentação:** [Listar Cupons](https://docs.abacatepay.com/pages/payment/list)
+- **DocumentaÃ§Ã£o:** [Listar Cupons](https://docs.abacatepay.com/pages/payment/list)
 
 ---
 
-### Cobranças
+### CobranÃ§as
 
-#### ➤ Criar Cobrança
+#### âž¤ Criar CobranÃ§a
 
 - **Endpoint:** `POST /v1/billing/create`
 - **curl esperado como exemplo:**
@@ -233,7 +233,7 @@ curl --request POST \
       {
         "externalId": "prod-1234",
         "name": "Assinatura de Programa Fitness",
-        "description": "Acesso ao programa fitness premium por 1 mês.",
+        "description": "Acesso ao programa fitness premium por 1 mÃªs.",
         "quantity": 2,
         "price": 2000
       }
@@ -244,20 +244,20 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro do Body:**
+**ExplicaÃ§Ã£o de cada parÃ¢metro do Body:**
 
-- **frequency** (string, obrigatório): Define o tipo de frequência da cobrança. Valores possíveis: `"ONE_TIME"` ou `"MULTIPLE_PAYMENTS"`.
-- **methods** (array de string, obrigatório): Lista com os métodos de pagamento aceitos. Agora aceita `"PIX"` e `"CARD"`.
-- **products** (array de objeto, obrigatório): Lista de produtos incluso na cobrança.
-  - **externalId** (string, obrigatório): Identificador único do produto no seu sistema.
-  - **name** (string, obrigatório): Nome do produto.
-  - **description** (string): Descrição do produto.
-  - **quantity** (integer, obrigatório, ≥1): Quantidade do produto.
-  - **price** (integer, obrigatório, mínimo 100): Preço unitário em centavos.
-- **returnUrl** (string, obrigatório - URI): URL para redirecionamento caso o cliente escolha a opção "Voltar".
-- **completionUrl** (string, obrigatório - URI): URL para redirecionamento após a conclusão do pagamento.
-- **customerId** (string, opcional): ID de um cliente já cadastrado.
-- **customer** (object, opcional): Objeto contendo os dados do cliente para criação imediata.
+- **frequency** (string, obrigatÃ³rio): Define o tipo de frequÃªncia da cobranÃ§a. Valores possÃ­veis: `"ONE_TIME"` ou `"MULTIPLE_PAYMENTS"`.
+- **methods** (array de string, obrigatÃ³rio): Lista com os mÃ©todos de pagamento aceitos. Agora aceita `"PIX"` e `"CARD"`.
+- **products** (array de objeto, obrigatÃ³rio): Lista de produtos incluso na cobranÃ§a.
+  - **externalId** (string, obrigatÃ³rio): Identificador Ãºnico do produto no seu sistema.
+  - **name** (string, obrigatÃ³rio): Nome do produto.
+  - **description** (string): DescriÃ§Ã£o do produto.
+  - **quantity** (integer, obrigatÃ³rio, â‰¥1): Quantidade do produto.
+  - **price** (integer, obrigatÃ³rio, mÃ­nimo 100): PreÃ§o unitÃ¡rio em centavos.
+- **returnUrl** (string, obrigatÃ³rio - URI): URL para redirecionamento caso o cliente escolha a opÃ§Ã£o "Voltar".
+- **completionUrl** (string, obrigatÃ³rio - URI): URL para redirecionamento apÃ³s a conclusÃ£o do pagamento.
+- **customerId** (string, opcional): ID de um cliente jÃ¡ cadastrado.
+- **customer** (object, opcional): Objeto contendo os dados do cliente para criaÃ§Ã£o imediata.
 
 **Modelo de resposta:**
 
@@ -295,11 +295,11 @@ curl --request POST \
 }
 ```
 
-- **Documentação:** [Criar Cobrança](https://docs.abacatepay.com/pages/payment/create)
+- **DocumentaÃ§Ã£o:** [Criar CobranÃ§a](https://docs.abacatepay.com/pages/payment/create)
 
 ---
 
-#### ➤ Buscar Cobrança
+#### âž¤ Buscar CobranÃ§a
 
 - **Endpoint:** `GET /v1/billing/get?id=bill_123456`
 - **curl esperado como exemplo:**
@@ -311,11 +311,11 @@ curl --request GET \
   --header 'authorization: Bearer {SEU_TOKEN_AQUI}'
 ```
 
-**Modelo de resposta:** Igual ao modelo da criação de cobrança, retornando os detalhes de uma cobrança específica.
+**Modelo de resposta:** Igual ao modelo da criaÃ§Ã£o de cobranÃ§a, retornando os detalhes de uma cobranÃ§a especÃ­fica.
 
 ---
 
-#### ➤ Listar Cobranças
+#### âž¤ Listar CobranÃ§as
 
 - **Endpoint:** `GET /v1/billing/list`
 - **curl esperado como exemplo:**
@@ -363,13 +363,13 @@ curl --request GET \
 }
 ```
 
-- **Documentação:** [Listar Cobranças](https://docs.abacatepay.com/pages/payment/list)
+- **DocumentaÃ§Ã£o:** [Listar CobranÃ§as](https://docs.abacatepay.com/pages/payment/list)
 
 ---
 
 ### PIX QRCode
 
-#### ➤ Criar QRCode PIX
+#### âž¤ Criar QRCode PIX
 
 - **Endpoint:** `POST /v1/pixQrCode/create`
 - **curl esperado como exemplo:**
@@ -383,7 +383,7 @@ curl --request POST \
   --data '{
     "amount": 100,
     "expiresIn": 3600,
-    "description": "Pagamento de serviço",
+    "description": "Pagamento de serviÃ§o",
     "customer": {
       "name": "Fulano de tal",
       "cellphone": "(00) 0000-0000",
@@ -398,17 +398,17 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro do Body:**
+**ExplicaÃ§Ã£o de cada parÃ¢metro do Body:**
 
-- **amount** (number, obrigatório): Valor da cobrança em centavos. Exemplo: 100 (R$1,00).
-- **expiresIn** (number, opcional): Tempo de expiração da cobrança em segundos. Exemplo: 3600 (1 hora).
-- **description** (string, opcional, máximo 140 caracteres): Mensagem que será exibida durante o pagamento do PIX. Exemplo: "Pagamento de serviço".
-- **customer** (object, opcional): Objeto contendo os dados do cliente para criação, caso este ainda não esteja cadastrado.
-  - **name** (string, obrigatório caso customer seja passado): Nome do cliente.
-  - **cellphone** (string, obrigatório caso customer seja passado): Telefone do cliente.
-  - **email** (string, obrigatório caso customer seja passado): E-mail do cliente.
-  - **taxId** (string, obrigatório caso customer seja passado): CPF ou CNPJ do cliente.
-- **metadata** (object, opcional): Objeto contendo os dados de um metadata customizável por parte de quem está integrando.
+- **amount** (number, obrigatÃ³rio): Valor da cobranÃ§a em centavos. Exemplo: 100 (R$1,00).
+- **expiresIn** (number, opcional): Tempo de expiraÃ§Ã£o da cobranÃ§a em segundos. Exemplo: 3600 (1 hora).
+- **description** (string, opcional, mÃ¡ximo 140 caracteres): Mensagem que serÃ¡ exibida durante o pagamento do PIX. Exemplo: "Pagamento de serviÃ§o".
+- **customer** (object, opcional): Objeto contendo os dados do cliente para criaÃ§Ã£o, caso este ainda nÃ£o esteja cadastrado.
+  - **name** (string, obrigatÃ³rio caso customer seja passado): Nome do cliente.
+  - **cellphone** (string, obrigatÃ³rio caso customer seja passado): Telefone do cliente.
+  - **email** (string, obrigatÃ³rio caso customer seja passado): E-mail do cliente.
+  - **taxId** (string, obrigatÃ³rio caso customer seja passado): CPF ou CNPJ do cliente.
+- **metadata** (object, opcional): Objeto contendo os dados de um metadata customizÃ¡vel por parte de quem estÃ¡ integrando.
 
 **Modelo de resposta:**
 
@@ -433,11 +433,11 @@ curl --request POST \
 }
 ```
 
-- **Documentação:** [Criar QRCode PIX](https://docs.abacatepay.com/pages/pix)
+- **DocumentaÃ§Ã£o:** [Criar QRCode PIX](https://docs.abacatepay.com/pages/pix)
 
 ---
 
-#### ➤ Checar Status do QRCode PIX
+#### âž¤ Checar Status do QRCode PIX
 
 - **Endpoint:** `GET /v1/pixQrCode/check`
 - **curl esperado como exemplo:**
@@ -449,9 +449,9 @@ curl --request GET \
   --header 'authorization: Bearer {SEU_TOKEN_AQUI}'
 ```
 
-_Esta rota utiliza um parâmetro na query:_
+_Esta rota utiliza um parÃ¢metro na query:_
 
-- **id** (string, obrigatório): ID do QRCode PIX. Exemplo: "pix_char_123456".
+- **id** (string, obrigatÃ³rio): ID do QRCode PIX. Exemplo: "pix_char_123456".
 
 **Modelo de resposta:**
 
@@ -465,11 +465,11 @@ _Esta rota utiliza um parâmetro na query:_
 }
 ```
 
-- **Documentação:** [Checar Status](https://docs.abacatepay.com/pages/pix)
+- **DocumentaÃ§Ã£o:** [Checar Status](https://docs.abacatepay.com/pages/pix)
 
 ---
 
-#### ➤ Simular Pagamento do QRCode PIX (Somente em Dev Mode)
+#### âž¤ Simular Pagamento do QRCode PIX (Somente em Dev Mode)
 
 - **Endpoint:** `POST /v1/pixQrCode/simulate-payment`
 - **curl esperado como exemplo:**
@@ -485,11 +485,11 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro:**
+**ExplicaÃ§Ã£o de cada parÃ¢metro:**
 
-- **Query Parameter - id** (string, obrigatório): ID do QRCode PIX que terá o pagamento simulado.
+- **Query Parameter - id** (string, obrigatÃ³rio): ID do QRCode PIX que terÃ¡ o pagamento simulado.
 - **No Body:**
-  - **metadata** (object, opcional): Objeto para incluir dados adicionais sobre a simulação, se necessário.
+  - **metadata** (object, opcional): Objeto para incluir dados adicionais sobre a simulaÃ§Ã£o, se necessÃ¡rio.
 
 **Modelo de resposta:**
 
@@ -511,13 +511,13 @@ curl --request POST \
 }
 ```
 
-- **Documentação:** [Simular Pagamento](https://docs.abacatepay.com/pages/pix)
+- **DocumentaÃ§Ã£o:** [Simular Pagamento](https://docs.abacatepay.com/pages/pix)
 
 ---
 
 ### Saques (Novo)
 
-#### ➤ Criar Saque
+#### âž¤ Criar Saque
 
 - **Endpoint:** `POST /v1/withdraw/create`
 - **curl esperado como exemplo:**
@@ -535,11 +535,11 @@ curl --request POST \
   }'
 ```
 
-**Explicação de cada parâmetro:**
+**ExplicaÃ§Ã£o de cada parÃ¢metro:**
 
-- **amount** (number, obrigatório): valor do saque em centavos.
-- **pixKey** (string, obrigatório): chave PIX do destinatário.
-- **notes** (string, opcional): observação ou descrição do saque.
+- **amount** (number, obrigatÃ³rio): valor do saque em centavos.
+- **pixKey** (string, obrigatÃ³rio): chave PIX do destinatÃ¡rio.
+- **notes** (string, opcional): observaÃ§Ã£o ou descriÃ§Ã£o do saque.
 
 **Modelo de resposta:**
 
@@ -559,7 +559,7 @@ curl --request POST \
 
 ---
 
-#### ➤ Buscar Saque
+#### âž¤ Buscar Saque
 
 - **Endpoint:** `GET /v1/withdraw/get?id=wd_123456`
 - **curl esperado como exemplo:**
@@ -571,11 +571,11 @@ curl --request GET \
   --header 'authorization: Bearer {SEU_TOKEN_AQUI}'
 ```
 
-**Modelo de resposta:** igual ao da criação.
+**Modelo de resposta:** igual ao da criaÃ§Ã£o.
 
 ---
 
-#### ➤ Listar Saques
+#### âž¤ Listar Saques
 
 - **Endpoint:** `GET /v1/withdraw/list`
 - **curl esperado como exemplo:**
@@ -609,7 +609,7 @@ curl --request GET \
 
 ### Loja (Novo)
 
-#### ➤ Obter Detalhes da Loja
+#### âž¤ Obter Detalhes da Loja
 
 - **Endpoint:** `GET /v1/store/get`
 - **curl esperado como exemplo:**
@@ -638,23 +638,46 @@ curl --request GET \
 
 ## Webhooks
 
-- Notificações automáticas enviadas pela AbacatePay.
-- Eventos disponíveis: `billing.paid`, `pix.paid`, `pix.expired`, `withdraw.paid`.
+- NotificaÃ§Ãµes automÃ¡ticas enviadas pela AbacatePay.
+- Eventos disponÃ­veis: `billing.paid`, `pix.paid`, `pix.expired`, `withdraw.paid`.
 - Sempre validar a assinatura enviada.
 - Implementar retries para lidar com falhas de rede.
+- Exemplo real de payload (evento `billing.paid` com QRCode PIX):
+  - `data.pixQrCode.id` -> id do QRCode (usado para consultar `pixQrCode/check`).
+  - `data.pixQrCode.metadata` -> objeto com `billing_ref`, `user_id`, `plano_id` (valores string).
+
+```json
+{
+  "id": "log_exemplo_123",
+  "event": "billing.paid",
+  "data": {
+    "pixQrCode": {
+      "id": "pix_char_exemplo_123",
+      "amount": 990,
+      "kind": "PIX",
+      "status": "PAID",
+      "metadata": {
+        "billing_ref": "038e850f3e5a4c10b5486c1bb5f9c2fd",
+        "user_id": "9",
+        "plano_id": "4"
+      }
+    }
+  }
+}
+```
 
 ---
 
 ## SDKs
 
-- SDKs oficiais disponíveis para integração em linguagens populares.
+- SDKs oficiais disponÃ­veis para integraÃ§Ã£o em linguagens populares.
 
 ---
 
-## Transição para Produção
+## TransiÃ§Ã£o para ProduÃ§Ã£o
 
-- **Descrição:** Para migrar do ambiente de desenvolvimento para produção, é necessário desativar o Dev Mode e completar o cadastro com informações adicionais.
-- **Documentação:** [Produção](https://docs.abacatepay.com/pages/production)
+- **DescriÃ§Ã£o:** Para migrar do ambiente de desenvolvimento para produÃ§Ã£o, Ã© necessÃ¡rio desativar o Dev Mode e completar o cadastro com informaÃ§Ãµes adicionais.
+- **DocumentaÃ§Ã£o:** [ProduÃ§Ã£o](https://docs.abacatepay.com/pages/production)
 
 ---
 
