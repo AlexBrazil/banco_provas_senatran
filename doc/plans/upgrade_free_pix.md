@@ -43,6 +43,7 @@ Entregaveis:
   - `check_pix_qrcode(...)` usando `GET /v1/pixQrCode/check`.
 - Ler token e webhook secret do `.env` (ja existem) e manter em `settings.py`.
 - Normalizar valores em centavos (ex.: R$ 9,90 -> 990), usando o preco configurado no plano "Free Upgrade".
+- Enviar `metadata` como objeto com valores string (ex.: `billing_ref`, `user_id`, `plano_id`), para evitar erro de validacao.
 
 Entregaveis:
 - Funcoes de criacao e consulta de QRCode retornando `id`, `brCode` (copia e cola) e `brCodeBase64`.
@@ -130,6 +131,7 @@ Entregaveis:
 - Garantir que o preco cobrado esteja alinhado com o plano "Free Upgrade".
 - Evitar upgrade sem confirmar evento de pagamento valido.
 - Tratar idempotencia para webhooks repetidos.
+- Futuro: se a AbacatePay passar a exigir dados de cliente (CPF/email/telefone), sera necessario capturar esses dados e criar `customer` ou usar modo Checkout.
 
 ## Melhorias opcionais
 - Armazenar `expiresAt` e `amount` do QRCode para auditoria e controle de expiracao.

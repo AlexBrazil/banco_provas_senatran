@@ -50,6 +50,10 @@ curl --request POST \
 - **cellphone** (string, obrigatório): Telefone celular do cliente. Exemplo: "(00) 0000-0000".
 - **email** (string, obrigatório): Endereço de e-mail do cliente. Exemplo: "cliente@gmail.com".
 - **taxId** (string, obrigatório): CPF ou CNPJ válido do cliente. Exemplo: "123.456.789-01".
+- **Observacao:** CPF (taxId) agora é único; não são permitidos clientes com CPF duplicado.
+- **Observacao:** se você não tiver CPF/nome/email/telefone, prefira criar uma cobrança em modo Checkout para o cliente se cadastrar.
+
+**Observacao:** para evitar erros de validacao, envie `metadata` como objeto com valores string (ex.: `"user_id": "123"`).
 
 **Modelo de resposta:**
 
@@ -387,7 +391,9 @@ curl --request POST \
       "taxId": "123.456.789-01"
     },
     "metadata": {
-      "teste": "Valor do teste de metadata"
+      "user_id": "123",
+      "plano_id": "45",
+      "billing_ref": "abcd1234"
     }
   }'
 ```
