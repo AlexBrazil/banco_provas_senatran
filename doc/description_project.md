@@ -52,6 +52,7 @@ Resumo completo do app, cobrindo visao geral, estrutura, rotas, front-end, regra
 - Admin em `/admin/`.
 - Rotas do simulado montadas na raiz (`/`), via `banco_questoes.urls_simulado`.
 - Existe um include comentado para usar `/simulado/`, mas nao esta ativo.
+- Rotas de pagamento em `/payments/`, via `payments.urls`.
 
 ### banco_questoes/urls_simulado.py (namespace `simulado`)
 - `""` -> `simulado_inicio`
@@ -62,6 +63,12 @@ Resumo completo do app, cobrindo visao geral, estrutura, rotas, front-end, regra
 - `"resultado/"` -> `simulado_resultado` (GET/POST)
 - `"api/modulos/"` -> `api_modulos_por_curso` (AJAX)
 - `"api/stats/"` -> `api_stats` (AJAX)
+
+### payments/urls.py (namespace `payments`)
+- `"upgrade/free/"` -> tela de checkout PIX (GET/POST).
+- `"upgrade/free/check/"` -> revalidacao manual (POST).
+- `"upgrade/free/status/"` -> status para polling no checkout (GET).
+- `"webhook/abacatepay/"` -> webhook de confirmacao (POST).
 
 ---
 
@@ -141,6 +148,7 @@ Registra modelos com listagem, filtros e busca basica.
 - `simulado/resultado.html`: resumo, filtros usados e revisao.
 - `simulado/erro.html`: mensagem simples com link para inicio.
 - `simulado/base.html`: layout basico (nao utilizado nos templates atuais).
+- `payments/checkout_free_pix.html`: checkout PIX com QRCode, copia e cola, revalidacao manual e polling.
 - Todas as telas principais carregam `scroll-hint`.
 
 ---

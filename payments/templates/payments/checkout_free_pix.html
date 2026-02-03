@@ -65,6 +65,9 @@
               O botao "Ja paguei" fica disponivel em {{ manual_check_delay }}s.
             </p>
           {% endif %}
+          <p class="stats-error" id="poll-timeout-msg" style="display:none">
+            Ainda nao confirmou, tente novamente.
+          </p>
         </div>
       </div>
     {% else %}
@@ -108,6 +111,54 @@
           }, delay * 1000);
         }
       }
+
+      var billingId = "{{ billing.id }}";
+      var statusUrl = "{% url 'payments:upgrade_free_status' %}?billing_id=" + billingId;
+      var pollIntervalMs = 5000;
+      var maxDurationMs = 10 * 60 * 1000;
+      var startedAt = Date.now();
+      var pollTimer = null;
+
+      function stopPolling() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      function pollStatus() {
+        if (!billingId) {
+          stopPolling();
+          return;
+        }
+        if (Date.now() - startedAt > maxDurationMs) {
+          stopPolling();
+          var timeoutMsg = document.getElementById("poll-timeout-msg");
+          if (timeoutMsg) {
+            timeoutMsg.style.display = "";
+          }
+          return;
+        }
+
+        fetch(statusUrl, { credentials: "same-origin" })
+          .then(function (resp) { return resp.json(); })
+          .then(function (data) {
+            if (!data || !data.ok) {
+              return;
+            }
+            if (data.status === "PAID") {
+              stopPolling();
+              var redirectUrl = data.redirect_url || "{% url 'simulado:inicio' %}";
+              window.location.href = redirectUrl;
+            }
+          })
+          .catch(function () {
+            // Silencia erros de rede e tenta novamente no proximo ciclo.
+          });
+      }
+
+      pollTimer = setInterval(pollStatus, pollIntervalMs);
+      pollStatus();
     })();
   </script>
   {% endif %}

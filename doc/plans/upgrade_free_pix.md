@@ -53,6 +53,7 @@ Entregaveis:
   - `GET /payments/upgrade/free/` (tela de compra com detalhes do plano).
   - `POST /payments/upgrade/free/` (cria QRCode PIX, salva `Billing` e exibe QRCode + copia e cola).
   - `POST /payments/upgrade/free/check/` (revalida status via `pixQrCode/check` quando o usuario clicar "Ja paguei").
+  - `GET /payments/upgrade/free/status/` (status simples para polling no checkout).
 - Bloquear o fluxo para usuarios que nao estao no plano Free.
 - Exibir detalhes do plano na tela de compra (nome, validade, limites, preco) a partir do modelo `Plano` do "Free Upgrade".
 
@@ -72,6 +73,11 @@ Detalhe do "Ja paguei" (revalidacao manual):
 - Se o status vier `PAID`, atualizar `Billing` e seguir o mesmo fluxo do webhook (ativar o plano e registrar auditoria).
 - Se continuar `PENDING`, retornar mensagem "Pagamento ainda nao confirmado".
 - Aplicar rate-limit simples (ex.: 1 tentativa a cada 30s por usuario/billing) e registrar tentativas em auditoria.
+
+Detalhe do redirecionamento automatico:
+- No checkout, fazer polling do endpoint `GET /payments/upgrade/free/status/`.
+- Ao detectar `PAID`, redirecionar automaticamente para `simulado:inicio`.
+- Se o polling expirar (timeout), exibir mensagem "Ainda nao confirmou, tente novamente".
 
 ### Etapa 5) Webhook e confirmacao de pagamento
 - Criar endpoint `POST /payments/webhook/abacatepay/`:

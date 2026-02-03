@@ -321,6 +321,28 @@ def upgrade_free_check(request: HttpRequest) -> HttpResponse:
     return render(request, "payments/checkout_free_pix.html", context)
 
 
+@login_required
+@require_http_methods(["GET"])
+def upgrade_free_status(request: HttpRequest) -> HttpResponse:
+    billing_id = (request.GET.get("billing_id") or "").strip()
+    if not billing_id:
+        return JsonResponse({"ok": False, "error": "billing_id_required"}, status=400)
+
+    billing = (
+        Billing.objects
+        .select_related("plano_destino")
+        .filter(id=billing_id, usuario=request.user)
+        .first()
+    )
+    if not billing:
+        return JsonResponse({"ok": False, "error": "billing_not_found"}, status=404)
+
+    payload = {"ok": True, "status": billing.status}
+    if billing.status == Billing.Status.PAID:
+        payload["redirect_url"] = reverse("simulado:inicio")
+    return JsonResponse(payload)
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def webhook_abacatepay(request: HttpRequest) -> HttpResponse:
