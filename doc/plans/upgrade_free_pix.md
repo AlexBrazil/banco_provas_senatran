@@ -1,7 +1,7 @@
 ﻿# Plano de implementacao - upgrade Free via PIX (AbacatePay) v2
 
 ## Objetivo
-Implementar uma regra de negocio em que usuarios do plano Free possam pagar via PIX para desbloquear o sistema e migrar para o plano "Free Upgrade", com valor configuravel no admin. Para usuarios de outros planos, manter a mensagem "Para alterar o plano, contate o administrador.". Registrar auditoria das mudancas de plano.
+Implementar uma regra de negocio em que usuarios do plano Free possam pagar via PIX para desbloquear o sistema e migrar para o plano "Aprova DETRAN", com valor configuravel no admin. Para usuarios de outros planos, manter a mensagem "Para alterar o plano, contate o administrador.". Registrar auditoria das mudancas de plano.
 
 ## Contexto e referencias
 - Planos/assinaturas e snapshots: `banco_questoes/models.py` e `planos_assinaturas.md`.
@@ -11,20 +11,20 @@ Implementar uma regra de negocio em que usuarios do plano Free possam pagar via 
 - App de pagamentos existente (vazio): `payments/`.
 
 ## Regra de negocio (alvo)
-- Se o usuario estiver no plano Free e estiver bloqueado por limite/assinatura, exibir opcao de pagamento via PIX para comprar o plano "Free Upgrade" (configuravel no admin).
-- A tela de compra deve mostrar os detalhes do plano comprado (nome, validade, limites e preco vigente no admin) a partir do "Free Upgrade".
+- Se o usuario estiver no plano Free e estiver bloqueado por limite/assinatura, exibir opcao de pagamento via PIX para comprar o plano "Aprova DETRAN" (configuravel no admin).
+- A tela de compra deve mostrar os detalhes do plano comprado (nome, validade, limites e preco vigente no admin) a partir do "Aprova DETRAN".
 - Para usuarios de outros planos, manter a mensagem "Para alterar o plano, contate o administrador pelo whatsapp (53)99121-4707.".
 - A troca de plano deve ser registrada em auditoria (com dados do pagamento e do plano origem/destino).
 
 ## Etapas (sequenciais)
 
 ### Etapa 1) Confirmacoes e preparo de dados
-- Verificar se os planos "Free" e "Free Upgrade" existem e estao ativos.
-- Definir que o valor de cobranca e os detalhes exibidos vem de `Plano` do "Free Upgrade".
+- Verificar se os planos "Free" e "Aprova DETRAN" existem e estao ativos.
+- Definir que o valor de cobranca e os detalhes exibidos vem de `Plano` do "Aprova DETRAN".
 - Definir que a opcao de pagamento sera exibida apenas em `simulado/erro.html`.
 
 Entregaveis:
-- Checklist de configuracao do plano "Free Upgrade" (nome, validade, limites, preco, ativo).
+- Checklist de configuracao do plano "Aprova DETRAN" (nome, validade, limites, preco, ativo).
 
 ### Etapa 2) Modelos de pagamento e auditoria
 - Criar modelos em `payments/models.py`:
@@ -42,7 +42,7 @@ Entregaveis:
   - `create_pix_qrcode(...)` usando `POST /v1/pixQrCode/create`.
   - `check_pix_qrcode(...)` usando `GET /v1/pixQrCode/check`.
 - Ler token e webhook secret do `.env` (ja existem) e manter em `settings.py`.
-- Normalizar valores em centavos (ex.: R$ 9,90 -> 990), usando o preco configurado no plano "Free Upgrade".
+- Normalizar valores em centavos (ex.: R$ 9,90 -> 990), usando o preco configurado no plano "Aprova DETRAN".
 - Enviar `metadata` como objeto com valores string (ex.: `billing_ref`, `user_id`, `plano_id`), para evitar erro de validacao.
 
 Entregaveis:
@@ -55,14 +55,14 @@ Entregaveis:
   - `POST /payments/upgrade/free/check/` (revalida status via `pixQrCode/check` quando o usuario clicar "Ja paguei").
   - `GET /payments/upgrade/free/status/` (status simples para polling no checkout).
 - Bloquear o fluxo para usuarios que nao estao no plano Free.
-- Exibir detalhes do plano na tela de compra (nome, validade, limites, preco) a partir do modelo `Plano` do "Free Upgrade".
+- Exibir detalhes do plano na tela de compra (nome, validade, limites, preco) a partir do modelo `Plano` do "Aprova DETRAN".
 
 Entregaveis:
 - Template de checkout simples (ex.: `payments/checkout_free_pix.html`) com QRCode (imagem base64) e campo de copia e cola (`brCode`).
 - Rotas adicionadas em `config/urls.py`.
 
 Layout sugerido da tela de pagamento:
-- Cabecalho com nome do plano "Free Upgrade" e preco.
+- Cabecalho com nome do plano "Aprova DETRAN" e preco.
 - Bloco 1: QRCode (imagem) + instrucoes rapidas de pagamento.
 - Bloco 2: campo de texto com o codigo "copia e cola" (`brCode`) e botao "Copiar".
 - Bloco 3: status do pagamento (aguardando / pago) e botao "Ja paguei".
@@ -88,12 +88,19 @@ Detalhe do redirecionamento automatico:
 - Confirmar que o valor e o metadata batem com o plano esperado (anti-fraude basico).
 - Marcar `Billing` como pago e idempotente (evitar reprocesso).
 
+Checklist anti-erro (webhook):
+- URL com barra final: `/payments/webhook/abacatepay/` (sem barra final pode virar POST -> GET e dar 405).
+- `webhookSecret` deve bater com `ABACATEPAY_WEBHOOK_SECRET` (query string).
+- `ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY` vem do dashboard e NAO e o ID publico.
+- Header esperado: `X-Webhook-Signature` com assinatura HMAC-SHA256 Base64 do corpo bruto.
+- Mudou `.env`? Reiniciar o servico da app.
+
 Entregaveis:
 - Webhook funcional com idempotencia.
 
 ### Etapa 6) Troca de plano e auditoria
 - Ao receber pagamento valido:
-  - Criar nova `Assinatura` para o usuario com o plano "Free Upgrade" e snapshot atualizado.
+  - Criar nova `Assinatura` para o usuario com o plano "Aprova DETRAN" e snapshot atualizado.
   - Marcar assinatura Free anterior como `EXPIRADO` ou `PAUSADO`.
   - Registrar evento em `EventoAuditoria` com `contexto_json` contendo:
     - usuario_id, plano_origem, plano_destino, billing_id, valor, metodo=PIX, timestamp.
@@ -109,7 +116,7 @@ Entregaveis:
 - Atualizar templates:
   - Em `simulado/erro.html`, se `plano_is_free`: substituir a mensagem "contate o administrador" por CTA de pagamento.
   - Em `simulado/erro.html`, se nao for Free: manter a mensagem atual.
-- Padronizar textos/labels de UI para mostrar "Free Upgrade" quando o CTA for exibido.
+- Padronizar textos/labels de UI para mostrar "Aprova DETRAN" quando o CTA for exibido.
 
 Entregaveis:
 - UI condicional por plano.
@@ -119,7 +126,7 @@ Entregaveis:
 - Testes manuais:
   1) Usuario Free bloqueado -> CTA PIX aparece.
   2) Usuario de outro plano -> mensagem antiga.
-  3) Pagamento confirmado -> assinatura "Free Upgrade" ativa.
+  3) Pagamento confirmado -> assinatura "Aprova DETRAN" ativa.
   4) Botao "Ja paguei" aparece apos 1 min e revalida o status.
   5) Webhook repetido -> idempotente.
 
@@ -135,7 +142,7 @@ Entregaveis:
 - Checklist de deploy.
 
 ## Riscos e cuidados
-- Garantir que o preco cobrado esteja alinhado com o plano "Free Upgrade".
+- Garantir que o preco cobrado esteja alinhado com o plano "Aprova DETRAN".
 - Evitar upgrade sem confirmar evento de pagamento valido.
 - Tratar idempotencia para webhooks repetidos.
 - Futuro: se a AbacatePay passar a exigir dados de cliente (CPF/email/telefone), sera necessario capturar esses dados e criar `customer` ou usar modo Checkout.

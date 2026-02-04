@@ -3,7 +3,7 @@
 Este arquivo explica como preencher os campos de um Plano e como criar uma Assinatura para um usuario.
 
 ## 1) Campos do Plano
-- `nome`: identificador do plano (ex.: Free, Free Upgrade, Mensal 30).
+- `nome`: identificador do plano (ex.: Free, Aprova DETRAN, Mensal 30).
 - `limite_qtd`: quantidade maxima de simulados no periodo. Vazio = ilimitado.
 - `limite_periodo`: janela de limite quando `limite_qtd` esta preenchido.
   Valores: `DIARIO`, `SEMANAL`, `MENSAL`, `ANUAL`.
@@ -20,7 +20,7 @@ Regras importantes:
 Exemplos:
 - Free (3 por dia): `limite_qtd=3`, `limite_periodo=DIARIO`, `validade_dias` vazio,
   `ciclo_cobranca=NAO_RECORRENTE`, `preco=0`, `ativo`.
-- Free Upgrade (exemplo de ilimitado anual): `limite_qtd` vazio, `limite_periodo` vazio,
+- Aprova DETRAN (exemplo de ilimitado anual): `limite_qtd` vazio, `limite_periodo` vazio,
   `validade_dias=365`, `ciclo_cobranca=ANUAL`, `preco=199.90`, `ativo`.
 
 ## 2) Campos da Assinatura

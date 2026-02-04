@@ -24,7 +24,7 @@ from .models import Billing, WebhookEvent
 
 
 FREE_PLAN_NAME = "Free"
-UPGRADE_PLAN_NAME = "Free Upgrade"
+UPGRADE_PLAN_NAME = "Aprova DETRAN"
 MANUAL_CHECK_DELAY_SECONDS = 60
 CHECK_COOLDOWN_SECONDS = 30
 
@@ -164,7 +164,7 @@ def upgrade_free(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Plano Free Upgrade indisponivel. Contate o suporte."},
+            {"msg": "Plano Aprova DETRAN indisponivel. Contate o suporte."},
             status=503,
         )
 

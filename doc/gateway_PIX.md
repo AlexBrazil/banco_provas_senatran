@@ -642,6 +642,15 @@ curl --request GET \
 - Eventos disponÃ­veis: `billing.paid`, `pix.paid`, `pix.expired`, `withdraw.paid`.
 - Sempre validar a assinatura enviada.
 - Implementar retries para lidar com falhas de rede.
+
+Checklist rapido (evita erros comuns):
+- URL do webhook deve terminar com `/`. Ex.: `https://SEU-DOMINIO/payments/webhook/abacatepay/`.
+- `webhookSecret` vem na query string e deve bater com `ABACATEPAY_WEBHOOK_SECRET`.
+- `ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY` vem do dashboard e NAO e o "ID publico" do webhook.
+- Assinatura chega em `X-Webhook-Signature` e e HMAC-SHA256 em Base64 do corpo bruto.
+- Diagnostico rapido: `405` = metodo errado ou falta de `/` no final; `401` = webhookSecret diferente; `400` = assinatura invalida.
+- Mudou `.env`? Reinicie o serviço do app (ex.: `systemctl restart gunicorn_simulado.service`).
+
 - Exemplo real de payload (evento `billing.paid` com QRCode PIX):
   - `data.pixQrCode.id` -> id do QRCode (usado para consultar `pixQrCode/check`).
   - `data.pixQrCode.metadata` -> objeto com `billing_ref`, `user_id`, `plano_id` (valores string).

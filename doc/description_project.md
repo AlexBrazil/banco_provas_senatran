@@ -70,6 +70,13 @@ Resumo completo do app, cobrindo visao geral, estrutura, rotas, front-end, regra
 - `"upgrade/free/status/"` -> status para polling no checkout (GET).
 - `"webhook/abacatepay/"` -> webhook de confirmacao (POST).
 
+Notas importantes do webhook (evitar falhas):
+- URL deve terminar com `/` (sem barra final pode virar POST -> GET e gerar 405).
+- `webhookSecret` chega na query string e deve bater com `ABACATEPAY_WEBHOOK_SECRET`.
+- `ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY` vem do dashboard e NAO e o ID publico.
+- Header esperado: `X-Webhook-Signature`, assinatura HMAC-SHA256 em Base64 do corpo bruto.
+- Mudou `.env`? Reinicie o serviço do app (systemd: `systemctl restart gunicorn_simulado.service`).
+
 ---
 
 ## Modelos e regras de dados
