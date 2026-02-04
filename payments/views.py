@@ -347,10 +347,18 @@ def upgrade_free_status(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["POST"])
 def webhook_abacatepay(request: HttpRequest) -> HttpResponse:
     raw_body = request.body or b""
+    expected_webhook_secret = (settings.ABACATEPAY_WEBHOOK_SECRET or "").strip()
+    if expected_webhook_secret:
+        provided_secret = (request.GET.get("webhookSecret") or "").strip()
+        if not provided_secret or provided_secret != expected_webhook_secret:
+            return JsonResponse({"ok": False, "error": "invalid_webhook_secret"}, status=401)
+
     signature = request.headers.get(settings.ABACATEPAY_WEBHOOK_SIGNATURE_HEADER, "")
     if not signature:
+        signature = request.headers.get("X-Webhook-Signature", "")
+    if not signature:
         signature = request.headers.get("assinatura-webhook-x", "")
-    if settings.ABACATEPAY_WEBHOOK_SECRET or settings.ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY:
+    if settings.ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY:
         if not verify_webhook_signature(raw_body, signature):
             return JsonResponse({"ok": False, "error": "invalid_signature"}, status=400)
 

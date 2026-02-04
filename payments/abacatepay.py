@@ -67,15 +67,10 @@ def check_pix_qrcode(pix_id: str) -> dict:
 
 
 def _iter_webhook_keys() -> list[bytes]:
-    keys = []
-    for key in (
-        settings.ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY,
-        settings.ABACATEPAY_WEBHOOK_SECRET,
-    ):
-        key = (key or "").strip()
-        if key:
-            keys.append(key.encode("utf-8"))
-    return keys
+    key = (settings.ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY or "").strip()
+    if not key:
+        return []
+    return [key.encode("utf-8")]
 
 
 def _normalize_signature(signature: str) -> str:
@@ -98,12 +93,10 @@ def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
         return False
     for key in keys:
         digest = hmac.new(key, raw_body, hashlib.sha256).digest()
-        digest_hex = digest.hex()
         digest_b64 = base64.b64encode(digest).decode("ascii")
         digest_b64_url = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
         if (
-            hmac.compare_digest(digest_hex, normalized)
-            or hmac.compare_digest(digest_b64, normalized)
+            hmac.compare_digest(digest_b64, normalized)
             or hmac.compare_digest(digest_b64_url, normalized)
         ):
             return True
