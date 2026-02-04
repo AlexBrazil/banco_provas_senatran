@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 from typing import Any
@@ -65,11 +66,45 @@ def check_pix_qrcode(pix_id: str) -> dict:
     return data.get("data") or {}
 
 
-def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
-    secret = (settings.ABACATEPAY_WEBHOOK_SECRET or "").encode("utf-8")
-    if not secret:
-        return True
+def _iter_webhook_keys() -> list[bytes]:
+    keys = []
+    for key in (
+        settings.ABACATEPAY_WEBHOOK_PUBLIC_HMAC_KEY,
+        settings.ABACATEPAY_WEBHOOK_SECRET,
+    ):
+        key = (key or "").strip()
+        if key:
+            keys.append(key.encode("utf-8"))
+    return keys
+
+
+def _normalize_signature(signature: str) -> str:
+    signature = (signature or "").strip()
     if not signature:
+        return ""
+    if "=" in signature:
+        prefix, value = signature.split("=", 1)
+        if prefix.lower() in {"sha256", "v1", "hmac", "sig", "signature"}:
+            return value.strip()
+    return signature
+
+
+def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
+    keys = _iter_webhook_keys()
+    if not keys:
+        return True
+    normalized = _normalize_signature(signature)
+    if not normalized:
         return False
-    digest = hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(digest, signature)
+    for key in keys:
+        digest = hmac.new(key, raw_body, hashlib.sha256).digest()
+        digest_hex = digest.hex()
+        digest_b64 = base64.b64encode(digest).decode("ascii")
+        digest_b64_url = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+        if (
+            hmac.compare_digest(digest_hex, normalized)
+            or hmac.compare_digest(digest_b64, normalized)
+            or hmac.compare_digest(digest_b64_url, normalized)
+        ):
+            return True
+    return False
