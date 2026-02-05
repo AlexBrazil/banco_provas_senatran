@@ -63,11 +63,11 @@
 ## Arquivos estáticos
 
 - **simulado.css**  
-  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/static/Simulado/simulado.css
+  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/static/simulado/simulado.css
 - **Imagem de placa (exemplo – R-14.png)**  
   https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/main/static/placas/R-14.png
 - **simulado.js**  
-  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/refs/heads/main/static/Simulado/simulado.js
+  https://raw.githubusercontent.com/AlexBrazil/banco_provas_senatran/refs/heads/main/static/simulado/simulado.js
 
 ---
 
