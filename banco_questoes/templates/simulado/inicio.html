@@ -12,7 +12,18 @@
 <body class="inicio-body">
   <main class="inicio-layout">
     <section class="inicio-hero">
-      <p class="inicio-badge">Simulado digital</p>
+      <div class="inicio-hero-top">
+        <p class="inicio-badge">Simulado digital</p>
+        <button
+          type="button"
+          class="inicio-btn inicio-btn--ghost inicio-btn--plan"
+          id="btn-meu-plano"
+          aria-haspopup="dialog"
+          aria-controls="modal-meu-plano"
+        >
+          Meu plano
+        </button>
+      </div>
       <h1 class="inicio-title">Escolha como começar</h1>
       <p class="inicio-subtitle">
         Você pode iniciar direto com o pacote padrão ou abrir a tela de filtros para montar o treino antes de começar.
@@ -67,9 +78,36 @@
         </p>
       </form>
 
-      {% if plano_status and plano_status.ativo %}
-        <div class="inicio-card inicio-card--secondary">
-          <h2 class="inicio-card-title">Seu plano</h2>
+      <div class="inicio-card inicio-card--secondary">
+        <h2 class="inicio-card-title">Monte seu Simulado</h2>
+        <p class="inicio-card-text">
+          Monte o simulado escolhendo curso, módulo, quantidade e demais filtros antes de começar.
+        </p>
+        <div class="inicio-card-actions">
+          <a href="{% url 'simulado:config' %}" class="inicio-btn inicio-btn--primary">Monte seu Simulado</a>
+        </div>
+        <div class="inicio-divider"></div>
+        <ul class="inicio-list">
+          <li>Ver disponibilidade e estatísticas por dificuldade.</li>
+          <li>Selecionar modo Prova ou Estudo.</li>
+          <li>Filtrar por questões com imagem ou só placas.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <dialog
+    id="modal-meu-plano"
+    class="inicio-modal"
+    aria-labelledby="modal-meu-plano-title"
+  >
+    <div class="inicio-modal__panel" role="document" tabindex="-1">
+      <div class="inicio-modal__header">
+        <h2 id="modal-meu-plano-title" class="inicio-modal__title">Meu plano</h2>
+        <button type="button" class="inicio-modal__close" data-modal-close aria-label="Fechar modal">×</button>
+      </div>
+      <div class="inicio-modal__body">
+        {% if plano_status and plano_status.ativo %}
           <p class="inicio-card-text">Plano {{ plano_status.nome }}</p>
           <div class="inicio-meta">
             {% if plano_status.ilimitado %}
@@ -83,33 +121,22 @@
             {% endif %}
           </div>
           {% if plano_status.janela_fim %}
-            <p class="inicio-hint">Janela atual ate {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</p>
+            <p class="inicio-hint">Janela atual até {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</p>
           {% endif %}
           {% if plano_status.valid_until %}
-            <p class="inicio-hint">Valido ate {{ plano_status.valid_until|date:"d/m/Y H:i" }}</p>
+            <p class="inicio-hint">Válido até {{ plano_status.valid_until|date:"d/m/Y H:i" }}</p>
           {% endif %}
-        </div>
-      {% endif %}
-
-      <div class="inicio-card inicio-card--secondary">
-        <h2 class="inicio-card-title">Início com filtros</h2>
-        <p class="inicio-card-text">
-          Monte o simulado escolhendo curso, módulo, quantidade e demais filtros antes de começar.
-        </p>
-        <div class="inicio-card-actions">
-          <a href="{% url 'simulado:config' %}" class="inicio-btn inicio-btn--outline">Abrir configuração</a>
-        </div>
-        <div class="inicio-divider"></div>
-        <ul class="inicio-list">
-          <li>Ver disponibilidade e estatísticas por dificuldade.</li>
-          <li>Selecionar modo Prova ou Estudo.</li>
-          <li>Filtrar por questões com imagem ou só placas.</li>
-        </ul>
+        {% else %}
+          <p class="inicio-card-text">
+            Nenhum plano ativo - Entre em contato com (53) 99121-4707 para adquirir um plano
+          </p>
+        {% endif %}
       </div>
-    </section>
-  </main>
+    </div>
+  </dialog>
 
   <div class="scroll-hint__sentinel" aria-hidden="true"></div>
+  <script src="{% static 'simulado/inicio.js' %}"></script>
   <script src="{% static 'simulado/scroll-hint.js' %}"></script>
 </body>
 </html>

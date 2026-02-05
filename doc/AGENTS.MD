@@ -36,6 +36,7 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Se houver `content.md` dentro da secao alvo, ler e seguir antes de propor mudancas nessa area.
 - Usar progressive disclosure: ler apenas arquivos/trechos necessarios; ampliar escopo so com bloqueio ou pedido explicito.
 - Sem suposicoes: nao inventar endpoints, settings, modelos ou arquivos; sempre cite o caminho ao referenciar.
+- Estrutura de diretorios: validar sempre no filesystem real do projeto (ex.: Get-ChildItem, git ls-files); nao inferir por memoria, resposta anterior ou nome citado.
 - Mudancas minimas: evitar refatoracoes amplas sem pedido.
 - Validacao obrigatoria: quando possivel, rodar testes/checks; quando nao, declarar limitacoes.
 - Impacto cruzado: evitar alterar CSS compartilhado sem verificar onde e usado.

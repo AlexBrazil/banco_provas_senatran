@@ -25,6 +25,15 @@ body.inicio-body {
   box-shadow: 0 22px 60px rgba(0,0,0,0.36);
 }
 
+.inicio-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
 .inicio-badge {
   display: inline-flex;
   align-items: center;
@@ -36,7 +45,7 @@ body.inicio-body {
   font-weight: 700;
   font-size: 13px;
   letter-spacing: -0.01em;
-  margin: 0 0 12px;
+  margin: 0;
 }
 
 .inicio-title {
@@ -165,6 +174,12 @@ body.inicio-body {
   color: #e9eefc;
 }
 
+.inicio-btn--plan {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
 .inicio-hint {
   margin: 8px 0 0;
   color: #b8c2dc;
@@ -206,6 +221,72 @@ body.inicio-body {
   margin: 14px 0;
 }
 
+body.inicio-body.inicio-modal-open {
+  overflow: hidden;
+}
+
+.inicio-modal {
+  border: 0;
+  margin: auto;
+  box-sizing: border-box;
+  overflow: visible;
+  padding: 12px;
+  width: min(480px, calc(100vw - 24px));
+  max-height: calc(100vh - 36px);
+  background: transparent;
+  color: inherit;
+}
+
+.inicio-modal__panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+  padding: 16px;
+}
+
+.inicio-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inicio-modal__title {
+  margin: 0;
+  font-size: 22px;
+}
+
+.inicio-modal__close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  color: #e9eefc;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.inicio-modal__close:hover {
+  background: rgba(255,255,255,0.16);
+}
+
+.inicio-modal__body {
+  margin-top: 12px;
+}
+
+.inicio-modal::backdrop {
+  background: rgba(11,18,32,0.78);
+  backdrop-filter: blur(2px);
+}
+
 @media (max-width: 768px) {
   .inicio-layout {
     padding: 24px 12px 36px;
@@ -217,5 +298,15 @@ body.inicio-body {
 
   .inicio-title {
     font-size: 24px;
+  }
+
+  .inicio-modal {
+    padding: 8px;
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .inicio-modal__panel {
+    max-height: calc(100vh - 40px);
   }
 }

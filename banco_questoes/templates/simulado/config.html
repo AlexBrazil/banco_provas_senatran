@@ -84,7 +84,7 @@
                         <select name="curso_id" id="curso_id" required>
                             <option value="">Selecione o curso...</option>
                             {% for c in cursos %}
-                                <option value="{{ c.id }}">{{ c.nome }}</option>
+                                <option value="{{ c.id }}" {% if quick_curso_id and c.id == quick_curso_id %}selected{% endif %}>{{ c.nome }}</option>
                             {% endfor %}
                         </select>
                     </div>

@@ -316,4 +316,14 @@
   resetStatsUI();
   setHint(getMsg("selecione_curso", "Selecione um curso para ver as estatísticas."));
 
+  const quickCursoId = String((SIMCFG && SIMCFG.quick_curso_id) || "").trim();
+  if (curso && !curso.value && quickCursoId) {
+    const hasQuickCurso = Array.from(curso.options || []).some((opt) => opt.value === quickCursoId);
+    if (hasQuickCurso) curso.value = quickCursoId;
+  }
+
+  if (curso && curso.value) {
+    curso.dispatchEvent(new Event("change"));
+  }
+
 })();
