@@ -6,12 +6,12 @@
     "dificuldade": "",
     "com_imagem": false,
     "so_placas": false,
-    "qtd": 10
+    "qtd": 30
   },
   "inicio_rapido": {
     "habilitado": true,
     "label": "Início Rápido",
-    "hint": "Primeira Habilitação · Modo Prova · Misturado · 10 questões",
+    "hint": "Primeira Habilitação · Modo Prova · Misturado · 30 questões",
     "tooltip": "Curso padrão não encontrado",
     "override_filtros": {}
   },
