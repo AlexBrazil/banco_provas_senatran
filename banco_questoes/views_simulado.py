@@ -118,9 +118,9 @@ def _build_frontend_config(cfg: dict) -> tuple[dict, dict, str | None]:
         },
         "inicio_rapido": {
             "habilitado": bool(inicio_cfg.get("habilitado", True)),
-            "label": inicio_cfg.get("label", "InÃ‡Ã°cio rÃ‡Â­pido"),
+            "label": inicio_cfg.get("label", "Início rápido"),
             "hint": inicio_cfg.get("hint", ""),
-            "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
+            "tooltip": inicio_cfg.get("tooltip", "Curso padrão não encontrado"),
             "override_filtros": quick_filters,
         },
         "ui": {"messages": (cfg.get("ui", {}) or {}).get("messages", {})},
@@ -334,9 +334,9 @@ def simulado_config(request: HttpRequest) -> HttpResponse:
         },
         "inicio_rapido": {
             "habilitado": bool(inicio_cfg.get("habilitado", True)),
-            "label": inicio_cfg.get("label", "InÃ­cio rÃ¡pido"),
+            "label": inicio_cfg.get("label", "Iní­cio rápido"),
             "hint": inicio_cfg.get("hint", ""),
-            "tooltip": inicio_cfg.get("tooltip", "Curso padr?o n?o encontrado"),
+            "tooltip": inicio_cfg.get("tooltip", "Curso padrão não encontrado"),
             "override_filtros": quick_filters,
         },
         "ui": {"messages": (cfg.get("ui", {}) or {}).get("messages", {})},
@@ -470,7 +470,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
             "simulado/erro.html",
             _build_error_context(
                 request,
-                msg="NÃ£o existem questÃµes para esse filtro (curso/mÃ³dulo/filtros).",
+                msg="NÃ£o existem questÃµes para esse filtro (curso/módulo/filtros).",
                 assinatura=assinatura,
             ),
             status=400,
