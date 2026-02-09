@@ -46,6 +46,7 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Evitar wrapper `powershell.exe -Command ...` dentro do proprio PowerShell, pois pode travar os botoes de confirmacao no chat.
 - Em caso de instabilidade/congelamento do prompt no chat, preferir execucao assistida: o agente fornece o comando, o usuario executa no terminal local e cola o output para analise.
 - Convencao de nomes: para novos arquivos e pastas, usar lowercase (kebab_case/underscore quando necessario) e evitar variacoes por maiuscula/minuscula para prevenir conflitos entre Windows e Linux.
+- Encoding/EOL: seguir obrigatoriamente o padrao oficial em `doc/padroes-encoding-eol.md` (UTF-8 sem BOM; LF para codigo/config; CRLF apenas para `.bat`/`.cmd`).
 - Mudancas minimas: evitar refatoracoes amplas sem pedido.
 - Validacao obrigatoria: quando possivel, rodar testes/checks; quando nao, declarar limitacoes.
 - Impacto cruzado: evitar alterar CSS compartilhado sem verificar onde e usado.

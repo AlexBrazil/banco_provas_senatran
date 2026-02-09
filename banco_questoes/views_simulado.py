@@ -21,7 +21,6 @@ from banco_questoes.access_control import check_and_increment_app_use, get_regra
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import (
     Alternativa,
-    AppModulo,
     Assinatura,
     Curso,
     CursoModulo,
@@ -183,53 +182,6 @@ def _get_janela_atual(inicio: timezone.datetime, period_seconds: int) -> tuple[t
     return janela_inicio, janela_fim
 
 
-def _dual_write_simulado_uso(
-    request: HttpRequest,
-    *,
-    user,
-    janela_inicio: timezone.datetime,
-    janela_fim: timezone.datetime,
-) -> None:
-    if not getattr(settings, "APP_ACCESS_DUAL_WRITE", False):
-        return
-
-    app_modulo = AppModulo.objects.filter(slug=SIMULADO_APP_SLUG, ativo=True).first()
-    if not app_modulo:
-        log_event(
-            request,
-            "app_rule_missing",
-            user=user,
-            contexto={"app_slug": SIMULADO_APP_SLUG, "reason": "app_modulo_not_found"},
-        )
-        return
-
-    try:
-        uso_app, _ = (
-            UsoAppJanela.objects
-            .select_for_update()
-            .get_or_create(
-                usuario=user,
-                app_modulo=app_modulo,
-                janela_inicio=janela_inicio,
-                janela_fim=janela_fim,
-                defaults={"contador": 0},
-            )
-        )
-        uso_app.contador += 1
-        uso_app.save(update_fields=["contador", "atualizado_em"])
-    except Exception as exc:
-        log_event(
-            request,
-            "app_usage_increment_failed",
-            user=user,
-            contexto={
-                "app_slug": SIMULADO_APP_SLUG,
-                "reason": "dual_write_exception",
-                "error": str(exc),
-            },
-        )
-
-
 def _dual_write_legacy_simulado_uso(
     request: HttpRequest,
     *,
@@ -277,53 +229,7 @@ def _dual_write_legacy_simulado_uso(
         )
 
 
-def _check_and_increment_uso_legacy(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
-    limite = assinatura.limite_qtd_snapshot
-    if limite is None:
-        return True, None
-    if limite <= 0:
-        return False, "Limite de simulados indisponivel para este plano."
-
-    period_seconds = _get_period_seconds(assinatura.limite_periodo_snapshot)
-    if not period_seconds:
-        return False, "Plano sem periodo de limite configurado."
-
-    inicio = assinatura.inicio or timezone.now()
-    if assinatura.inicio is None:
-        assinatura.inicio = inicio
-        assinatura.save(update_fields=["inicio"])
-
-    janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
-
-    with transaction.atomic():
-        uso, _ = (
-            SimuladoUso.objects
-            .select_for_update()
-            .get_or_create(
-                usuario=user,
-                janela_inicio=janela_inicio,
-                janela_fim=janela_fim,
-                defaults={"contador": 0},
-            )
-        )
-        if uso.contador >= limite:
-            return False, "Limite de simulados atingido para o periodo atual."
-        uso.contador += 1
-        uso.save(update_fields=["contador"])
-        _dual_write_simulado_uso(
-            request,
-            user=user,
-            janela_inicio=janela_inicio,
-            janela_fim=janela_fim,
-        )
-
-    return True, None
-
-
 def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
-    if not getattr(settings, "APP_ACCESS_V2_ENABLED", False):
-        return _check_and_increment_uso_legacy(request, user, assinatura)
-
     allowed, reason, contexto = check_and_increment_app_use(user, SIMULADO_APP_SLUG)
     if allowed:
         _dual_write_legacy_simulado_uso(request, user=user, assinatura=assinatura)
@@ -337,18 +243,31 @@ def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura)
             user=user,
             contexto={"app_slug": SIMULADO_APP_SLUG, "motivo": motivo},
         )
-        return _check_and_increment_uso_legacy(request, user, assinatura)
 
     return False, reason
 
 
-def _build_plano_status_v2(user, assinatura: Assinatura) -> dict | None:
-    regra = get_regra_app(assinatura, SIMULADO_APP_SLUG)
-    if not regra:
-        return None
-
+def _build_plano_status_v2(user, assinatura: Assinatura) -> dict:
     nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
     is_free = nome_plano.strip().lower() == "free"
+    regra = get_regra_app(assinatura, SIMULADO_APP_SLUG)
+    if not regra:
+        return {
+            "ativo": True,
+            "nome": nome_plano,
+            "is_free": is_free,
+            "limite_qtd": None,
+            "limite_periodo": None,
+            "limite_periodo_label": "",
+            "ilimitado": False,
+            "usos": 0,
+            "restantes": 0,
+            "janela_inicio": None,
+            "janela_fim": None,
+            "valid_until": assinatura.valid_until,
+            "regra_ausente": True,
+        }
+
     if not regra.permitido:
         return {
             "ativo": True,
@@ -363,6 +282,7 @@ def _build_plano_status_v2(user, assinatura: Assinatura) -> dict | None:
             "janela_inicio": None,
             "janela_fim": None,
             "valid_until": assinatura.valid_until,
+            "regra_ausente": False,
         }
 
     limite = regra.limite_qtd
@@ -409,6 +329,7 @@ def _build_plano_status_v2(user, assinatura: Assinatura) -> dict | None:
         "janela_inicio": janela_inicio,
         "janela_fim": janela_fim,
         "valid_until": assinatura.valid_until,
+        "regra_ausente": False,
     }
 
 
@@ -420,53 +341,7 @@ def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | No
     if not assinatura:
         return {"ativo": False}
 
-    if getattr(settings, "APP_ACCESS_V2_ENABLED", False):
-        plano_status_v2 = _build_plano_status_v2(user, assinatura)
-        if plano_status_v2 is not None:
-            return plano_status_v2
-
-    limite = assinatura.limite_qtd_snapshot
-    periodo = assinatura.limite_periodo_snapshot
-    ilimitado = limite is None
-    usos = 0
-    restantes = None
-    janela_inicio = None
-    janela_fim = None
-    periodo_label = assinatura.get_limite_periodo_snapshot_display() if periodo else ""
-
-    if not ilimitado and periodo:
-        period_seconds = _get_period_seconds(periodo)
-        if period_seconds:
-            inicio = assinatura.inicio
-            if inicio:
-                janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
-                uso = (
-                    SimuladoUso.objects
-                    .filter(usuario=user, janela_inicio=janela_inicio, janela_fim=janela_fim)
-                    .first()
-                )
-                usos = uso.contador if uso else 0
-                restantes = max(limite - usos, 0)
-            else:
-                usos = 0
-                restantes = limite
-
-    nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
-    is_free = nome_plano.strip().lower() == "free"
-    return {
-        "ativo": True,
-        "nome": nome_plano,
-        "is_free": is_free,
-        "limite_qtd": limite,
-        "limite_periodo": periodo,
-        "limite_periodo_label": periodo_label,
-        "ilimitado": ilimitado,
-        "usos": usos,
-        "restantes": restantes,
-        "janela_inicio": janela_inicio,
-        "janela_fim": janela_fim,
-        "valid_until": assinatura.valid_until,
-    }
+    return _build_plano_status_v2(user, assinatura)
 
 
 def _build_error_context(
