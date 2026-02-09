@@ -1,0 +1,84 @@
+{% extends "simulado/base.html" %}
+
+{% block title %}{{ app_title }}{% endblock %}
+
+{% block head_extra %}
+  <style>
+    .uc-page {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(165deg, #eef5ff 0%, #ffffff 70%);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .uc-card {
+      width: min(680px, 100%);
+      background: #ffffff;
+      border: 1px solid #d9e4f6;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
+      padding: 24px;
+    }
+    .uc-badge {
+      display: inline-block;
+      margin: 0 0 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8a6b00;
+      background: #fff6d6;
+      border: 1px solid #f2d67c;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .uc-title {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 5vw, 34px);
+      color: #12213d;
+    }
+    .uc-text {
+      margin: 0;
+      color: #425a78;
+      line-height: 1.5;
+    }
+    .uc-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .uc-btn {
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid #1d4ed8;
+      color: #ffffff;
+      background: #1d4ed8;
+    }
+    .uc-btn-secondary {
+      border-color: #c7d6ee;
+      color: #16325c;
+      background: #f3f7ff;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <main class="uc-page">
+    <section class="uc-card">
+      <p class="uc-badge">Em construcao</p>
+      <h1 class="uc-title">{{ app_title }}</h1>
+      <p class="uc-text">Este modulo esta em construcao e sera liberado em breve.</p>
+      <div class="uc-actions">
+        <a href="{% url 'menu:home' %}" class="uc-btn">Voltar ao menu</a>
+        <a href="{% url 'simulado:inicio' %}" class="uc-btn uc-btn-secondary">Ir para Simulado Digital</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+

@@ -40,6 +40,11 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Comandos de leitura/inspecao: preferir `rg --files`, `rg -n` e `Get-ChildItem` simples.
 - Evitar one-liners PowerShell com pipe/`ForEach-Object`/subexpressoes `$(...)` e cadeias longas de aspas; quando possivel, quebrar em comandos curtos.
 - Se um prompt de aprovacao travar em comando PowerShell complexo, cancelar e rerodar uma versao equivalente mais simples (sem pipe), em vez de insistir no mesmo one-liner.
+- Para executar comandos Python/Django no PowerShell, usar formato em 2 linhas com diretorio explicito:
+  `Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"` e depois
+  `.\.venv\Scripts\python.exe manage.py <comando>`.
+- Evitar wrapper `powershell.exe -Command ...` dentro do proprio PowerShell, pois pode travar os botoes de confirmacao no chat.
+- Em caso de instabilidade/congelamento do prompt no chat, preferir execucao assistida: o agente fornece o comando, o usuario executa no terminal local e cola o output para analise.
 - Convencao de nomes: para novos arquivos e pastas, usar lowercase (kebab_case/underscore quando necessario) e evitar variacoes por maiuscula/minuscula para prevenir conflitos entre Windows e Linux.
 - Mudancas minimas: evitar refatoracoes amplas sem pedido.
 - Validacao obrigatoria: quando possivel, rodar testes/checks; quando nao, declarar limitacoes.

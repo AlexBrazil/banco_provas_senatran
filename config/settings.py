@@ -55,6 +55,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "banco_questoes",
     "menu",
+    "perguntas_respostas",
+    "apostila_cnh",
+    "simulacao_prova",
+    "manual_pratico",
+    "aprenda_jogando",
+    "oraculo",
+    "aprova_plus",
     "payments",
 ]
 
