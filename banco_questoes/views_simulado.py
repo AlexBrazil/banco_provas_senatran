@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_GET
 
+from banco_questoes.access_control import check_and_increment_app_use, get_regra_app
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import (
     Alternativa,
@@ -229,7 +230,54 @@ def _dual_write_simulado_uso(
         )
 
 
-def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
+def _dual_write_legacy_simulado_uso(
+    request: HttpRequest,
+    *,
+    user,
+    assinatura: Assinatura,
+) -> None:
+    if not getattr(settings, "APP_ACCESS_DUAL_WRITE", False):
+        return
+
+    period_seconds = _get_period_seconds(assinatura.limite_periodo_snapshot)
+    if not period_seconds:
+        return
+
+    inicio = assinatura.inicio or timezone.now()
+    if assinatura.inicio is None:
+        assinatura.inicio = inicio
+        assinatura.save(update_fields=["inicio"])
+
+    janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+
+    try:
+        with transaction.atomic():
+            uso, _ = (
+                SimuladoUso.objects
+                .select_for_update()
+                .get_or_create(
+                    usuario=user,
+                    janela_inicio=janela_inicio,
+                    janela_fim=janela_fim,
+                    defaults={"contador": 0},
+                )
+            )
+            uso.contador += 1
+            uso.save(update_fields=["contador"])
+    except Exception as exc:
+        log_event(
+            request,
+            "app_usage_increment_failed",
+            user=user,
+            contexto={
+                "app_slug": SIMULADO_APP_SLUG,
+                "reason": "legacy_dual_write_exception",
+                "error": str(exc),
+            },
+        )
+
+
+def _check_and_increment_uso_legacy(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
     limite = assinatura.limite_qtd_snapshot
     if limite is None:
         return True, None
@@ -272,6 +320,98 @@ def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura)
     return True, None
 
 
+def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
+    if not getattr(settings, "APP_ACCESS_V2_ENABLED", False):
+        return _check_and_increment_uso_legacy(request, user, assinatura)
+
+    allowed, reason, contexto = check_and_increment_app_use(user, SIMULADO_APP_SLUG)
+    if allowed:
+        _dual_write_legacy_simulado_uso(request, user=user, assinatura=assinatura)
+        return True, None
+
+    motivo = (contexto or {}).get("motivo")
+    if motivo in {"regra_ausente", "app_ausente"}:
+        log_event(
+            request,
+            "app_rule_missing",
+            user=user,
+            contexto={"app_slug": SIMULADO_APP_SLUG, "motivo": motivo},
+        )
+        return _check_and_increment_uso_legacy(request, user, assinatura)
+
+    return False, reason
+
+
+def _build_plano_status_v2(user, assinatura: Assinatura) -> dict | None:
+    regra = get_regra_app(assinatura, SIMULADO_APP_SLUG)
+    if not regra:
+        return None
+
+    nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
+    is_free = nome_plano.strip().lower() == "free"
+    if not regra.permitido:
+        return {
+            "ativo": True,
+            "nome": nome_plano,
+            "is_free": is_free,
+            "limite_qtd": regra.limite_qtd,
+            "limite_periodo": regra.limite_periodo,
+            "limite_periodo_label": regra.get_limite_periodo_display() if regra.limite_periodo else "",
+            "ilimitado": False,
+            "usos": 0,
+            "restantes": 0,
+            "janela_inicio": None,
+            "janela_fim": None,
+            "valid_until": assinatura.valid_until,
+        }
+
+    limite = regra.limite_qtd
+    periodo = regra.limite_periodo
+    ilimitado = limite is None
+    usos = 0
+    restantes = None
+    janela_inicio = None
+    janela_fim = None
+    periodo_label = regra.get_limite_periodo_display() if periodo else ""
+
+    if not ilimitado and periodo:
+        period_seconds = _get_period_seconds(periodo)
+        if period_seconds:
+            inicio = assinatura.inicio
+            if inicio:
+                janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+                uso = (
+                    UsoAppJanela.objects
+                    .filter(
+                        usuario=user,
+                        app_modulo=regra.app_modulo,
+                        janela_inicio=janela_inicio,
+                        janela_fim=janela_fim,
+                    )
+                    .first()
+                )
+                usos = uso.contador if uso else 0
+                restantes = max(limite - usos, 0)
+            else:
+                usos = 0
+                restantes = limite
+
+    return {
+        "ativo": True,
+        "nome": nome_plano,
+        "is_free": is_free,
+        "limite_qtd": limite,
+        "limite_periodo": periodo,
+        "limite_periodo_label": periodo_label,
+        "ilimitado": ilimitado,
+        "usos": usos,
+        "restantes": restantes,
+        "janela_inicio": janela_inicio,
+        "janela_fim": janela_fim,
+        "valid_until": assinatura.valid_until,
+    }
+
+
 def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | None:
     if not user.is_authenticated:
         return None
@@ -279,6 +419,11 @@ def _build_plano_status(user, assinatura: Assinatura | None = None) -> dict | No
     assinatura = assinatura or _get_active_assinatura(user)
     if not assinatura:
         return {"ativo": False}
+
+    if getattr(settings, "APP_ACCESS_V2_ENABLED", False):
+        plano_status_v2 = _build_plano_status_v2(user, assinatura)
+        if plano_status_v2 is not None:
+            return plano_status_v2
 
     limite = assinatura.limite_qtd_snapshot
     periodo = assinatura.limite_periodo_snapshot
@@ -976,4 +1121,3 @@ def api_stats(request: HttpRequest) -> JsonResponse:
             },
         }
     )
-
