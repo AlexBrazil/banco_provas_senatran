@@ -20,16 +20,19 @@ from django.views.decorators.http import require_http_methods, require_GET
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import (
     Alternativa,
+    AppModulo,
     Assinatura,
     Curso,
     CursoModulo,
     Questao,
     SimuladoUso,
+    UsoAppJanela,
 )
 from banco_questoes.simulado_config import get_simulado_config
 
 
 SESSION_KEY = "simulado_state_v1"
+SIMULADO_APP_SLUG = "simulado-digital"
 
 
 def login_required_audit(view_func):
@@ -179,7 +182,54 @@ def _get_janela_atual(inicio: timezone.datetime, period_seconds: int) -> tuple[t
     return janela_inicio, janela_fim
 
 
-def _check_and_increment_uso(user, assinatura: Assinatura) -> tuple[bool, str | None]:
+def _dual_write_simulado_uso(
+    request: HttpRequest,
+    *,
+    user,
+    janela_inicio: timezone.datetime,
+    janela_fim: timezone.datetime,
+) -> None:
+    if not getattr(settings, "APP_ACCESS_DUAL_WRITE", False):
+        return
+
+    app_modulo = AppModulo.objects.filter(slug=SIMULADO_APP_SLUG, ativo=True).first()
+    if not app_modulo:
+        log_event(
+            request,
+            "app_rule_missing",
+            user=user,
+            contexto={"app_slug": SIMULADO_APP_SLUG, "reason": "app_modulo_not_found"},
+        )
+        return
+
+    try:
+        uso_app, _ = (
+            UsoAppJanela.objects
+            .select_for_update()
+            .get_or_create(
+                usuario=user,
+                app_modulo=app_modulo,
+                janela_inicio=janela_inicio,
+                janela_fim=janela_fim,
+                defaults={"contador": 0},
+            )
+        )
+        uso_app.contador += 1
+        uso_app.save(update_fields=["contador", "atualizado_em"])
+    except Exception as exc:
+        log_event(
+            request,
+            "app_usage_increment_failed",
+            user=user,
+            contexto={
+                "app_slug": SIMULADO_APP_SLUG,
+                "reason": "dual_write_exception",
+                "error": str(exc),
+            },
+        )
+
+
+def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura) -> tuple[bool, str | None]:
     limite = assinatura.limite_qtd_snapshot
     if limite is None:
         return True, None
@@ -212,6 +262,12 @@ def _check_and_increment_uso(user, assinatura: Assinatura) -> tuple[bool, str | 
             return False, "Limite de simulados atingido para o periodo atual."
         uso.contador += 1
         uso.save(update_fields=["contador"])
+        _dual_write_simulado_uso(
+            request,
+            user=user,
+            janela_inicio=janela_inicio,
+            janela_fim=janela_fim,
+        )
 
     return True, None
 
@@ -479,7 +535,7 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
     if qtd > total:
         qtd = total
 
-    allowed, error_msg = _check_and_increment_uso(request.user, assinatura)
+    allowed, error_msg = _check_and_increment_uso(request, request.user, assinatura)
     if not allowed:
         log_event(
             request,
@@ -920,5 +976,4 @@ def api_stats(request: HttpRequest) -> JsonResponse:
             },
         }
     )
-
 
