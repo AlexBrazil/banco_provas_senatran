@@ -43,6 +43,8 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Impacto cruzado: evitar alterar CSS compartilhado sem verificar onde e usado.
 - Em caso de duvida, listar 1-3 perguntas antes de alterar.
 - Garantir que a nova versao cubra 100% dos casos de uso anteriores, salvo pedido explicito.
+- Regressao rapida obrigatoria: apos cada etapa relevante, executar um roteiro minimo dos fluxos criticos (ex.: login, menu, simulado, checkout PIX, logout/login) antes de seguir.
+- Gate Go/No-Go obrigatorio: so avancar para a proxima etapa quando todos os criterios de aceite da etapa atual e a regressao rapida tiverem passado; caso contrario, parar, corrigir e revalidar.
 - Templates de pagina completa devem estender `base.html`; se nao estenderem, incluir `<meta name="viewport">` no `<head>`. Nao aplicar a fragmentos/parciais.
 - Para tarefas grandes, registrar o plano em `Documentos_Ajuda/PLAN.md` ou
   `Documentos_Ajuda/plans/<tema>.md` e atualizar o status a cada etapa.
