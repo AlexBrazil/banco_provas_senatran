@@ -179,6 +179,10 @@ def build_app_access_status(user) -> dict[str, Any]:
             {
                 "slug": app.slug,
                 "nome": app.nome,
+                "ordem_menu": app.ordem_menu,
+                "icone_path": app.icone_path,
+                "rota_nome": app.rota_nome,
+                "ativo": app.ativo,
                 "liberado": liberado,
                 "em_construcao": app.em_construcao,
                 "bloqueado_plano": bool(assinatura and regra and not regra.permitido),
@@ -235,4 +239,3 @@ def require_app_access(app_slug: str) -> Callable:
         return _wrapped
 
     return decorator
-

@@ -30,7 +30,7 @@
               <img src="{% static card.icone %}" alt="{{ card.titulo }}" class="menu-card-icon" loading="lazy">
               <h2 class="menu-card-title">{{ card.titulo }}</h2>
               <p class="menu-card-description">{{ card.descricao }}</p>
-              <span class="menu-badge{% if card.ativo %} menu-badge--active{% endif %}">
+              <span class="menu-badge{% if card.badge_class %} {{ card.badge_class }}{% endif %}">
                 {{ card.status }}
               </span>
 

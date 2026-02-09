@@ -8,11 +8,12 @@ from banco_questoes.models import AppModulo, Plano, PlanoPermissaoApp
 
 FREE_PLAN_NAME = "Free"
 PAID_PLAN_NAME = "Aprova DETRAN"
-FREE_ALLOWED_SLUG = "simulado-provas"
+FREE_ALLOWED_SLUG = "simulado-digital"
+LEGACY_SIMULADO_SLUG = "simulado-provas"
 
 APP_MODULES = [
     {
-        "slug": "simulado-provas",
+        "slug": "simulado-digital",
         "nome": "Simulado de Provas",
         "ordem_menu": 1,
         "icone_path": "menu_app/icons/icon_app_1.png",
@@ -81,8 +82,26 @@ APP_MODULES = [
 class Command(BaseCommand):
     help = "Seed idempotente de AppModulo e PlanoPermissaoApp para Free e Aprova DETRAN."
 
+    def _migrate_legacy_simulado_slug(self) -> None:
+        canonical = AppModulo.objects.filter(slug=FREE_ALLOWED_SLUG).first()
+        legacy = AppModulo.objects.filter(slug=LEGACY_SIMULADO_SLUG).first()
+        if not legacy:
+            return
+
+        if canonical:
+            # Se ambos existem, desativa o legado para nao duplicar no menu/status.
+            if legacy.ativo:
+                legacy.ativo = False
+                legacy.save(update_fields=["ativo", "atualizado_em"])
+            return
+
+        legacy.slug = FREE_ALLOWED_SLUG
+        legacy.save(update_fields=["slug", "atualizado_em"])
+
     @transaction.atomic
     def handle(self, *args, **options):
+        self._migrate_legacy_simulado_slug()
+
         free_plan = Plano.objects.filter(nome__iexact=FREE_PLAN_NAME).first()
         if not free_plan:
             raise CommandError("Plano 'Free' nao encontrado. Crie o plano e rode novamente.")
@@ -154,4 +173,3 @@ class Command(BaseCommand):
                 f"PlanoPermissaoApp: {perm_created} criados, {perm_updated} atualizados."
             )
         )
-

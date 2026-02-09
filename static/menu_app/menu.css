@@ -164,6 +164,12 @@ body.menu-body {
   background: var(--menu-active-soft);
 }
 
+.menu-badge--blocked {
+  border-color: #a94b24;
+  color: #8c3513;
+  background: #fee9e1;
+}
+
 .menu-card--disabled .menu-card-link {
   cursor: default;
   opacity: 0.7;

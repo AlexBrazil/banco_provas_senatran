@@ -1,12 +1,11 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
+from banco_questoes.access_control import require_app_access
 
-@login_required
+@require_app_access("aprenda-jogando")
 def index(request):
     return render(
         request,
         "aprenda_jogando/index.html",
         {"app_title": "Aprenda Jogando"},
     )
-

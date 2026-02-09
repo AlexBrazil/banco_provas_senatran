@@ -1,7 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
+
+from banco_questoes.models import AppModulo, Assinatura, Plano, PlanoPermissaoApp
 
 
 class MenuSmokeTests(TestCase):
@@ -93,3 +97,128 @@ class MenuSmokeTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
+
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_menu_shows_liberado_and_bloqueado_status_with_v2(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-6",
+            email="menu6@example.com",
+            password="safe-password-123",
+        )
+        plano = Plano.objects.create(nome="Plano Teste Menu V2")
+        Assinatura.objects.create(
+            usuario=user,
+            plano=plano,
+            nome_plano_snapshot=plano.nome,
+            status=Assinatura.Status.ATIVO,
+            inicio=timezone.now(),
+            valid_until=None,
+        )
+        app_liberado = AppModulo.objects.create(
+            slug="simulado-digital",
+            nome="Simulado de Provas",
+            ordem_menu=1,
+            icone_path="menu_app/icons/icon_app_1.png",
+            rota_nome="simulado:inicio",
+            em_construcao=False,
+            ativo=True,
+        )
+        app_bloqueado = AppModulo.objects.create(
+            slug="oraculo",
+            nome="Oraculo",
+            ordem_menu=2,
+            icone_path="menu_app/icons/icon_app_7.png",
+            rota_nome="oraculo:index",
+            em_construcao=False,
+            ativo=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_liberado,
+            permitido=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_bloqueado,
+            permitido=False,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Liberado")
+        self.assertContains(response, "Bloqueado pelo plano")
+
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_menu_blocked_card_is_not_clickable_with_v2(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-7",
+            email="menu7@example.com",
+            password="safe-password-123",
+        )
+        plano = Plano.objects.create(nome="Plano Teste Menu V2 Bloqueio")
+        Assinatura.objects.create(
+            usuario=user,
+            plano=plano,
+            nome_plano_snapshot=plano.nome,
+            status=Assinatura.Status.ATIVO,
+            inicio=timezone.now(),
+            valid_until=None,
+        )
+        app_bloqueado = AppModulo.objects.create(
+            slug="oraculo",
+            nome="Oraculo",
+            ordem_menu=1,
+            icone_path="menu_app/icons/icon_app_7.png",
+            rota_nome="oraculo:index",
+            em_construcao=False,
+            ativo=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_bloqueado,
+            permitido=False,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'aria-disabled="true"')
+        self.assertNotContains(response, 'href="/oraculo/"')
+
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_menu_em_construcao_badge_when_liberado_but_under_construction(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-8",
+            email="menu8@example.com",
+            password="safe-password-123",
+        )
+        plano = Plano.objects.create(nome="Plano Teste Menu V2 EmConstrucao")
+        Assinatura.objects.create(
+            usuario=user,
+            plano=plano,
+            nome_plano_snapshot=plano.nome,
+            status=Assinatura.Status.ATIVO,
+            inicio=timezone.now(),
+            valid_until=None,
+        )
+        app_em_construcao = AppModulo.objects.create(
+            slug="oraculo",
+            nome="Oraculo",
+            ordem_menu=1,
+            icone_path="menu_app/icons/icon_app_7.png",
+            rota_nome="oraculo:index",
+            em_construcao=True,
+            ativo=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_em_construcao,
+            permitido=True,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Em construcao")
+        self.assertContains(response, 'href="/oraculo/"')

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 MENU_CATALOG = [
     {
-        "slug": "simulado-provas",
+        "slug": "simulado-digital",
         "titulo": "Simulado de Provas",
         "descricao": "App atual em operacao.",
         "icone": "menu_app/icons/icon_app_1.png",
