@@ -153,6 +153,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Toggle para cooldown de cadastro (IP + device)
 REGISTER_COOLDOWN_ENABLED = env_bool("REGISTER_COOLDOWN_ENABLED", "1")
+# Flags de rollout do controle de acesso por app (Fase 2)
+APP_ACCESS_V2_ENABLED = env_bool("APP_ACCESS_V2_ENABLED", "0")
+APP_ACCESS_DUAL_WRITE = env_bool("APP_ACCESS_DUAL_WRITE", "0")
 
 
 # -----------------------------------------------------------------------------

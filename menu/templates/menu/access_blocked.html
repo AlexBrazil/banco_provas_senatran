@@ -1,0 +1,90 @@
+{% extends "simulado/base.html" %}
+
+{% block title %}Acesso ao modulo{% endblock %}
+
+{% block head_extra %}
+  <style>
+    .ab-page {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(165deg, #eef5ff 0%, #ffffff 70%);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .ab-card {
+      width: min(680px, 100%);
+      background: #ffffff;
+      border: 1px solid #d9e4f6;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
+      padding: 24px;
+    }
+    .ab-badge {
+      display: inline-block;
+      margin: 0 0 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8a2f00;
+      background: #ffe5da;
+      border: 1px solid #f5bda8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .ab-title {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 5vw, 34px);
+      color: #12213d;
+    }
+    .ab-text {
+      margin: 0 0 8px;
+      color: #425a78;
+      line-height: 1.5;
+    }
+    .ab-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .ab-btn {
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid #1d4ed8;
+      color: #ffffff;
+      background: #1d4ed8;
+    }
+    .ab-btn-secondary {
+      border-color: #c7d6ee;
+      color: #16325c;
+      background: #f3f7ff;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <main class="ab-page">
+    <section class="ab-card">
+      <p class="ab-badge">Acesso bloqueado</p>
+      <h1 class="ab-title">Este modulo nao esta disponivel agora</h1>
+      <p class="ab-text">{{ reason }}</p>
+      {% if plano_nome %}
+        <p class="ab-text">Plano atual: {{ plano_nome }}</p>
+      {% endif %}
+      <div class="ab-actions">
+        <a href="{% url 'menu:home' %}" class="ab-btn ab-btn-secondary">Voltar ao menu</a>
+        <a href="{% url 'simulado:inicio' %}" class="ab-btn ab-btn-secondary">Ir para Simulado</a>
+        {% if show_upgrade_cta %}
+          <a href="{{ upgrade_url }}" class="ab-btn">Fazer upgrade</a>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
