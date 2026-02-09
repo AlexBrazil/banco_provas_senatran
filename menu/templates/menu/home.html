@@ -1,0 +1,45 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu de Apps</title>
+  <link rel="stylesheet" href="{% static 'menu_app/menu.css' %}">
+</head>
+<body class="menu-body">
+  <main class="menu-layout">
+    <header class="menu-header">
+      <p class="menu-eyebrow">Nosso Transito 2026</p>
+      <h1 class="menu-title">Menu de Apps</h1>
+      <p class="menu-subtitle">Selecione um modulo para continuar.</p>
+    </header>
+
+    <section class="menu-grid" aria-label="Catalogo de apps">
+      {% for card in cards %}
+        <article class="menu-card{% if not card.ativo %} menu-card--disabled{% endif %}">
+          {% if card.ativo %}
+            <a href="{{ card.href }}" class="menu-card-link">
+          {% else %}
+            <div class="menu-card-link" aria-disabled="true">
+          {% endif %}
+
+              <img src="{% static card.icone %}" alt="" class="menu-card-icon" loading="lazy">
+              <h2 class="menu-card-title">{{ card.titulo }}</h2>
+              <p class="menu-card-description">{{ card.descricao }}</p>
+              <span class="menu-badge{% if card.ativo %} menu-badge--active{% endif %}">
+                {{ card.status }}
+              </span>
+
+          {% if card.ativo %}
+            </a>
+          {% else %}
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>
+

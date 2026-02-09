@@ -37,6 +37,9 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Usar progressive disclosure: ler apenas arquivos/trechos necessarios; ampliar escopo so com bloqueio ou pedido explicito.
 - Sem suposicoes: nao inventar endpoints, settings, modelos ou arquivos; sempre cite o caminho ao referenciar.
 - Estrutura de diretorios: validar sempre no filesystem real do projeto (ex.: Get-ChildItem, git ls-files); nao inferir por memoria, resposta anterior ou nome citado.
+- Comandos de leitura/inspecao: preferir `rg --files`, `rg -n` e `Get-ChildItem` simples.
+- Evitar one-liners PowerShell com pipe/`ForEach-Object`/subexpressoes `$(...)` e cadeias longas de aspas; quando possivel, quebrar em comandos curtos.
+- Se um prompt de aprovacao travar em comando PowerShell complexo, cancelar e rerodar uma versao equivalente mais simples (sem pipe), em vez de insistir no mesmo one-liner.
 - Convencao de nomes: para novos arquivos e pastas, usar lowercase (kebab_case/underscore quando necessario) e evitar variacoes por maiuscula/minuscula para prevenir conflitos entre Windows e Linux.
 - Mudancas minimas: evitar refatoracoes amplas sem pedido.
 - Validacao obrigatoria: quando possivel, rodar testes/checks; quando nao, declarar limitacoes.
