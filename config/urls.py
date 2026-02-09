@@ -16,12 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from banco_questoes.urls_simulado import urlpatterns as simulado_urlpatterns
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("", include("menu.urls", namespace="menu")),
+    path("menu/", RedirectView.as_view(pattern_name="menu:home", permanent=False)),
     path("", include("banco_questoes.urls_auth")),
-    path("menu/", include("menu.urls", namespace="menu")),
     path("perguntas-respostas/", include("perguntas_respostas.urls", namespace="perguntas_respostas")),
     path("apostila-cnh/", include("apostila_cnh.urls", namespace="apostila_cnh")),
     path("simulacao-prova-detran/", include("simulacao_prova.urls", namespace="simulacao_prova")),
@@ -30,6 +31,5 @@ urlpatterns = [
     path("oraculo/", include("oraculo.urls", namespace="oraculo")),
     path("aprova-plus/", include("aprova_plus.urls", namespace="aprova_plus")),
     path("simulado/", include("banco_questoes.urls_simulado", namespace="simulado")),
-    path("", include((simulado_urlpatterns, "simulado_legacy"), namespace="simulado_legacy")),
     path("payments/", include("payments.urls")),
 ]

@@ -9,14 +9,17 @@ from .auditoria import log_event
 
 from .models import (
     Alternativa,
+    AppModulo,
     Assinatura,
     Curso,
     CursoModulo,
     Documento,
     EventoAuditoria,
     Plano,
+    PlanoPermissaoApp,
     Questao,
     SimuladoUso,
+    UsoAppJanela,
 )
 
 
@@ -90,6 +93,22 @@ class PlanoAdmin(admin.ModelAdmin):
             )
 
 
+@admin.register(AppModulo)
+class AppModuloAdmin(admin.ModelAdmin):
+    list_display = ("nome", "slug", "ordem_menu", "ativo", "em_construcao", "rota_nome")
+    list_filter = ("ativo", "em_construcao")
+    search_fields = ("nome", "slug", "rota_nome")
+    ordering = ("ordem_menu", "nome")
+
+
+@admin.register(PlanoPermissaoApp)
+class PlanoPermissaoAppAdmin(admin.ModelAdmin):
+    list_display = ("plano", "app_modulo", "permitido", "limite_qtd", "limite_periodo")
+    list_filter = ("permitido", "limite_periodo", "plano")
+    search_fields = ("plano__nome", "app_modulo__nome", "app_modulo__slug")
+    list_select_related = ("plano", "app_modulo")
+
+
 @admin.register(Assinatura)
 class AssinaturaAdmin(admin.ModelAdmin):
     list_display = ("usuario", "plano", "status", "valid_until", "preco_snapshot", "limite_qtd_snapshot")
@@ -155,6 +174,14 @@ class SimuladoUsoAdmin(admin.ModelAdmin):
     list_filter = ("janela_fim",)
     search_fields = ("usuario__email", "usuario__username")
     list_select_related = ("usuario",)
+
+
+@admin.register(UsoAppJanela)
+class UsoAppJanelaAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "app_modulo", "janela_inicio", "janela_fim", "contador")
+    list_filter = ("app_modulo", "janela_fim")
+    search_fields = ("usuario__email", "usuario__username", "app_modulo__nome", "app_modulo__slug")
+    list_select_related = ("usuario", "app_modulo")
 
 
 @admin.register(EventoAuditoria)

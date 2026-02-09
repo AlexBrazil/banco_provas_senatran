@@ -227,6 +227,66 @@ class Plano(models.Model):
         return self.nome
 
 
+class AppModulo(models.Model):
+    slug = models.SlugField(max_length=120, unique=True)
+    nome = models.CharField(max_length=120)
+    ativo = models.BooleanField(default=True)
+    ordem_menu = models.PositiveSmallIntegerField(default=0)
+    icone_path = models.CharField(max_length=255, blank=True, default="")
+    rota_nome = models.CharField(max_length=120, blank=True, default="")
+    em_construcao = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["ordem_menu", "nome"]
+        indexes = [
+            models.Index(fields=["ativo", "ordem_menu"], name="bq_appmod_ativo_ordem_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return self.nome
+
+
+class PlanoPermissaoApp(models.Model):
+    plano = models.ForeignKey(
+        Plano,
+        on_delete=models.CASCADE,
+        related_name="permissoes_apps",
+    )
+    app_modulo = models.ForeignKey(
+        AppModulo,
+        on_delete=models.CASCADE,
+        related_name="permissoes_planos",
+    )
+    permitido = models.BooleanField(default=False)
+    limite_qtd = models.PositiveIntegerField(null=True, blank=True)
+    limite_periodo = models.CharField(
+        max_length=20,
+        choices=Plano.Periodo.choices,
+        null=True,
+        blank=True,
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["plano__nome", "app_modulo__ordem_menu", "app_modulo__nome"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["plano", "app_modulo"],
+                name="uniq_plano_permissao_app",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["plano", "permitido"], name="bq_planoapp_plano_perm_idx"),
+            models.Index(fields=["app_modulo"], name="bq_planoapp_app_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.plano.nome} :: {self.app_modulo.nome}"
+
+
 class Assinatura(models.Model):
     class Status(models.TextChoices):
         ATIVO = "ATIVO", "Ativo"
@@ -301,6 +361,38 @@ class SimuladoUso(models.Model):
 
     def __str__(self) -> str:
         return f"{self.usuario} :: {self.janela_inicio.date()}-{self.janela_fim.date()}"
+
+
+class UsoAppJanela(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="uso_apps_janela",
+    )
+    app_modulo = models.ForeignKey(
+        AppModulo,
+        on_delete=models.CASCADE,
+        related_name="usos_janela",
+    )
+    janela_inicio = models.DateTimeField()
+    janela_fim = models.DateTimeField()
+    contador = models.PositiveIntegerField(default=0)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "app_modulo", "janela_inicio", "janela_fim"],
+                name="uniq_usoapp_usuario_janela",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["usuario", "app_modulo", "janela_fim"], name="bq_usoapp_user_app_fim_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.usuario} :: {self.app_modulo.slug} :: {self.janela_inicio.date()}-{self.janela_fim.date()}"
 
 
 class EventoAuditoria(models.Model):

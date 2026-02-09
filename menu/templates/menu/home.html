@@ -13,25 +13,28 @@
       <p class="menu-eyebrow">Nosso Transito 2026</p>
       <h1 class="menu-title">Menu de Apps</h1>
       <p class="menu-subtitle">Selecione um modulo para continuar.</p>
+      <div class="menu-header-actions">
+        <a href="{% url 'simulado:inicio' %}" class="menu-cta">Abrir Simulado</a>
+      </div>
     </header>
 
     <section class="menu-grid" aria-label="Catalogo de apps">
       {% for card in cards %}
-        <article class="menu-card{% if not card.ativo %} menu-card--disabled{% endif %}">
-          {% if card.ativo %}
+        <article class="menu-card{% if card.ativo %} menu-card--active{% endif %}{% if not card.clicavel %} menu-card--disabled{% endif %}" style="--card-order: {{ forloop.counter0 }};">
+          {% if card.clicavel %}
             <a href="{{ card.href }}" class="menu-card-link">
           {% else %}
             <div class="menu-card-link" aria-disabled="true">
           {% endif %}
 
-              <img src="{% static card.icone %}" alt="" class="menu-card-icon" loading="lazy">
+              <img src="{% static card.icone %}" alt="{{ card.titulo }}" class="menu-card-icon" loading="lazy">
               <h2 class="menu-card-title">{{ card.titulo }}</h2>
               <p class="menu-card-description">{{ card.descricao }}</p>
               <span class="menu-badge{% if card.ativo %} menu-badge--active{% endif %}">
                 {{ card.status }}
               </span>
 
-          {% if card.ativo %}
+          {% if card.clicavel %}
             </a>
           {% else %}
             </div>
@@ -42,4 +45,3 @@
   </main>
 </body>
 </html>
-

@@ -12,12 +12,15 @@ def home(request):
     cards = []
     for index, card in enumerate(get_menu_catalog()):
         route_name = card.get("rota_nome", "")
-        href = reverse(route_name) if route_name else "#"
+        clicavel = bool(route_name)
+        ativo = str(card.get("status", "")).strip().lower() == "ativo"
+        href = reverse(route_name) if clicavel else "#"
         cards.append(
             {
                 **card,
                 "href": href,
-                "ativo": bool(route_name),
+                "ativo": ativo,
+                "clicavel": clicavel,
                 "ordem_base": index,
             }
         )
