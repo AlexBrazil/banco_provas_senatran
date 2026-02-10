@@ -1,56 +1,147 @@
-# Planos e assinaturas (guia rapido)
+# Planos e assinaturas (guia rapido atualizado)
 
-Este arquivo explica como preencher os campos de um Plano e como criar uma Assinatura para um usuario.
+Este guia descreve como funcionam `Plano`, `Assinatura` e o controle por app (`AppModulo` / `PlanoPermissaoApp` / `UsoAppJanela`).
 
-## 1) Campos do Plano
-- `nome`: identificador do plano (ex.: Free, Aprova DETRAN, Mensal 30).
-- `limite_qtd`: quantidade maxima de simulados no periodo. Vazio = ilimitado.
-- `limite_periodo`: janela de limite quando `limite_qtd` esta preenchido.
-  Valores: `DIARIO`, `SEMANAL`, `MENSAL`, `ANUAL`.
-- `validade_dias`: quando a assinatura expira. Vazio = vitalicio.
-- `ciclo_cobranca`: `MENSAL`, `ANUAL` ou `NAO_RECORRENTE`.
-- `preco`: valor do plano.
-- `ativo`: se o plano esta disponivel.
+---
 
-Regras importantes:
-- Se `limite_qtd` estiver vazio, o plano e ilimitado e `limite_periodo` pode ficar vazio.
-- Se `limite_qtd` estiver preenchido e `limite_periodo` estiver vazio, o sistema bloqueia
-  com "Plano sem periodo de limite configurado".
+## 1) Modelo atual de acesso
 
-Exemplos:
-- Free (3 por dia): `limite_qtd=3`, `limite_periodo=DIARIO`, `validade_dias` vazio,
-  `ciclo_cobranca=NAO_RECORRENTE`, `preco=0`, `ativo`.
-- Aprova DETRAN (exemplo de ilimitado anual): `limite_qtd` vazio, `limite_periodo` vazio,
-  `validade_dias=365`, `ciclo_cobranca=ANUAL`, `preco=199.90`, `ativo`.
+No estado atual do projeto, o acesso e controlado em duas camadas:
 
-## 2) Campos da Assinatura
-- `usuario`: dono da assinatura.
-- `plano`: referencia do plano atual.
-- `nome_plano_snapshot`: copia do nome no momento da compra.
-- `limite_qtd_snapshot`: copia do limite do plano no momento da compra.
-- `limite_periodo_snapshot`: copia do periodo do plano no momento da compra.
-- `validade_dias_snapshot`: copia da validade do plano no momento da compra.
-- `ciclo_cobranca_snapshot`: copia do ciclo do plano no momento da compra.
-- `preco_snapshot`: copia do preco do plano no momento da compra.
-- `status`: `ATIVO`, `EXPIRADO`, `PAUSADO`.
-- `inicio`: data de inicio da assinatura (usada para a janela de limite).
-- `valid_until`: data de expiracao (pode ser vazio se vitalicio).
+1. Assinatura ativa do usuario
+- modelo `Assinatura`
+- valida status e validade temporal (`valid_until`)
 
-Regras importantes:
-- A janela de limite e "periodo corrido", contando a partir de `inicio`.
-- Na renovacao, **apenas** `preco_snapshot` deve ser atualizado (limites permanecem).
+2. Regra por app do plano
+- modelos `AppModulo` + `PlanoPermissaoApp`
+- define se cada app esta liberado e qual limite por app se houver
 
-## 3) Como criar uma assinatura manualmente (admin)
-1) Garanta que o Plano desejado existe e esta `ativo`.
-2) Crie a Assinatura para o usuario:
-   - Preencha o campo `plano`.
-   - Copie os valores do plano para os campos `_snapshot`.
-   - Defina `inicio` (agora) e `valid_until` conforme a validade.
-   - Ajuste `status` para `ATIVO`.
+Consumo:
+- modelo `UsoAppJanela` registra uso por usuario + app + janela.
 
-Observacao:
-- Ao criar uma Assinatura no admin com um plano selecionado, os campos `_snapshot`
-  sao preenchidos automaticamente com os dados do plano.
-- Ao criar a Assinatura, `inicio` e `valid_until` sao preenchidos automaticamente.
-- Ao editar a Assinatura, `inicio` passa a ser obrigatorio e `valid_until` e
-  recalculado **apenas** quando o plano possui `validade_dias`.
+---
+
+## 2) Campos do Plano
+
+Modelo: `Plano`
+
+- `nome`
+- `limite_qtd`
+- `limite_periodo` (`DIARIO`, `SEMANAL`, `MENSAL`, `ANUAL`)
+- `validade_dias`
+- `ciclo_cobranca` (`MENSAL`, `ANUAL`, `NAO_RECORRENTE`)
+- `preco`
+- `ativo`
+
+Importante no contexto atual:
+- os limites globais do `Plano` nao sao suficientes para o V2 por app;
+- no V2, a regra efetiva por modulo fica em `PlanoPermissaoApp`;
+- no seed padrao, o plano Free ainda fornece limite base do app `simulado-digital`.
+
+---
+
+## 3) Campos da Assinatura
+
+Modelo: `Assinatura`
+
+Campos principais:
+- `usuario`
+- `plano`
+- `status` (`ATIVO`, `EXPIRADO`, `PAUSADO`)
+- `inicio`
+- `valid_until`
+
+Snapshots:
+- `nome_plano_snapshot`
+- `limite_qtd_snapshot`
+- `limite_periodo_snapshot`
+- `validade_dias_snapshot`
+- `ciclo_cobranca_snapshot`
+- `preco_snapshot`
+
+Observacao importante:
+- no V2 por app, limites de acesso devem vir de `PlanoPermissaoApp`, nao do snapshot global da assinatura;
+- snapshots continuam uteis para trilha comercial/historica.
+
+---
+
+## 4) Regras por app (core do V2)
+
+### 4.1 `AppModulo`
+- catalogo persistido dos apps.
+- slug canonico do simulado: `simulado-digital`.
+
+### 4.2 `PlanoPermissaoApp`
+- chave: (`plano`, `app_modulo`) unica.
+- campos de regra:
+  - `permitido` (bool)
+  - `limite_qtd` (null = ilimitado)
+  - `limite_periodo` (ou null)
+
+### 4.3 `UsoAppJanela`
+- contador por usuario/app/janela.
+- usado para bloqueio quando `limite_qtd` esta definido.
+
+---
+
+## 5) Simulado e legado
+
+- Simulado usa regra V2 do app `simulado-digital`.
+- `SimuladoUso` (legado) permanece apenas para dual-write opcional/observabilidade.
+- dual-write legado depende de `APP_ACCESS_DUAL_WRITE=1`.
+
+---
+
+## 6) Seed oficial de apps e permissoes
+
+Comando:
+
+```powershell
+Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
+.\.venv\Scripts\python.exe manage.py seed_apps_menu_access
+```
+
+O que garante:
+- 8 apps em `AppModulo`;
+- permissoes Free e Aprova DETRAN em `PlanoPermissaoApp`;
+- migracao de slug legado `simulado-provas` -> `simulado-digital`.
+
+---
+
+## 7) Configuracao recomendada de planos (padrao do projeto)
+
+Free:
+- permitido somente `simulado-digital`;
+- limite vindo do plano Free (ex.: 3/DIARIO).
+
+Aprova DETRAN:
+- 8 apps permitidos;
+- sem limite por app (`limite_qtd=null`, `limite_periodo=null`).
+
+---
+
+## 8) Criar/ajustar assinatura manualmente (admin)
+
+Passos:
+1. Confirmar que o `Plano` desejado existe e esta ativo.
+2. Criar/editar `Assinatura` do usuario com `status=ATIVO`.
+3. Garantir `inicio` e `valid_until` coerentes com a regra comercial.
+4. Confirmar que o plano da assinatura possui regras em `PlanoPermissaoApp`.
+
+Sem regra em `PlanoPermissaoApp`:
+- o app correspondente pode bloquear (comportamento esperado de seguranca).
+
+---
+
+## 9) Checklist de deploy (acesso por app)
+
+1. Aplicar migrations.
+2. Rodar `seed_apps_menu_access`.
+3. Validar no admin:
+  - 8 `AppModulo`;
+  - regras Free e Aprova DETRAN em `PlanoPermissaoApp`.
+4. Validar flags de ambiente conforme rollout.
+5. Smoke test:
+  - usuario Free;
+  - usuario Aprova DETRAN;
+  - menu + simulado + checkout PIX.
