@@ -5,8 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.urls import NoReverseMatch, reverse
 
-from banco_questoes.access_control import build_app_access_status
+from banco_questoes.access_control import build_app_access_status, build_plan_status_for_app
 from .catalog import get_menu_catalog
+
+SIMULADO_APP_SLUG = "simulado-digital"
 
 
 def _build_cards_from_catalog() -> list[dict]:
@@ -91,4 +93,5 @@ def home(request):
         cards = _build_cards_from_access(request.user)
     else:
         cards = _build_cards_from_catalog()
-    return render(request, "menu/home.html", {"cards": cards})
+    plano_status = build_plan_status_for_app(request.user, SIMULADO_APP_SLUG)
+    return render(request, "menu/home.html", {"cards": cards, "plano_status": plano_status})

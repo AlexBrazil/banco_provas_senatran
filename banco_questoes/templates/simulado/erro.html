@@ -39,6 +39,7 @@
 
     <div class="form-actions">
       <a class="btn-simulado" href="{% url 'simulado:inicio' %}">Voltar ao inicio</a>
+      <a class="btn-simulado" href="{% url 'menu:home' %}">Voltar para o menu</a>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="btn-simulado">Sair</button>

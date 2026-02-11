@@ -37,6 +37,18 @@ class MenuSmokeTests(TestCase):
         response = self.client.get(reverse("menu:home"))
         self.assertEqual(response.status_code, 200)
 
+    def test_menu_header_shows_meu_plano_instead_of_abrir_simulado(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-header",
+            email="menu-header@example.com",
+            password="safe-password-123",
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Meu plano")
+        self.assertNotContains(response, "Abrir Simulado")
+
     def test_menu_card_simulado_points_to_canonical_url(self):
         user = get_user_model().objects.create_user(
             username="menu-user-2",

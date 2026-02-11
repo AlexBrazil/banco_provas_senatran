@@ -24,6 +24,10 @@
     {% endif %}
   {% endwith %}
 
+  <div class="form-actions">
+    <a class="btn-simulado" href="{% url 'menu:home' %}">Voltar para o menu</a>
+  </div>
+
   <p class="simulado-modulo">
     <strong>{{ questao.modulo.nome }}</strong>
   </p>

@@ -14,7 +14,15 @@
       <h1 class="menu-title">Menu de Apps</h1>
       <p class="menu-subtitle">Selecione um modulo para continuar.</p>
       <div class="menu-header-actions">
-        <a href="{% url 'simulado:inicio' %}" class="menu-cta">Abrir Simulado</a>
+        <button
+          type="button"
+          class="menu-cta"
+          id="btn-meu-plano"
+          aria-haspopup="dialog"
+          aria-controls="modal-meu-plano"
+        >
+          Meu plano
+        </button>
       </div>
     </header>
 
@@ -43,5 +51,50 @@
       {% endfor %}
     </section>
   </main>
+
+  <dialog
+    id="modal-meu-plano"
+    class="menu-modal"
+    aria-labelledby="modal-meu-plano-title"
+  >
+    <div class="menu-modal-panel" role="document" tabindex="-1">
+      <div class="menu-modal-header">
+        <h2 id="modal-meu-plano-title" class="menu-modal-title">Meu plano</h2>
+        <button type="button" class="menu-modal-close" data-modal-close aria-label="Fechar modal">x</button>
+      </div>
+      <div class="menu-modal-body">
+        {% if plano_status and plano_status.ativo %}
+          <p class="menu-modal-text">Plano {{ plano_status.nome }}</p>
+          <div class="menu-modal-meta">
+            {% if plano_status.ilimitado %}
+              <span class="menu-pill">Acesso ilimitado</span>
+            {% else %}
+              {% if plano_status.regra_ausente %}
+                <span class="menu-pill menu-pill--warn">Regra de acesso nao configurada</span>
+              {% else %}
+                <span class="menu-pill">
+                  Limite {{ plano_status.limite_qtd }} / {{ plano_status.limite_periodo_label }}
+                </span>
+                <span class="menu-pill">Usados {{ plano_status.usos }}</span>
+                <span class="menu-pill">Restantes {{ plano_status.restantes }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+          {% if plano_status.janela_fim %}
+            <p class="menu-modal-hint">Janela atual ate {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+          {% if plano_status.valid_until %}
+            <p class="menu-modal-hint">Valido ate {{ plano_status.valid_until|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+        {% else %}
+          <p class="menu-modal-text">
+            Nenhum plano ativo. Entre em contato com o suporte para adquirir um plano.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </dialog>
+
+  <script src="{% static 'menu_app/menu.js' %}"></script>
 </body>
 </html>

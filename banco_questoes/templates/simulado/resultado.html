@@ -71,6 +71,7 @@
   <div class="simulado-card">
     <form method="post" class="form-actions">
       {% csrf_token %}
+      <a class="btn-simulado" href="{% url 'menu:home' %}">Voltar para o menu</a>
       <button type="submit" class="btn-simulado">Novo simulado</button>
     </form>
   </div>

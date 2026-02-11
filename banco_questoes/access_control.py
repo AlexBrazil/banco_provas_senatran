@@ -198,6 +198,99 @@ def build_app_access_status(user) -> dict[str, Any]:
     }
 
 
+def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
+    if not getattr(user, "is_authenticated", False):
+        return None
+
+    assinatura = get_assinatura_ativa(user)
+    if not assinatura:
+        return {"ativo": False}
+
+    nome_plano = _nome_plano(assinatura) or "Plano"
+    is_free = nome_plano.strip().lower() == "free"
+    regra = get_regra_app(assinatura, app_slug)
+    if not regra:
+        return {
+            "ativo": True,
+            "nome": nome_plano,
+            "is_free": is_free,
+            "limite_qtd": None,
+            "limite_periodo": None,
+            "limite_periodo_label": "",
+            "ilimitado": False,
+            "usos": 0,
+            "restantes": 0,
+            "janela_inicio": None,
+            "janela_fim": None,
+            "valid_until": assinatura.valid_until,
+            "regra_ausente": True,
+        }
+
+    if not regra.permitido:
+        return {
+            "ativo": True,
+            "nome": nome_plano,
+            "is_free": is_free,
+            "limite_qtd": regra.limite_qtd,
+            "limite_periodo": regra.limite_periodo,
+            "limite_periodo_label": regra.get_limite_periodo_display() if regra.limite_periodo else "",
+            "ilimitado": False,
+            "usos": 0,
+            "restantes": 0,
+            "janela_inicio": None,
+            "janela_fim": None,
+            "valid_until": assinatura.valid_until,
+            "regra_ausente": False,
+        }
+
+    limite = regra.limite_qtd
+    periodo = regra.limite_periodo
+    ilimitado = limite is None
+    usos = 0
+    restantes = None
+    janela_inicio = None
+    janela_fim = None
+    periodo_label = regra.get_limite_periodo_display() if periodo else ""
+
+    if not ilimitado and periodo:
+        period_seconds = _get_period_seconds(periodo)
+        if period_seconds:
+            inicio = assinatura.inicio
+            if inicio:
+                janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+                uso = (
+                    UsoAppJanela.objects
+                    .filter(
+                        usuario=user,
+                        app_modulo=regra.app_modulo,
+                        janela_inicio=janela_inicio,
+                        janela_fim=janela_fim,
+                    )
+                    .first()
+                )
+                usos = uso.contador if uso else 0
+                restantes = max(limite - usos, 0)
+            else:
+                usos = 0
+                restantes = limite
+
+    return {
+        "ativo": True,
+        "nome": nome_plano,
+        "is_free": is_free,
+        "limite_qtd": limite,
+        "limite_periodo": periodo,
+        "limite_periodo_label": periodo_label,
+        "ilimitado": ilimitado,
+        "usos": usos,
+        "restantes": restantes,
+        "janela_inicio": janela_inicio,
+        "janela_fim": janela_fim,
+        "valid_until": assinatura.valid_until,
+        "regra_ausente": False,
+    }
+
+
 def require_app_access(app_slug: str) -> Callable:
     def decorator(view_func: Callable) -> Callable:
         @wraps(view_func)
