@@ -198,6 +198,123 @@ def build_app_access_status(user) -> dict[str, Any]:
     }
 
 
+def build_plan_modal_status(user) -> dict[str, Any]:
+    apps = list(AppModulo.objects.filter(ativo=True).order_by("ordem_menu", "nome"))
+    payload: dict[str, Any] = {
+        "assinatura_ativa": False,
+        "plano_nome": "",
+        "valid_until": None,
+        "apps": [],
+    }
+    if not getattr(user, "is_authenticated", False):
+        return payload
+
+    assinatura = get_assinatura_ativa(user)
+    payload["assinatura_ativa"] = bool(assinatura)
+    payload["plano_nome"] = _nome_plano(assinatura)
+    payload["valid_until"] = assinatura.valid_until if assinatura else None
+
+    regras_por_app_id: dict[int, PlanoPermissaoApp] = {}
+    if assinatura and assinatura.plano_id:
+        regras_por_app_id = {
+            regra.app_modulo_id: regra
+            for regra in PlanoPermissaoApp.objects.filter(
+                plano_id=assinatura.plano_id,
+                app_modulo__in=apps,
+            ).select_related("app_modulo")
+        }
+
+    status_apps: list[dict[str, Any]] = []
+    uso_targets: list[tuple[int, timezone.datetime, timezone.datetime]] = []
+
+    for app in apps:
+        regra = regras_por_app_id.get(app.id)
+        liberado = bool(assinatura and regra and regra.permitido)
+        bloqueado_plano = bool(assinatura and regra and not regra.permitido)
+        regra_ausente = bool(assinatura and not regra)
+
+        if not assinatura:
+            status_label = "Sem plano ativo"
+            badge_class = "menu-badge--blocked"
+        elif regra_ausente:
+            status_label = "Regra ausente"
+            badge_class = "menu-badge--blocked"
+        elif not regra.permitido:
+            status_label = "Bloqueado pelo plano"
+            badge_class = "menu-badge--blocked"
+        elif app.em_construcao:
+            status_label = "Em construcao"
+            badge_class = ""
+        else:
+            status_label = "Liberado"
+            badge_class = "menu-badge--active"
+
+        limite_qtd = regra.limite_qtd if regra else None
+        limite_periodo = regra.limite_periodo if regra else None
+        limite_periodo_label = regra.get_limite_periodo_display() if regra and limite_periodo else ""
+        show_limite = bool(liberado and limite_qtd is not None)
+
+        item: dict[str, Any] = {
+            "app_id": app.id,
+            "slug": app.slug,
+            "nome": app.nome,
+            "status_label": status_label,
+            "badge_class": badge_class,
+            "liberado": liberado,
+            "em_construcao": app.em_construcao,
+            "bloqueado_plano": bloqueado_plano,
+            "regra_ausente": regra_ausente,
+            "ilimitado": bool(liberado and limite_qtd is None),
+            "show_limite": show_limite,
+            "limite_qtd": limite_qtd,
+            "limite_periodo": limite_periodo,
+            "limite_periodo_label": limite_periodo_label,
+            "usos": 0,
+            "restantes": limite_qtd if show_limite else None,
+            "janela_inicio": None,
+            "janela_fim": None,
+        }
+
+        if show_limite and assinatura and assinatura.inicio and limite_periodo:
+            period_seconds = _get_period_seconds(limite_periodo)
+            if period_seconds:
+                janela_inicio, janela_fim = _get_janela_atual(assinatura.inicio, period_seconds)
+                item["janela_inicio"] = janela_inicio
+                item["janela_fim"] = janela_fim
+                uso_targets.append((app.id, janela_inicio, janela_fim))
+
+        status_apps.append(item)
+
+    if uso_targets:
+        filtros = Q()
+        for app_id, janela_inicio, janela_fim in uso_targets:
+            filtros |= Q(
+                usuario=user,
+                app_modulo_id=app_id,
+                janela_inicio=janela_inicio,
+                janela_fim=janela_fim,
+            )
+        usos_por_chave = {
+            (uso.app_modulo_id, uso.janela_inicio, uso.janela_fim): uso.contador
+            for uso in UsoAppJanela.objects.filter(filtros)
+        }
+
+        for item in status_apps:
+            janela_inicio = item["janela_inicio"]
+            janela_fim = item["janela_fim"]
+            if not (item["show_limite"] and janela_inicio and janela_fim):
+                continue
+            usos = usos_por_chave.get((item["app_id"], janela_inicio, janela_fim), 0)
+            item["usos"] = usos
+            item["restantes"] = max(item["limite_qtd"] - usos, 0)
+
+    for item in status_apps:
+        item.pop("app_id", None)
+
+    payload["apps"] = status_apps
+    return payload
+
+
 def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
     if not getattr(user, "is_authenticated", False):
         return None

@@ -49,6 +49,99 @@ class MenuSmokeTests(TestCase):
         self.assertContains(response, "Meu plano")
         self.assertNotContains(response, "Abrir Simulado")
 
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_modal_meu_plano_lists_all_apps_with_statuses(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-modal",
+            email="menu-modal@example.com",
+            password="safe-password-123",
+        )
+        plano = Plano.objects.create(nome="Plano Modal Apps")
+        Assinatura.objects.create(
+            usuario=user,
+            plano=plano,
+            nome_plano_snapshot=plano.nome,
+            status=Assinatura.Status.ATIVO,
+            inicio=timezone.now(),
+            valid_until=None,
+        )
+        app_liberado = AppModulo.objects.create(
+            slug="simulado-digital",
+            nome="Simulado de Provas",
+            ordem_menu=1,
+            icone_path="menu_app/icons/icon_app_1.png",
+            rota_nome="simulado:inicio",
+            em_construcao=False,
+            ativo=True,
+        )
+        app_bloqueado = AppModulo.objects.create(
+            slug="oraculo",
+            nome="Oraculo",
+            ordem_menu=2,
+            icone_path="menu_app/icons/icon_app_7.png",
+            rota_nome="oraculo:index",
+            em_construcao=False,
+            ativo=True,
+        )
+        AppModulo.objects.create(
+            slug="aprenda-jogando",
+            nome="Aprenda Jogando",
+            ordem_menu=3,
+            icone_path="menu_app/icons/icon_app_6.png",
+            rota_nome="aprenda_jogando:index",
+            em_construcao=False,
+            ativo=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_liberado,
+            permitido=True,
+            limite_qtd=5,
+            limite_periodo=Plano.Periodo.MENSAL,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app_bloqueado,
+            permitido=False,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Plano Plano Modal Apps")
+        self.assertContains(response, "Simulado de Provas")
+        self.assertContains(response, "Oraculo")
+        self.assertContains(response, "Aprenda Jogando")
+        self.assertContains(response, "Liberado")
+        self.assertContains(response, "Bloqueado pelo plano")
+        self.assertContains(response, "Regra ausente")
+        self.assertContains(response, "Limite 5 / Mensal")
+        self.assertContains(response, "Usados 0")
+        self.assertContains(response, "Restantes 5")
+
+    def test_modal_meu_plano_without_assinatura_shows_message_and_status(self):
+        user = get_user_model().objects.create_user(
+            username="menu-user-sem-assinatura",
+            email="menu-sem-assinatura@example.com",
+            password="safe-password-123",
+        )
+        AppModulo.objects.create(
+            slug="simulado-digital",
+            nome="Simulado de Provas",
+            ordem_menu=1,
+            icone_path="menu_app/icons/icon_app_1.png",
+            rota_nome="simulado:inicio",
+            em_construcao=False,
+            ativo=True,
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("menu:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nenhum plano ativo.")
+        self.assertContains(response, "Simulado de Provas")
+        self.assertContains(response, "Sem plano ativo")
+
     def test_menu_card_simulado_points_to_canonical_url(self):
         user = get_user_model().objects.create_user(
             username="menu-user-2",

@@ -92,6 +92,11 @@ Arquivos:
 Regras:
 - Catalogo estatico contem `slug`, `titulo`, `descricao`, `icone`, `rota_nome`.
 - Em V2, o menu usa `build_app_access_status(user)` para montar badges e clicabilidade.
+- O cabecalho do menu contem o botao `Meu plano` (substituiu o antigo `Abrir Simulado`).
+- O modal `Meu plano` e aberto no proprio menu (`menu/templates/menu/home.html`) e lista todos os apps ativos com:
+  - status por app (`Liberado`, `Bloqueado pelo plano`, `Em construcao`, `Regra ausente`, `Sem plano ativo`);
+  - limite/usados/restantes quando houver limite por app;
+  - plano atual e validade da assinatura no topo.
 - Status visual por card:
   - `Liberado`
   - `Bloqueado pelo plano`
@@ -147,6 +152,7 @@ Responsabilidades:
 - resolver regra por app (`get_regra_app`);
 - validar e incrementar uso por app (`check_and_increment_app_use`);
 - montar status para o menu (`build_app_access_status`);
+- montar payload do modal `Meu plano` com todos os apps (`build_plan_modal_status`);
 - decorator `require_app_access(app_slug)` para proteger views.
 
 Uso atual:
@@ -174,6 +180,8 @@ Regras de acesso/consumo no codigo atual:
 
 Status de plano exibido em telas do simulado:
 - calculado por regra de `PlanoPermissaoApp` + `UsoAppJanela`.
+- O botao/modal `Meu plano` nao fica mais dentro do Simulado; o acesso a essa visao foi centralizado no Menu de Apps.
+- O Simulado passou a exibir atalho de navegacao `Voltar para o menu`.
 
 ---
 

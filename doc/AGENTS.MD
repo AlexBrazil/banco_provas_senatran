@@ -60,6 +60,16 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 
 ---
 
+## Janela de contexto e compactacao
+
+- O historico do chat pode ser compactado automaticamente durante a sessao para liberar contexto.
+- Essa compactacao e gerida pelo sistema e nao deve ser assumida como totalmente controlavel pelo agente.
+- Quando algo for critico (regras, decisoes, restricoes), repetir explicitamente no prompt atual e obrigatorio para garantir fidelidade.
+- Em mudancas sensiveis, o prompt deve incluir a fonte de verdade (arquivo/plano/trecho) e os criterios de aceite da etapa.
+- Se houver duvida de continuidade, pedir um checkpoint curto do estado antes de prosseguir.
+
+---
+
 ## Validacao sugerida
 
 - Se aplicavel: `python manage.py check`.

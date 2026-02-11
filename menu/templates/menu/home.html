@@ -63,34 +63,50 @@
         <button type="button" class="menu-modal-close" data-modal-close aria-label="Fechar modal">x</button>
       </div>
       <div class="menu-modal-body">
-        {% if plano_status and plano_status.ativo %}
-          <p class="menu-modal-text">Plano {{ plano_status.nome }}</p>
-          <div class="menu-modal-meta">
-            {% if plano_status.ilimitado %}
-              <span class="menu-pill">Acesso ilimitado</span>
-            {% else %}
-              {% if plano_status.regra_ausente %}
-                <span class="menu-pill menu-pill--warn">Regra de acesso nao configurada</span>
-              {% else %}
-                <span class="menu-pill">
-                  Limite {{ plano_status.limite_qtd }} / {{ plano_status.limite_periodo_label }}
-                </span>
-                <span class="menu-pill">Usados {{ plano_status.usos }}</span>
-                <span class="menu-pill">Restantes {{ plano_status.restantes }}</span>
-              {% endif %}
-            {% endif %}
-          </div>
-          {% if plano_status.janela_fim %}
-            <p class="menu-modal-hint">Janela atual ate {{ plano_status.janela_fim|date:"d/m/Y H:i" }}</p>
-          {% endif %}
-          {% if plano_status.valid_until %}
-            <p class="menu-modal-hint">Valido ate {{ plano_status.valid_until|date:"d/m/Y H:i" }}</p>
+        {% if plano_modal_status.assinatura_ativa %}
+          <p class="menu-modal-text">Plano {{ plano_modal_status.plano_nome }}</p>
+          {% if plano_modal_status.valid_until %}
+            <p class="menu-modal-hint">Valido ate {{ plano_modal_status.valid_until|date:"d/m/Y H:i" }}</p>
           {% endif %}
         {% else %}
           <p class="menu-modal-text">
             Nenhum plano ativo. Entre em contato com o suporte para adquirir um plano.
           </p>
         {% endif %}
+
+        <section class="menu-plan-grid" aria-label="Status dos apps por plano">
+          {% for app in plano_modal_status.apps %}
+            <article class="menu-plan-card">
+              <div class="menu-plan-card-head">
+                <h3 class="menu-plan-card-title">{{ app.nome }}</h3>
+                <span class="menu-badge{% if app.badge_class %} {{ app.badge_class }}{% endif %}">
+                  {{ app.status_label }}
+                </span>
+              </div>
+
+              {% if plano_modal_status.assinatura_ativa %}
+                {% if app.ilimitado %}
+                  <p class="menu-plan-meta">Acesso ilimitado.</p>
+                {% elif app.show_limite %}
+                  <div class="menu-modal-meta">
+                    <span class="menu-pill">
+                      Limite {{ app.limite_qtd }}{% if app.limite_periodo_label %} / {{ app.limite_periodo_label }}{% endif %}
+                    </span>
+                    <span class="menu-pill">Usados {{ app.usos }}</span>
+                    <span class="menu-pill">Restantes {{ app.restantes }}</span>
+                  </div>
+                  {% if app.janela_fim %}
+                    <p class="menu-modal-hint">Janela atual ate {{ app.janela_fim|date:"d/m/Y H:i" }}</p>
+                  {% endif %}
+                {% elif app.regra_ausente %}
+                  <p class="menu-plan-meta">Regra de acesso nao configurada para este app.</p>
+                {% endif %}
+              {% endif %}
+            </article>
+          {% empty %}
+            <p class="menu-plan-empty">Nenhum app ativo cadastrado.</p>
+          {% endfor %}
+        </section>
       </div>
     </div>
   </dialog>
