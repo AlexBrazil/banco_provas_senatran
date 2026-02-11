@@ -70,7 +70,7 @@ def _safe_next_url(request: HttpRequest) -> str:
     raw = (request.POST.get("next") or request.GET.get("next") or "").strip()
     if raw and url_has_allowed_host_and_scheme(raw, allowed_hosts={request.get_host()}):
         return raw
-    return reverse("simulado:inicio")
+    return reverse("menu:home")
 
 
 def _cooldown_remaining(ip: str, device_id: str) -> timedelta | None:
