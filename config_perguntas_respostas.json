@@ -1,0 +1,6 @@
+{
+  "tempo_min": 5,
+  "tempo_max": 60,
+  "tempo_default": 12,
+  "qtd_default": 30
+}

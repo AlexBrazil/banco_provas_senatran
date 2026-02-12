@@ -1,84 +1,142 @@
 {% extends "simulado/base.html" %}
+{% load static %}
 
 {% block title %}{{ app_title }}{% endblock %}
 
-{% block head_extra %}
-  <style>
-    .uc-page {
-      min-height: 100vh;
-      margin: 0;
-      padding: 24px 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(165deg, #eef5ff 0%, #ffffff 70%);
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .uc-card {
-      width: min(680px, 100%);
-      background: #ffffff;
-      border: 1px solid #d9e4f6;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
-      padding: 24px;
-    }
-    .uc-badge {
-      display: inline-block;
-      margin: 0 0 10px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #8a6b00;
-      background: #fff6d6;
-      border: 1px solid #f2d67c;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .uc-title {
-      margin: 0 0 8px;
-      font-size: clamp(24px, 5vw, 34px);
-      color: #12213d;
-    }
-    .uc-text {
-      margin: 0;
-      color: #425a78;
-      line-height: 1.5;
-    }
-    .uc-actions {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .uc-btn {
-      text-decoration: none;
-      font-weight: 600;
-      border-radius: 10px;
-      padding: 10px 14px;
-      border: 1px solid #1d4ed8;
-      color: #ffffff;
-      background: #1d4ed8;
-    }
-    .uc-btn-secondary {
-      border-color: #c7d6ee;
-      color: #16325c;
-      background: #f3f7ff;
-    }
-  </style>
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'perguntas_respostas/perguntas_respostas.css' %}">
 {% endblock %}
 
 {% block content %}
-  <main class="uc-page">
-    <section class="uc-card">
-      <p class="uc-badge">Em construcao</p>
-      <h1 class="uc-title">{{ app_title }}</h1>
-      <p class="uc-text">Este modulo esta em construcao e sera liberado em breve.</p>
-      <div class="uc-actions">
-        <a href="{% url 'menu:home' %}" class="uc-btn">Voltar ao menu</a>
-        <a href="{% url 'simulado:inicio' %}" class="uc-btn uc-btn-secondary">Ir para Simulado Digital</a>
+  <main class="pr-page">
+    <header class="pr-header">
+      <p class="pr-eyebrow">Estudo rapido</p>
+      <h1 class="pr-title">{{ app_title }}</h1>
+      <p class="pr-subtitle">
+        Estude com pergunta, resposta correta e comentario em ordem natural do banco.
+      </p>
+      <div class="pr-header-actions">
+        <a href="{% url 'menu:home' %}" class="pr-btn pr-btn-secondary">Voltar para o menu</a>
       </div>
+    </header>
+
+    {% if messages %}
+      <section class="pr-messages" aria-label="Mensagens">
+        {% for message in messages %}
+          <p class="pr-message">{{ message }}</p>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    <section class="pr-grid">
+      <article class="pr-card">
+        <h2 class="pr-card-title">Inicio rapido</h2>
+        <p class="pr-card-text">Comece agora com as configuracoes basicas.</p>
+        <form method="post" action="{% url 'perguntas_respostas:iniciar' %}" class="pr-form">
+          {% csrf_token %}
+          <label class="pr-label" for="qtd_questoes_quick">Quantidade de questoes</label>
+          <input
+            class="pr-input"
+            type="number"
+            id="qtd_questoes_quick"
+            name="qtd_questoes"
+            min="1"
+            value="{{ form_values.qtd_questoes|default:cfg.qtd_default }}"
+            required
+          >
+          <input type="hidden" name="study_mode" value="manual">
+          <input type="hidden" name="voice_enabled" value="0">
+          <button type="submit" class="pr-btn">Iniciar estudo</button>
+        </form>
+      </article>
+
+      <article class="pr-card">
+        <h2 class="pr-card-title">Montar estudo com filtros</h2>
+        <form method="post" action="{% url 'perguntas_respostas:iniciar' %}" class="pr-form" id="pr-form-filtros">
+          {% csrf_token %}
+
+          <label class="pr-label" for="curso_id">Curso</label>
+          <select class="pr-input" id="curso_id" name="curso_id">
+            <option value="">Todos</option>
+            {% for curso in cursos %}
+              <option value="{{ curso.id }}" {% if form_values.curso_id == curso.id|stringformat:"s" %}selected{% endif %}>
+                {{ curso.nome }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <label class="pr-label" for="modulo_id">Modulo</label>
+          <select class="pr-input" id="modulo_id" name="modulo_id">
+            <option value="">Todos</option>
+            {% for modulo in modulos %}
+              <option
+                value="{{ modulo.id }}"
+                data-curso-id="{{ modulo.curso_id }}"
+                {% if form_values.modulo_id == modulo.id|stringformat:"s" %}selected{% endif %}
+              >
+                {{ modulo.curso.nome }} - M{{ modulo.ordem }} - {{ modulo.nome }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <label class="pr-label" for="dificuldade">Dificuldade</label>
+          <select class="pr-input" id="dificuldade" name="dificuldade">
+            <option value="">Todas</option>
+            {% for value, label in dificuldades %}
+              <option value="{{ value }}" {% if form_values.dificuldade == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          <div class="pr-checks">
+            <label class="pr-check">
+              <input type="checkbox" name="com_imagem" value="1" {% if form_values.com_imagem %}checked{% endif %}>
+              Somente questoes com imagem
+            </label>
+            <label class="pr-check">
+              <input type="checkbox" name="com_placa" value="1" {% if form_values.com_placa %}checked{% endif %}>
+              Somente questoes com placa
+            </label>
+          </div>
+
+          <label class="pr-label" for="qtd_questoes">Quantidade de questoes</label>
+          <input
+            class="pr-input"
+            type="number"
+            id="qtd_questoes"
+            name="qtd_questoes"
+            min="1"
+            value="{{ form_values.qtd_questoes|default:cfg.qtd_default }}"
+            required
+          >
+
+          <fieldset class="pr-fieldset">
+            <legend class="pr-label">Modo inicial</legend>
+            <label class="pr-check">
+              <input type="radio" name="study_mode" value="manual" {% if form_values.study_mode != "auto" %}checked{% endif %}>
+              Manual
+            </label>
+            <label class="pr-check">
+              <input type="radio" name="study_mode" value="auto" {% if form_values.study_mode == "auto" %}checked{% endif %}>
+              Automatico
+            </label>
+            <label class="pr-check">
+              <input type="checkbox" name="voice_enabled" value="1" {% if form_values.voice_enabled %}checked{% endif %}>
+              Leitura automatica PT-BR
+            </label>
+          </fieldset>
+
+          <p class="pr-hint">
+            Tempo entre questoes configurado para este usuario: <strong>{{ tempo_usuario }}s</strong>
+            (faixa {{ cfg.tempo_min }}s a {{ cfg.tempo_max }}s, valor padrao {{ cfg.tempo_default }}s).
+          </p>
+
+          <button type="submit" class="pr-btn">Montar estudo</button>
+        </form>
+      </article>
     </section>
   </main>
 {% endblock %}
 
+{% block body_end %}
+  <script src="{% static 'perguntas_respostas/index.js' %}"></script>
+{% endblock %}

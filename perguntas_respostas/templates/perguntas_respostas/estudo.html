@@ -1,0 +1,127 @@
+{% extends "simulado/base.html" %}
+{% load static %}
+
+{% block title %}Estudo - {{ app_title }}{% endblock %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'perguntas_respostas/perguntas_respostas.css' %}">
+{% endblock %}
+
+{% block content %}
+  <main class="pr-page">
+    <header class="pr-header">
+      <p class="pr-eyebrow">Sessao de estudo</p>
+      <h1 class="pr-title">{{ app_title }}</h1>
+      <p class="pr-subtitle">Questao {{ posicao|add:1 }} de {{ total }}</p>
+      <div class="pr-header-actions">
+        <a href="{% url 'perguntas_respostas:index' %}" class="pr-btn pr-btn-secondary">Nova sessao</a>
+        <a href="{% url 'menu:home' %}" class="pr-btn pr-btn-secondary">Voltar para o menu</a>
+      </div>
+    </header>
+
+    <section class="pr-grid pr-grid-study">
+      <article class="pr-card pr-card-main">
+        <p class="pr-kicker">{{ questao.curso.nome }} | {{ questao.modulo.nome }}</p>
+        <h2 class="pr-question">{{ questao.enunciado }}</h2>
+
+        {% if questao.imagem_arquivo %}
+          <figure class="pr-image-wrap">
+            <img
+              src="{% static 'placas/' %}{{ questao.imagem_arquivo }}"
+              alt="Imagem da questao"
+              class="pr-image"
+              onerror="this.closest('.pr-image-wrap').style.display='none';"
+            >
+            <figcaption class="pr-image-caption">{{ questao.imagem_arquivo }}</figcaption>
+          </figure>
+        {% endif %}
+
+        <section class="pr-answer-box">
+          <h3>Resposta correta</h3>
+          {% if resposta_correta %}
+            <p>{{ resposta_correta.texto }}</p>
+          {% else %}
+            <p>Resposta correta nao cadastrada.</p>
+          {% endif %}
+        </section>
+
+        <section class="pr-comment-box">
+          <h3>Comentario</h3>
+          <p>{% if questao.comentario %}{{ questao.comentario }}{% else %}Sem comentario para esta questao.{% endif %}</p>
+        </section>
+
+        <div class="pr-nav">
+          {% if tem_anterior %}
+            <a href="{{ anterior_url }}" class="pr-btn pr-btn-secondary">Retornar</a>
+          {% else %}
+            <span class="pr-btn pr-btn-disabled" aria-disabled="true">Retornar</span>
+          {% endif %}
+
+          {% if tem_proxima %}
+            <a href="{{ proxima_url }}" class="pr-btn" id="pr-next-btn">Avancar</a>
+          {% else %}
+            <span class="pr-btn pr-btn-disabled" aria-disabled="true" id="pr-next-btn">Fim da sessao</span>
+          {% endif %}
+        </div>
+      </article>
+
+      <aside class="pr-card pr-card-side">
+        <h2 class="pr-card-title">Modo de estudo</h2>
+        <p class="pr-card-text">Manual ou automatico com ajuste de tempo por usuario.</p>
+
+        <div class="pr-checks">
+          <label class="pr-check">
+            <input type="checkbox" id="pr-auto-mode" {% if default_auto_mode %}checked{% endif %}>
+            Modo automatico
+          </label>
+          <label class="pr-check">
+            <input type="checkbox" id="pr-voice-enabled" {% if default_voice_enabled %}checked{% endif %}>
+            Leitura automatica PT-BR
+          </label>
+        </div>
+
+        <label class="pr-label" for="pr-tempo-range">Tempo entre questoes</label>
+        <div class="pr-tempo-wrap">
+          <input
+            type="range"
+            id="pr-tempo-range"
+            min="{{ cfg.tempo_min }}"
+            max="{{ cfg.tempo_max }}"
+            value="{{ tempo_atual }}"
+          >
+          <input
+            type="number"
+            id="pr-tempo-input"
+            min="{{ cfg.tempo_min }}"
+            max="{{ cfg.tempo_max }}"
+            value="{{ tempo_atual }}"
+            class="pr-input pr-input-mini"
+          >
+        </div>
+        <p class="pr-hint">Faixa: {{ cfg.tempo_min }}s a {{ cfg.tempo_max }}s.</p>
+
+        <button type="button" class="pr-btn" id="pr-auto-toggle">Iniciar automatico</button>
+        <p class="pr-status" id="pr-status">Modo manual ativo.</p>
+      </aside>
+    </section>
+  </main>
+
+  <form id="pr-csrf-form" style="display:none">{% csrf_token %}</form>
+  {{ voice_payload|json_script:"pr-voice-payload" }}
+  <script id="pr-page-data" type="application/json">
+    {
+      "hasNext": {{ tem_proxima|yesno:"true,false" }},
+      "nextUrl": "{{ proxima_url|default:''|escapejs }}",
+      "saveTempoUrl": "{{ salvar_tempo_url|escapejs }}",
+      "tempoMin": {{ cfg.tempo_min }},
+      "tempoMax": {{ cfg.tempo_max }},
+      "tempoAtual": {{ tempo_atual }},
+      "autoDefault": {{ default_auto_mode|yesno:"true,false" }},
+      "voiceDefault": {{ default_voice_enabled|yesno:"true,false" }}
+    }
+  </script>
+{% endblock %}
+
+{% block body_end %}
+  <script src="{% static 'perguntas_respostas/estudo.js' %}"></script>
+{% endblock %}
