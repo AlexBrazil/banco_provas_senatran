@@ -27,8 +27,12 @@
   const nextUrl = data.nextUrl || "";
   const hasNext = Boolean(data.hasNext);
   const saveTempoUrl = data.saveTempoUrl || "";
+  const searchParams = new URLSearchParams(window.location.search || "");
+  const autoFromUrl = searchParams.get("auto");
+  const voiceFromUrl = searchParams.get("voice");
   let timer = null;
   let autoRunning = false;
+  let voiceBlocked = false;
 
   function getCookie(name) {
     const cookies = document.cookie ? document.cookie.split("; ") : [];
@@ -60,6 +64,24 @@
 
   function setStatus(text) {
     statusEl.textContent = text;
+  }
+
+  function withStudyState(rawUrl) {
+    if (!rawUrl) return "";
+    const url = new URL(rawUrl, window.location.origin);
+    url.searchParams.set("auto", autoModeEl.checked ? "1" : "0");
+    url.searchParams.set("voice", voiceEnabledEl.checked ? "1" : "0");
+    url.searchParams.set("tempo", String(currentTempo()));
+    return `${url.pathname}${url.search}`;
+  }
+
+  function syncNavLinks() {
+    const links = document.querySelectorAll(".pr-nav a[href]");
+    links.forEach((link) => {
+      const href = link.getAttribute("href") || "";
+      if (!href) return;
+      link.setAttribute("href", withStudyState(href));
+    });
   }
 
   async function persistTempo() {
@@ -108,13 +130,36 @@
     window.speechSynthesis.cancel();
     return new Promise((resolve) => {
       let idx = 0;
+      let finished = false;
+      let firstStarted = false;
+
+      const settle = function () {
+        if (finished) return;
+        finished = true;
+        resolve();
+      };
+
+      const startupGuard = setTimeout(() => {
+        if (!firstStarted) {
+          voiceBlocked = true;
+          window.speechSynthesis.cancel();
+          settle();
+        }
+      }, 2200);
+
       const playNext = function () {
         if (idx >= chunks.length) {
-          resolve();
+          clearTimeout(startupGuard);
+          settle();
           return;
         }
         const utter = new SpeechSynthesisUtterance(chunks[idx]);
         utter.lang = "pt-BR";
+        utter.rate = 1;
+        utter.pitch = 1;
+        utter.onstart = function () {
+          firstStarted = true;
+        };
         utter.onend = function () {
           idx += 1;
           playNext();
@@ -139,9 +184,13 @@
     setStatus("Modo automatico em execucao.");
     await speakQueue();
     if (!autoRunning) return;
+    if (voiceBlocked) {
+      setStatus("Modo automatico em execucao. Leitura automatica bloqueada pelo navegador nesta pagina.");
+      voiceBlocked = false;
+    }
     const waitMs = currentTempo() * 1000;
     timer = setTimeout(() => {
-      window.location.href = nextUrl;
+      window.location.href = withStudyState(nextUrl);
     }, waitMs);
   }
 
@@ -174,12 +223,14 @@
 
   autoModeEl.addEventListener("change", () => {
     persistTempo();
+    syncNavLinks();
     if (!autoModeEl.checked && autoRunning) {
       stopAutomatic("Modo manual ativo.");
     }
   });
 
   voiceEnabledEl.addEventListener("change", () => {
+    syncNavLinks();
     if (!voiceEnabledEl.checked) {
       window.speechSynthesis?.cancel();
     }
@@ -195,11 +246,13 @@
 
   tempoRangeEl.addEventListener("input", () => {
     syncTempoInputs(tempoRangeEl.value);
+    syncNavLinks();
     schedulePersist();
   });
 
   tempoInputEl.addEventListener("input", () => {
     syncTempoInputs(tempoInputEl.value);
+    syncNavLinks();
     schedulePersist();
   });
 
@@ -208,7 +261,19 @@
   });
 
   syncTempoInputs(data.tempoAtual || tempoRangeEl.value);
-  autoModeEl.checked = Boolean(data.autoDefault);
-  voiceEnabledEl.checked = Boolean(data.voiceDefault);
-  setStatus(autoModeEl.checked ? "Modo automatico pronto para iniciar." : "Modo manual ativo.");
+  if (searchParams.get("tempo")) {
+    syncTempoInputs(searchParams.get("tempo"));
+  }
+
+  const autoDefault = autoFromUrl === null ? Boolean(data.autoDefault) : autoFromUrl === "1";
+  const voiceDefault = voiceFromUrl === null ? Boolean(data.voiceDefault) : voiceFromUrl === "1";
+  autoModeEl.checked = autoDefault;
+  voiceEnabledEl.checked = voiceDefault;
+  syncNavLinks();
+
+  if (autoFromUrl === "1" && hasNext) {
+    startAutomatic();
+  } else {
+    setStatus(autoModeEl.checked ? "Modo automatico pronto para iniciar." : "Modo manual ativo.");
+  }
 })();

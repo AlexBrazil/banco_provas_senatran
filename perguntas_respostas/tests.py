@@ -147,6 +147,22 @@ class PerguntasRespostasFlowTests(TestCase):
         self.assertContains(second_resp, "Pergunta 2")
         self.assertContains(second_resp, "Questao 2 de 2")
 
+    def test_estudar_preserves_auto_voice_and_tempo_on_navigation_urls(self):
+        user = self._create_user(username="pr-state", email="pr-state@example.com")
+        self._seed_two_questions()
+        self.client.force_login(user)
+
+        start_resp = self.client.post(
+            reverse("perguntas_respostas:iniciar"),
+            {"qtd_questoes": "2", "study_mode": "manual", "voice_enabled": "0"},
+        )
+        self.assertEqual(start_resp.status_code, 302)
+
+        state_url = f"{start_resp.url}&auto=1&voice=1&tempo=15"
+        response = self.client.get(state_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "?pos=1&amp;auto=1&amp;voice=1&amp;tempo=15")
+
     @override_settings(APP_ACCESS_V2_ENABLED=True)
     def test_index_with_v2_respects_plan_permission(self):
         user = self._create_user(username="pr-v2", email="pr-v2@example.com")

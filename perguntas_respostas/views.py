@@ -60,6 +60,17 @@ def _clamp(value: int, minimum: int, maximum: int) -> int:
     return max(min(value, maximum), minimum)
 
 
+def _parse_bool_flag(raw: str | None, fallback: bool) -> bool:
+    if raw is None:
+        return fallback
+    value = raw.strip()
+    if value == "1":
+        return True
+    if value == "0":
+        return False
+    return fallback
+
+
 def _parse_context_from_post(request: HttpRequest) -> EstudoContexto:
     return EstudoContexto(
         curso_id=(request.POST.get("curso_id") or "").strip(),
@@ -316,9 +327,31 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
         _register_estudo(request.user, questao, contexto_hash, contexto_json)
 
     cfg = get_perguntas_respostas_config()
+    tempo_from_query = request.GET.get("tempo")
     tempo_atual = _tempo_usuario_atual(request.user, cfg)
+    if tempo_from_query is not None:
+        tempo_atual = _clamp(_to_positive_int(tempo_from_query, tempo_atual), cfg["tempo_min"], cfg["tempo_max"])
+
+    default_auto_mode = _parse_bool_flag(
+        request.GET.get("auto"),
+        bool(sessao.get("default_auto_mode", False)),
+    )
+    default_voice_enabled = _parse_bool_flag(
+        request.GET.get("voice"),
+        bool(sessao.get("default_voice_enabled", False)),
+    )
+
     next_pos = pos + 1
     prev_pos = pos - 1
+
+    def _build_step_url(target_pos: int) -> str:
+        base_url = reverse("perguntas_respostas:estudar", args=[sessao_id])
+        return (
+            f"{base_url}?pos={target_pos}"
+            f"&auto={'1' if default_auto_mode else '0'}"
+            f"&voice={'1' if default_voice_enabled else '0'}"
+            f"&tempo={tempo_atual}"
+        )
 
     voice_payload = {
         "intro": _build_voice_intro(questao),
@@ -336,12 +369,12 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
         "posicao": pos,
         "tem_anterior": pos > 0,
         "tem_proxima": pos < len(questoes_ids) - 1,
-        "anterior_url": f"{reverse('perguntas_respostas:estudar', args=[sessao_id])}?pos={prev_pos}",
-        "proxima_url": f"{reverse('perguntas_respostas:estudar', args=[sessao_id])}?pos={next_pos}",
+        "anterior_url": _build_step_url(prev_pos),
+        "proxima_url": _build_step_url(next_pos),
         "cfg": cfg,
         "tempo_atual": tempo_atual,
-        "default_auto_mode": bool(sessao.get("default_auto_mode", False)),
-        "default_voice_enabled": bool(sessao.get("default_voice_enabled", False)),
+        "default_auto_mode": default_auto_mode,
+        "default_voice_enabled": default_voice_enabled,
         "voice_payload": voice_payload,
         "salvar_tempo_url": reverse("perguntas_respostas:salvar_tempo"),
     }
