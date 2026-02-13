@@ -15,7 +15,7 @@ MENU_CATALOG = [
         "titulo": "Perguntas e Respostas para Estudos",
         "descricao": "Estude de forma direta, sem enrolação e conteúdos desnecessários.",
         "icone": "menu_app/icons/icon_app_2.png",
-        "status": "Em construcao",
+        "status": "Ativo",
         "rota_nome": "perguntas_respostas:index",
     },
     {
