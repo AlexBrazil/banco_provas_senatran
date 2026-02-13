@@ -11,7 +11,7 @@ Resumo tecnico atualizado do sistema, com foco em arquitetura, rotas, regras de 
 - Fluxo principal do usuario:
   - login/cadastro;
   - menu de apps (hub);
-  - acesso ao Simulado Digital e aos demais apps (placeholders no momento).
+  - acesso ao Simulado Digital, app Perguntas e Respostas e demais apps em evolucao.
 - Controle de acesso por app em producao de codigo:
   - assinatura ativa (`Assinatura`);
   - regra por app (`PlanoPermissaoApp`);
@@ -23,7 +23,7 @@ Resumo tecnico atualizado do sistema, com foco em arquitetura, rotas, regras de 
 
 - `banco_questoes` (core de dominio, simulado, auth, acesso, auditoria, importacao).
 - `menu` (home/hub dos apps).
-- `perguntas_respostas` (placeholder).
+- `perguntas_respostas` (app de estudo rapido com leitura e avanco automatico).
 - `apostila_cnh` (placeholder).
 - `simulacao_prova` (placeholder).
 - `manual_pratico` (placeholder).
@@ -102,6 +102,10 @@ Regras:
   - `Bloqueado pelo plano`
   - `Em construcao`
 
+Observacao operacional:
+- no seed oficial atual (`seed_apps_menu_access`), o slug `perguntas-respostas` e semeado com `em_construcao=False`.
+- manter este valor alinhado ao estado real de liberacao do app em producao.
+
 Slug canonico do simulado no ecossistema novo:
 - `simulado-digital`.
 
@@ -156,7 +160,7 @@ Responsabilidades:
 - decorator `require_app_access(app_slug)` para proteger views.
 
 Uso atual:
-- 7 placeholders + `oraculo` estao protegidos via `@require_app_access(...)`.
+- todos os apps de menu usam controle por decorator (`@require_app_access(...)`) em V2.
 - Tela de bloqueio padrao: `menu/templates/menu/access_blocked.html`.
 
 ---
@@ -185,7 +189,41 @@ Status de plano exibido em telas do simulado:
 
 ---
 
-## 10) Auth e cadastro
+## 10) Perguntas e Respostas (estado atual)
+
+Arquivos principais:
+- `perguntas_respostas/views.py`
+- `perguntas_respostas/models.py`
+- `perguntas_respostas/urls.py`
+- `perguntas_respostas/templates/perguntas_respostas/index.html`
+- `perguntas_respostas/templates/perguntas_respostas/estudo.html`
+- `static/perguntas_respostas/estudo.js`
+- `config_perguntas_respostas.json`
+
+Fluxo:
+- inicio rapido e montar estudo com filtros;
+- sessao de estudo com:
+  - imagem (quando houver) acima do enunciado;
+  - resposta correta e comentario;
+  - botoes `Retornar`/`Avancar`.
+
+Leitura e avanco automatico:
+- botao unico na tela de estudo (`Iniciar leitura e avanco automatico` / `Parar ...`);
+- durante automatico, `Retornar` e `Avancar` ficam inativos;
+- ao sair por `Nova sessao` ou `Voltar para o menu`, a narracao e interrompida imediatamente.
+
+Regra de selecao:
+- prioriza questoes ineditas por contexto;
+- quando ineditas acabam, repete por menos recentemente estudadas (LRU) no mesmo contexto.
+
+Persistencia:
+- historico por `usuario + questao + contexto_hash` em `PerguntaRespostaEstudo`;
+- configuracao do app em JSON com `tempo_min`, `tempo_max`, `tempo_default`, `qtd_default`;
+- UI nao expoe ajuste de tempo; tempo efetivo usa `tempo_default` com clamp interno.
+
+---
+
+## 11) Auth e cadastro
 
 Arquivos:
 - `banco_questoes/views_auth.py`
@@ -195,11 +233,12 @@ Arquivos:
 Resumo:
 - Login por email (`EmailAuthenticationForm`).
 - Cadastro cria usuario + assinatura Free.
+- Redirecionamento padrao pos-cadastro: Menu de Apps (`menu:home`), salvo quando `next` valido for informado.
 - Cooldown de cadastro por IP/device quando habilitado.
 
 ---
 
-## 11) Payments (PIX)
+## 12) Payments (PIX)
 
 Arquivos:
 - `payments/views.py`
@@ -218,11 +257,14 @@ Ao confirmar pagamento:
 
 ---
 
-## 12) Front-end
+## 13) Front-end
 
 - Simulado:
   - templates em `banco_questoes/templates/simulado/`
   - assets em `static/simulado/`
+- Perguntas e Respostas:
+  - templates em `perguntas_respostas/templates/perguntas_respostas/`
+  - assets em `static/perguntas_respostas/`
 - Menu:
   - template `menu/templates/menu/home.html`
   - css em `static/menu_app/menu.css`
@@ -232,21 +274,23 @@ Ao confirmar pagamento:
 
 ---
 
-## 13) Comandos operacionais uteis
+## 14) Comandos operacionais uteis
 
 ```powershell
 Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 .\.venv\Scripts\python.exe manage.py check
 .\.venv\Scripts\python.exe manage.py showmigrations banco_questoes
+.\.venv\Scripts\python.exe manage.py showmigrations perguntas_respostas
 .\.venv\Scripts\python.exe manage.py seed_apps_menu_access
 ```
 
 ---
 
-## 14) Observacoes de consistencia
+## 15) Observacoes de consistencia
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
   - migrations aplicadas;
   - `seed_apps_menu_access` executado;
   - planos em uso com regras em `PlanoPermissaoApp`.
+  - confirmar `AppModulo.em_construcao` dos apps liberados (especialmente `perguntas-respostas`).

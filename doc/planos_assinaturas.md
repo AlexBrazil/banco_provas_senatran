@@ -70,6 +70,7 @@ Observacao importante:
 ### 4.1 `AppModulo`
 - catalogo persistido dos apps.
 - slug canonico do simulado: `simulado-digital`.
+- slug do estudo rapido: `perguntas-respostas`.
 
 ### 4.2 `PlanoPermissaoApp`
 - chave: (`plano`, `app_modulo`) unica.
@@ -106,6 +107,10 @@ O que garante:
 - permissoes Free e Aprova DETRAN em `PlanoPermissaoApp`;
 - migracao de slug legado `simulado-provas` -> `simulado-digital`.
 
+Importante para deploy:
+- no seed atual, `perguntas-respostas` e atualizado com `em_construcao=False`;
+- manter o valor coerente com o estado de liberacao real de cada app.
+
 ---
 
 ## 7) Configuracao recomendada de planos (padrao do projeto)
@@ -117,6 +122,9 @@ Free:
 Aprova DETRAN:
 - 8 apps permitidos;
 - sem limite por app (`limite_qtd=null`, `limite_periodo=null`).
+
+Observacao:
+- permissao de plano e visibilidade de liberacao no menu dependem tambem de `AppModulo.em_construcao`.
 
 ---
 
@@ -140,8 +148,9 @@ Sem regra em `PlanoPermissaoApp`:
 3. Validar no admin:
   - 8 `AppModulo`;
   - regras Free e Aprova DETRAN em `PlanoPermissaoApp`.
+  - campo `em_construcao` coerente com os apps efetivamente liberados (ex.: `perguntas-respostas`).
 4. Validar flags de ambiente conforme rollout.
 5. Smoke test:
   - usuario Free;
   - usuario Aprova DETRAN;
-  - menu + simulado + checkout PIX.
+  - menu + simulado + perguntas-respostas + checkout PIX.

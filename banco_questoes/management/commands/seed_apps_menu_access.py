@@ -26,7 +26,7 @@ APP_MODULES = [
         "ordem_menu": 2,
         "icone_path": "menu_app/icons/icon_app_2.png",
         "rota_nome": "perguntas_respostas:index",
-        "em_construcao": True,
+        "em_construcao": False,
     },
     {
         "slug": "apostila-cnh",
