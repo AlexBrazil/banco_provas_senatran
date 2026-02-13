@@ -44,8 +44,6 @@
             value="{{ form_values.qtd_questoes|default:cfg.qtd_default }}"
             required
           >
-          <input type="hidden" name="study_mode" value="manual">
-          <input type="hidden" name="voice_enabled" value="0">
           <button type="submit" class="pr-btn">Iniciar estudo</button>
         </form>
       </article>
@@ -108,27 +106,6 @@
             value="{{ form_values.qtd_questoes|default:cfg.qtd_default }}"
             required
           >
-
-          <fieldset class="pr-fieldset">
-            <legend class="pr-label">Modo inicial</legend>
-            <label class="pr-check">
-              <input type="radio" name="study_mode" value="manual" {% if form_values.study_mode != "auto" %}checked{% endif %}>
-              Manual
-            </label>
-            <label class="pr-check">
-              <input type="radio" name="study_mode" value="auto" {% if form_values.study_mode == "auto" %}checked{% endif %}>
-              Automatico
-            </label>
-            <label class="pr-check">
-              <input type="checkbox" name="voice_enabled" value="1" {% if form_values.voice_enabled %}checked{% endif %}>
-              Leitura automatica PT-BR
-            </label>
-          </fieldset>
-
-          <p class="pr-hint">
-            Tempo entre questoes configurado para este usuario: <strong>{{ tempo_usuario }}s</strong>
-            (faixa {{ cfg.tempo_min }}s a {{ cfg.tempo_max }}s, valor padrao {{ cfg.tempo_default }}s).
-          </p>
 
           <button type="submit" class="pr-btn">Montar estudo</button>
         </form>

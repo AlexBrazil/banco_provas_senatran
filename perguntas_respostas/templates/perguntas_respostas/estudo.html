@@ -22,7 +22,6 @@
     <section class="pr-grid pr-grid-study">
       <article class="pr-card pr-card-main">
         <p class="pr-kicker">{{ questao.curso.nome }} | {{ questao.modulo.nome }}</p>
-        <h2 class="pr-question">{{ questao.enunciado }}</h2>
 
         {% if questao.imagem_arquivo %}
           <figure class="pr-image-wrap">
@@ -35,6 +34,8 @@
             <figcaption class="pr-image-caption">{{ questao.imagem_arquivo }}</figcaption>
           </figure>
         {% endif %}
+
+        <h2 class="pr-question">{{ questao.enunciado }}</h2>
 
         <section class="pr-answer-box">
           <h3>Resposta correta</h3>
@@ -52,57 +53,23 @@
 
         <div class="pr-nav">
           {% if tem_anterior %}
-            <a href="{{ anterior_url }}" class="pr-btn pr-btn-secondary">Retornar</a>
+            <a href="{{ anterior_url }}" class="pr-btn pr-btn-secondary pr-manual-nav" data-manual-nav="1">Retornar</a>
           {% else %}
             <span class="pr-btn pr-btn-disabled" aria-disabled="true">Retornar</span>
           {% endif %}
 
           {% if tem_proxima %}
-            <a href="{{ proxima_url }}" class="pr-btn" id="pr-next-btn">Avancar</a>
+            <a href="{{ proxima_url }}" class="pr-btn pr-manual-nav" id="pr-next-btn" data-manual-nav="1">Avancar</a>
           {% else %}
             <span class="pr-btn pr-btn-disabled" aria-disabled="true" id="pr-next-btn">Fim da sessao</span>
           {% endif %}
+
+          <button type="button" class="pr-btn pr-btn-auto" id="pr-auto-toggle">
+            Iniciar leitura e avanco automatico
+          </button>
         </div>
-      </article>
-
-      <aside class="pr-card pr-card-side">
-        <h2 class="pr-card-title">Modo de estudo</h2>
-        <p class="pr-card-text">Manual ou automatico com ajuste de tempo por usuario.</p>
-
-        <div class="pr-checks">
-          <label class="pr-check">
-            <input type="checkbox" id="pr-auto-mode" {% if default_auto_mode %}checked{% endif %}>
-            Modo automatico
-          </label>
-          <label class="pr-check">
-            <input type="checkbox" id="pr-voice-enabled" {% if default_voice_enabled %}checked{% endif %}>
-            Leitura automatica PT-BR
-          </label>
-        </div>
-
-        <label class="pr-label" for="pr-tempo-range">Tempo entre questoes</label>
-        <div class="pr-tempo-wrap">
-          <input
-            type="range"
-            id="pr-tempo-range"
-            min="{{ cfg.tempo_min }}"
-            max="{{ cfg.tempo_max }}"
-            value="{{ tempo_atual }}"
-          >
-          <input
-            type="number"
-            id="pr-tempo-input"
-            min="{{ cfg.tempo_min }}"
-            max="{{ cfg.tempo_max }}"
-            value="{{ tempo_atual }}"
-            class="pr-input pr-input-mini"
-          >
-        </div>
-        <p class="pr-hint">Faixa: {{ cfg.tempo_min }}s a {{ cfg.tempo_max }}s.</p>
-
-        <button type="button" class="pr-btn" id="pr-auto-toggle">Iniciar automatico</button>
         <p class="pr-status" id="pr-status">Modo manual ativo.</p>
-      </aside>
+      </article>
     </section>
   </main>
 
@@ -112,12 +79,8 @@
     {
       "hasNext": {{ tem_proxima|yesno:"true,false" }},
       "nextUrl": "{{ proxima_url|default:''|escapejs }}",
-      "saveTempoUrl": "{{ salvar_tempo_url|escapejs }}",
-      "tempoMin": {{ cfg.tempo_min }},
-      "tempoMax": {{ cfg.tempo_max }},
-      "tempoAtual": {{ tempo_atual }},
-      "autoDefault": {{ default_auto_mode|yesno:"true,false" }},
-      "voiceDefault": {{ default_voice_enabled|yesno:"true,false" }}
+      "tempoSegundos": {{ tempo_atual }},
+      "autoDefault": {{ default_auto_mode|yesno:"true,false" }}
     }
   </script>
 {% endblock %}

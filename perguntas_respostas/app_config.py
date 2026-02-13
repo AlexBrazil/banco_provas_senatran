@@ -8,9 +8,9 @@ from django.conf import settings
 
 
 DEFAULT_CONFIG: dict[str, int] = {
-    "tempo_min": 5,
+    "tempo_min": 3,
     "tempo_max": 60,
-    "tempo_default": 12,
+    "tempo_default": 3,
     "qtd_default": 30,
 }
 

@@ -171,6 +171,19 @@ body {
   cursor: default;
 }
 
+.pr-btn-auto {
+  background: #0f766e;
+  border-color: #0f766e;
+}
+
+.pr-btn-auto:hover {
+  background: #0d645d;
+}
+
+.pr-btn-inert {
+  pointer-events: none;
+}
+
 .pr-hint {
   margin: 2px 0 0;
   color: var(--pr-muted);
@@ -179,6 +192,7 @@ body {
 
 .pr-grid-study {
   align-items: start;
+  grid-template-columns: 1fr;
 }
 
 .pr-kicker {
@@ -260,6 +274,6 @@ body {
   }
 
   .pr-grid-study {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 }

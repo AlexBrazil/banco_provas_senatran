@@ -138,21 +138,6 @@ def _select_questoes_for_estudo(user, contexto: EstudoContexto, qtd: int) -> lis
     return selecionadas
 
 
-def _get_preferencia_usuario(user) -> PerguntaRespostaPreferenciaUsuario | None:
-    return (
-        PerguntaRespostaPreferenciaUsuario.objects
-        .filter(usuario=user)
-        .first()
-    )
-
-
-def _tempo_usuario_atual(user, cfg: dict[str, int]) -> int:
-    pref = _get_preferencia_usuario(user)
-    if not pref:
-        return cfg["tempo_default"]
-    return _clamp(pref.tempo_entre_questoes_segundos, cfg["tempo_min"], cfg["tempo_max"])
-
-
 def _build_index_context(request: HttpRequest, form_values: dict[str, Any] | None = None) -> dict[str, Any]:
     cfg = get_perguntas_respostas_config()
     cursos = Curso.objects.filter(ativo=True).order_by("nome")
@@ -162,7 +147,6 @@ def _build_index_context(request: HttpRequest, form_values: dict[str, Any] | Non
     return {
         "app_title": "Perguntas e Respostas para Estudos",
         "cfg": cfg,
-        "tempo_usuario": _tempo_usuario_atual(request.user, cfg),
         "cursos": cursos,
         "modulos": modulos,
         "dificuldades": Questao.Dificuldade.choices,
@@ -187,8 +171,6 @@ def _save_estudo_sessao(
     questoes_ids: list[uuid.UUID],
     contexto: EstudoContexto,
     qtd: int,
-    auto_mode: bool,
-    voice_enabled: bool,
 ) -> str:
     sessao_id = uuid.uuid4().hex
     bucket = _get_bucket(request)
@@ -198,8 +180,6 @@ def _save_estudo_sessao(
         "contexto": contexto.as_dict(),
         "contexto_hash": _context_hash(contexto),
         "questoes_ids": [str(item) for item in questoes_ids],
-        "default_auto_mode": bool(auto_mode),
-        "default_voice_enabled": bool(voice_enabled),
     }
     _save_bucket(request, bucket)
     return sessao_id
@@ -271,17 +251,12 @@ def iniciar_estudo(request: HttpRequest) -> HttpResponse:
     qtd = _clamp(qtd, 1, 500)
 
     contexto = _parse_context_from_post(request)
-    auto_mode = request.POST.get("study_mode") == "auto"
-    voice_enabled = request.POST.get("voice_enabled") == "1"
-
     questoes_ids = _select_questoes_for_estudo(request.user, contexto, qtd)
     if not questoes_ids:
         messages.error(request, "Nenhuma questao encontrada para os filtros selecionados.")
         form_values = {
             **contexto.as_dict(),
             "qtd_questoes": qtd,
-            "study_mode": "auto" if auto_mode else "manual",
-            "voice_enabled": voice_enabled,
         }
         return render(request, "perguntas_respostas/index.html", _build_index_context(request, form_values))
 
@@ -290,8 +265,6 @@ def iniciar_estudo(request: HttpRequest) -> HttpResponse:
         questoes_ids=questoes_ids,
         contexto=contexto,
         qtd=qtd,
-        auto_mode=auto_mode,
-        voice_enabled=voice_enabled,
     )
     return redirect(f"{reverse('perguntas_respostas:estudar', args=[sessao_id])}?pos=0")
 
@@ -327,18 +300,11 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
         _register_estudo(request.user, questao, contexto_hash, contexto_json)
 
     cfg = get_perguntas_respostas_config()
-    tempo_from_query = request.GET.get("tempo")
-    tempo_atual = _tempo_usuario_atual(request.user, cfg)
-    if tempo_from_query is not None:
-        tempo_atual = _clamp(_to_positive_int(tempo_from_query, tempo_atual), cfg["tempo_min"], cfg["tempo_max"])
+    tempo_atual = _clamp(cfg["tempo_default"], cfg["tempo_min"], cfg["tempo_max"])
 
     default_auto_mode = _parse_bool_flag(
         request.GET.get("auto"),
-        bool(sessao.get("default_auto_mode", False)),
-    )
-    default_voice_enabled = _parse_bool_flag(
-        request.GET.get("voice"),
-        bool(sessao.get("default_voice_enabled", False)),
+        False,
     )
 
     next_pos = pos + 1
@@ -349,8 +315,6 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
         return (
             f"{base_url}?pos={target_pos}"
             f"&auto={'1' if default_auto_mode else '0'}"
-            f"&voice={'1' if default_voice_enabled else '0'}"
-            f"&tempo={tempo_atual}"
         )
 
     voice_payload = {
@@ -374,9 +338,7 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
         "cfg": cfg,
         "tempo_atual": tempo_atual,
         "default_auto_mode": default_auto_mode,
-        "default_voice_enabled": default_voice_enabled,
         "voice_payload": voice_payload,
-        "salvar_tempo_url": reverse("perguntas_respostas:salvar_tempo"),
     }
     return render(request, "perguntas_respostas/estudo.html", context)
 
