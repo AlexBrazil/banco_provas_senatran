@@ -33,6 +33,7 @@
   let timer = null;
   let autoRunning = false;
   let voiceBlocked = false;
+  let speechRunToken = 0;
 
   function getCookie(name) {
     const cookies = document.cookie ? document.cookie.split("; ") : [];
@@ -111,8 +112,13 @@
       timer = null;
     }
     autoRunning = false;
+    speechRunToken += 1;
     window.speechSynthesis?.cancel();
     autoToggleEl.textContent = "Iniciar automatico";
+  }
+
+  function stopOnNavigate() {
+    clearRunState();
   }
 
   function speakQueue() {
@@ -129,6 +135,7 @@
 
     window.speechSynthesis.cancel();
     return new Promise((resolve) => {
+      const runToken = ++speechRunToken;
       let idx = 0;
       let finished = false;
       let firstStarted = false;
@@ -140,6 +147,10 @@
       };
 
       const startupGuard = setTimeout(() => {
+        if (runToken !== speechRunToken) {
+          settle();
+          return;
+        }
         if (!firstStarted) {
           voiceBlocked = true;
           window.speechSynthesis.cancel();
@@ -148,6 +159,11 @@
       }, 2200);
 
       const playNext = function () {
+        if (runToken !== speechRunToken) {
+          clearTimeout(startupGuard);
+          settle();
+          return;
+        }
         if (idx >= chunks.length) {
           clearTimeout(startupGuard);
           settle();
@@ -161,10 +177,20 @@
           firstStarted = true;
         };
         utter.onend = function () {
+          if (runToken !== speechRunToken) {
+            clearTimeout(startupGuard);
+            settle();
+            return;
+          }
           idx += 1;
           playNext();
         };
         utter.onerror = function () {
+          if (runToken !== speechRunToken) {
+            clearTimeout(startupGuard);
+            settle();
+            return;
+          }
           idx += 1;
           playNext();
         };
@@ -254,6 +280,10 @@
     syncTempoInputs(tempoInputEl.value);
     syncNavLinks();
     schedulePersist();
+  });
+
+  document.querySelectorAll(".pr-header-actions a, .pr-nav a").forEach((link) => {
+    link.addEventListener("click", stopOnNavigate);
   });
 
   window.addEventListener("beforeunload", () => {
