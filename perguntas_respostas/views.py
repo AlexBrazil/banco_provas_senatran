@@ -238,13 +238,13 @@ def _register_estudo(user, questao: Questao, contexto_hash: str, contexto_json: 
 
 
 @require_GET
-@require_app_access("perguntas-respostas")
+@require_app_access("perguntas-respostas", consume=False)
 def index(request: HttpRequest) -> HttpResponse:
     return render(request, "perguntas_respostas/index.html", _build_index_context(request))
 
 
 @require_POST
-@require_app_access("perguntas-respostas")
+@require_app_access("perguntas-respostas", consume=True)
 def iniciar_estudo(request: HttpRequest) -> HttpResponse:
     cfg = get_perguntas_respostas_config()
     qtd = _to_positive_int(request.POST.get("qtd_questoes"), cfg["qtd_default"])
@@ -270,7 +270,7 @@ def iniciar_estudo(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@require_app_access("perguntas-respostas")
+@require_app_access("perguntas-respostas", consume=False)
 def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
     sessao = _get_estudo_sessao(request, sessao_id)
     if not sessao:
@@ -344,7 +344,7 @@ def estudar(request: HttpRequest, sessao_id: str) -> HttpResponse:
 
 
 @require_POST
-@require_app_access("perguntas-respostas")
+@require_app_access("perguntas-respostas", consume=False)
 def salvar_tempo_preferencia(request: HttpRequest) -> JsonResponse:
     cfg = get_perguntas_respostas_config()
     tempo = _to_positive_int(request.POST.get("tempo"), cfg["tempo_default"])

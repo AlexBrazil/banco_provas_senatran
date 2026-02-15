@@ -294,6 +294,13 @@ Implementar controle de acesso e limite por app de forma centralizada, mantendo 
 5. Plano pago (ex.: `Aprova DETRAN`) recebe permissao `permitido=True` para os 8 apps e, preferencialmente, `limite_qtd=null`.
 6. Resultado esperado: pagamento confirmado => assinatura muda para plano pago => todos os apps liberados automaticamente.
 
+### Padrao obrigatorio de consumo de credito por app (apps futuros)
+1. Cada app deve consumir credito apenas no evento de negocio que inicia o uso real da sessao.
+2. Rotas de entrada, navegacao, preferencias e APIs auxiliares devem validar acesso sem consumir credito.
+3. A navegacao interna (refresh, redirect, proxima/anterior tela) nao pode gerar novo consumo.
+4. Bloqueio por limite deve ocorrer ao iniciar nova sessao, nao no meio de sessao ja iniciada.
+5. Excecao temporaria: `simulado-digital` pode manter fluxo legado durante transicao (dual-write/cutover), sem impor esse padrao ate a consolidacao final.
+
 ### Componentes de servico (camada de dominio)
 
 Criar modulo de servico, por exemplo `banco_questoes/access_control.py`:

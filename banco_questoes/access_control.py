@@ -77,8 +77,13 @@ def _nome_plano(assinatura: Assinatura | None) -> str:
     return ""
 
 
-def check_and_increment_app_use(user, app_slug: str) -> tuple[bool, str | None, dict[str, Any]]:
-    contexto: dict[str, Any] = {"app_slug": app_slug}
+def _check_app_use(
+    user,
+    app_slug: str,
+    *,
+    consume: bool,
+) -> tuple[bool, str | None, dict[str, Any]]:
+    contexto: dict[str, Any] = {"app_slug": app_slug, "consume": consume}
     assinatura = get_assinatura_ativa(user)
     if not assinatura:
         contexto["motivo"] = "assinatura_inativa"
@@ -115,11 +120,36 @@ def check_and_increment_app_use(user, app_slug: str) -> tuple[bool, str | None, 
         return False, "Regra de limite sem periodo configurado para este modulo.", contexto
 
     inicio = assinatura.inicio or timezone.now()
-    if assinatura.inicio is None:
+    if consume and assinatura.inicio is None:
         assinatura.inicio = inicio
         assinatura.save(update_fields=["inicio", "atualizado_em"])
 
     janela_inicio, janela_fim = _get_janela_atual(inicio, period_seconds)
+
+    if not consume:
+        uso = (
+            UsoAppJanela.objects
+            .filter(
+                usuario=user,
+                app_modulo=regra.app_modulo,
+                janela_inicio=janela_inicio,
+                janela_fim=janela_fim,
+            )
+            .only("contador")
+            .first()
+        )
+        contador = uso.contador if uso else 0
+        motivo = "limite_atingido_sem_consumo" if contador >= limite else "liberado_sem_consumo"
+        contexto.update(
+            {
+                "motivo": motivo,
+                "janela_inicio": janela_inicio.isoformat(),
+                "janela_fim": janela_fim.isoformat(),
+                "contador": contador,
+                "restantes": max(limite - contador, 0),
+            }
+        )
+        return True, None, contexto
 
     with transaction.atomic():
         uso, _ = (
@@ -155,6 +185,14 @@ def check_and_increment_app_use(user, app_slug: str) -> tuple[bool, str | None, 
         }
     )
     return True, None, contexto
+
+
+def check_app_use(user, app_slug: str) -> tuple[bool, str | None, dict[str, Any]]:
+    return _check_app_use(user, app_slug, consume=False)
+
+
+def check_and_increment_app_use(user, app_slug: str) -> tuple[bool, str | None, dict[str, Any]]:
+    return _check_app_use(user, app_slug, consume=True)
 
 
 def build_app_access_status(user) -> dict[str, Any]:
@@ -408,7 +446,7 @@ def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
     }
 
 
-def require_app_access(app_slug: str) -> Callable:
+def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
     def decorator(view_func: Callable) -> Callable:
         @wraps(view_func)
         def _wrapped(request: HttpRequest, *args, **kwargs) -> HttpResponse:
@@ -418,7 +456,10 @@ def require_app_access(app_slug: str) -> Callable:
             if not getattr(settings, "APP_ACCESS_V2_ENABLED", False):
                 return view_func(request, *args, **kwargs)
 
-            allowed, reason, contexto = check_and_increment_app_use(request.user, app_slug)
+            if consume:
+                allowed, reason, contexto = check_and_increment_app_use(request.user, app_slug)
+            else:
+                allowed, reason, contexto = check_app_use(request.user, app_slug)
             if allowed:
                 log_event(request, "app_access_granted", user=request.user, contexto=contexto)
                 return view_func(request, *args, **kwargs)

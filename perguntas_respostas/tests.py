@@ -5,7 +5,18 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from banco_questoes.models import Alternativa, AppModulo, Assinatura, Curso, CursoModulo, Documento, Plano, PlanoPermissaoApp, Questao
+from banco_questoes.models import (
+    Alternativa,
+    AppModulo,
+    Assinatura,
+    Curso,
+    CursoModulo,
+    Documento,
+    Plano,
+    PlanoPermissaoApp,
+    Questao,
+    UsoAppJanela,
+)
 from .models import PerguntaRespostaEstudo, PerguntaRespostaPreferenciaUsuario
 
 
@@ -92,6 +103,33 @@ class PerguntasRespostasFlowTests(TestCase):
         Alternativa.objects.create(questao=q2, texto="Distrator 2", is_correta=False, ordem=2)
         return curso, modulo, q1, q2
 
+    def _seed_access_rule_v2(self, user, *, permitido: bool, limite_qtd: int | None, limite_periodo: str | None):
+        plano = Plano.objects.create(nome=f"Plano PR V2 {user.id}")
+        Assinatura.objects.create(
+            usuario=user,
+            plano=plano,
+            nome_plano_snapshot=plano.nome,
+            status=Assinatura.Status.ATIVO,
+            inicio=timezone.now(),
+            valid_until=None,
+        )
+        app = AppModulo.objects.create(
+            slug="perguntas-respostas",
+            nome="Perguntas e Respostas para Estudos",
+            ordem_menu=2,
+            icone_path="menu_app/icons/icon_app_2.png",
+            rota_nome="perguntas_respostas:index",
+            em_construcao=False,
+            ativo=True,
+        )
+        PlanoPermissaoApp.objects.create(
+            plano=plano,
+            app_modulo=app,
+            permitido=permitido,
+            limite_qtd=limite_qtd,
+            limite_periodo=limite_periodo,
+        )
+
     def test_index_requires_login(self):
         response = self.client.get(reverse("perguntas_respostas:index"))
         self.assertEqual(response.status_code, 302)
@@ -166,27 +204,50 @@ class PerguntasRespostasFlowTests(TestCase):
     @override_settings(APP_ACCESS_V2_ENABLED=True)
     def test_index_with_v2_respects_plan_permission(self):
         user = self._create_user(username="pr-v2", email="pr-v2@example.com")
-        plano = Plano.objects.create(nome="Plano PR V2")
-        Assinatura.objects.create(
-            usuario=user,
-            plano=plano,
-            nome_plano_snapshot=plano.nome,
-            status=Assinatura.Status.ATIVO,
-            inicio=timezone.now(),
-            valid_until=None,
-        )
-        app = AppModulo.objects.create(
-            slug="perguntas-respostas",
-            nome="Perguntas e Respostas para Estudos",
-            ordem_menu=2,
-            icone_path="menu_app/icons/icon_app_2.png",
-            rota_nome="perguntas_respostas:index",
-            em_construcao=False,
-            ativo=True,
-        )
-        PlanoPermissaoApp.objects.create(plano=plano, app_modulo=app, permitido=False)
+        self._seed_access_rule_v2(user, permitido=False, limite_qtd=2, limite_periodo=Plano.Periodo.DIARIO)
 
         self.client.force_login(user)
         response = self.client.get(reverse("perguntas_respostas:index"))
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "Acesso bloqueado")
+
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_v2_consumes_credit_only_when_starting_session(self):
+        user = self._create_user(username="pr-v2-consume", email="pr-v2-consume@example.com")
+        self._seed_question()
+        self._seed_access_rule_v2(user, permitido=True, limite_qtd=2, limite_periodo=Plano.Periodo.DIARIO)
+        self.client.force_login(user)
+
+        index_response = self.client.get(reverse("perguntas_respostas:index"))
+        self.assertEqual(index_response.status_code, 200)
+        self.assertEqual(UsoAppJanela.objects.filter(usuario=user, app_modulo__slug="perguntas-respostas").count(), 0)
+
+        start_response = self.client.post(
+            reverse("perguntas_respostas:iniciar"),
+            {"qtd_questoes": "1"},
+        )
+        self.assertEqual(start_response.status_code, 302)
+
+        uso = UsoAppJanela.objects.get(usuario=user, app_modulo__slug="perguntas-respostas")
+        self.assertEqual(uso.contador, 1)
+
+        study_response = self.client.get(start_response.url)
+        self.assertEqual(study_response.status_code, 200)
+        uso.refresh_from_db()
+        self.assertEqual(uso.contador, 1)
+
+    @override_settings(APP_ACCESS_V2_ENABLED=True)
+    def test_v2_blocks_on_new_start_after_limit(self):
+        user = self._create_user(username="pr-v2-limit", email="pr-v2-limit@example.com")
+        self._seed_question()
+        self._seed_access_rule_v2(user, permitido=True, limite_qtd=1, limite_periodo=Plano.Periodo.DIARIO)
+        self.client.force_login(user)
+
+        first_start = self.client.post(reverse("perguntas_respostas:iniciar"), {"qtd_questoes": "1"})
+        self.assertEqual(first_start.status_code, 302)
+        study_response = self.client.get(first_start.url)
+        self.assertEqual(study_response.status_code, 200)
+
+        second_start = self.client.post(reverse("perguntas_respostas:iniciar"), {"qtd_questoes": "1"})
+        self.assertEqual(second_start.status_code, 403)
+        self.assertContains(second_start, "Limite de uso atingido")
