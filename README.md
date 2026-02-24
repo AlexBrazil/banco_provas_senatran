@@ -24,3 +24,7 @@ Chaves suportadas (todas obrigatorias):
 3. Execute migracoes: `python manage.py migrate`.
 4. (Opcional) Popule os modulos SENATRAN 2025: `python manage.py seed_modulos_senatran2025`.
 5. Suba o servidor: `python manage.py runserver`.
+
+## Documentacao operacional
+- Plano do app apostila CNH: `doc/plans/plano_app_apostila_cnh.md`
+- Manual de insercao/atualizacao de PDF da apostila: `doc/manual_operacao_pdf_apostila_cnh.md`

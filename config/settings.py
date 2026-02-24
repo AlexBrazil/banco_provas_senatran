@@ -184,6 +184,18 @@ STATIC_ROOT = BASE_DIR.parent / "shared" / "staticfiles"
 
 
 # -----------------------------------------------------------------------------
+# Private files (apostila_cnh PDF)
+# -----------------------------------------------------------------------------
+# Arquivos sensiveis da apostila ficam fora de static e sem URL publica direta.
+APOSTILA_CNH_PDF_ROOT = Path(
+    os.getenv(
+        "APOSTILA_CNH_PDF_ROOT",
+        str(BASE_DIR.parent / "shared" / "private" / "apostila_cnh"),
+    )
+)
+
+
+# -----------------------------------------------------------------------------
 # Segurança / Proxy / Cloudflare
 # -----------------------------------------------------------------------------
 # Redirect para HTTPS controlado por env (Cloudflare faz o SSL)

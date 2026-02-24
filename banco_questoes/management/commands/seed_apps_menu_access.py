@@ -34,7 +34,7 @@ APP_MODULES = [
         "ordem_menu": 3,
         "icone_path": "menu_app/icons/icon_app_3.png",
         "rota_nome": "apostila_cnh:index",
-        "em_construcao": True,
+        "em_construcao": False,
     },
     {
         "slug": "simulacao-prova-detran",

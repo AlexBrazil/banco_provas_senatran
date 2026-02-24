@@ -23,7 +23,7 @@ MENU_CATALOG = [
         "titulo": "Apostila da CNH do Brasil",
         "descricao": "Apostila oficial da SENATRAN em PDF disponível sem ter que entrar com gov.br.",
         "icone": "menu_app/icons/icon_app_3.png",
-        "status": "Em construcao",
+        "status": "Ativo",
         "rota_nome": "apostila_cnh:index",
     },
     {
