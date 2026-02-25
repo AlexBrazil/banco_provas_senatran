@@ -12,7 +12,18 @@
     <header class="acnh-header">
       <div>
         <p class="acnh-eyebrow">Leitor da apostila</p>
-        <h1 class="acnh-title">{{ app_title }}</h1>
+        <div class="acnh-title-row">
+          <h1 class="acnh-title">{{ app_title }}</h1>
+          <a
+            href="{% url 'menu:home' %}"
+            class="acnh-btn acnh-btn-secondary acnh-menu-link"
+            aria-label="Voltar ao menu"
+            title="Voltar ao menu"
+          >
+            <span class="acnh-menu-link-icon" aria-hidden="true">&#9776;</span>
+            <span class="acnh-menu-link-text">Voltar ao menu</span>
+          </a>
+        </div>
         <p class="acnh-subtitle" id="acnh-documento-titulo">
           {% if tem_documento_ativo %}
             Preparando documento ativo...
@@ -21,35 +32,33 @@
           {% endif %}
         </p>
       </div>
-      <div class="acnh-actions">
-        <a href="{% url 'menu:home' %}" class="acnh-btn acnh-btn-secondary">Voltar ao menu</a>
-      </div>
     </header>
 
     <section class="acnh-toolbar" aria-label="Navegacao de pagina">
-      <button type="button" id="acnh-prev-btn" class="acnh-btn">Pagina anterior</button>
+      <button type="button" id="acnh-prev-btn" class="acnh-btn" aria-label="Pagina anterior">
+        <span class="acnh-btn-icon" aria-hidden="true">&#x2190;</span>
+        <span class="acnh-btn-text">Pagina anterior</span>
+      </button>
+      <span id="acnh-page-inline-info" class="acnh-page-inline-info" aria-live="polite">1 / -</span>
       <div class="acnh-page-controls">
         <label for="acnh-page-input">Pagina</label>
         <input id="acnh-page-input" type="number" min="1" value="1">
         <span id="acnh-page-total">/ -</span>
         <button type="button" id="acnh-go-btn" class="acnh-btn acnh-btn-secondary">Ir</button>
       </div>
-      <button type="button" id="acnh-next-btn" class="acnh-btn">Proxima pagina</button>
+      <button type="button" id="acnh-next-btn" class="acnh-btn" aria-label="Proxima pagina">
+        <span class="acnh-btn-icon" aria-hidden="true">&#x2192;</span>
+        <span class="acnh-btn-text">Proxima pagina</span>
+      </button>
+      <button type="button" id="acnh-open-search-btn" class="acnh-btn acnh-btn-secondary" aria-label="Buscar">
+        <span class="acnh-btn-icon" aria-hidden="true">&#128269;</span>
+        <span class="acnh-btn-text">Buscar</span>
+      </button>
       <div class="acnh-zoom-controls">
         <button type="button" id="acnh-zoom-out-btn" class="acnh-btn acnh-btn-secondary">-</button>
         <span id="acnh-zoom-label">100%</span>
         <button type="button" id="acnh-zoom-in-btn" class="acnh-btn acnh-btn-secondary">+</button>
       </div>
-    </section>
-
-    <section class="acnh-search" aria-label="Busca no documento ativo">
-      <label for="acnh-search-input">Buscar no documento</label>
-      <div class="acnh-search-row">
-        <input id="acnh-search-input" type="search" placeholder="Digite um termo (ex.: transito)">
-        <button type="button" id="acnh-search-btn" class="acnh-btn acnh-btn-secondary">Buscar</button>
-      </div>
-      <div class="acnh-search-status" id="acnh-search-status"></div>
-      <ol class="acnh-search-results" id="acnh-search-results"></ol>
     </section>
 
     <section class="acnh-viewer" aria-label="Visualizador PDF">
@@ -62,6 +71,30 @@
         <canvas id="acnh-canvas-secondary"></canvas>
       </div>
     </section>
+
+    <div class="acnh-search-modal" id="acnh-search-modal" hidden>
+      <div class="acnh-search-modal-backdrop" id="acnh-search-modal-backdrop"></div>
+      <section
+        class="acnh-search-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="acnh-search-modal-title"
+      >
+        <header class="acnh-search-modal-header">
+          <h2 id="acnh-search-modal-title">Busca na apostila</h2>
+          <button type="button" id="acnh-close-search-btn" class="acnh-btn acnh-btn-secondary">Fechar</button>
+        </header>
+        <section class="acnh-search" aria-label="Busca no documento ativo">
+          <label for="acnh-search-input">Buscar no documento</label>
+          <div class="acnh-search-row">
+            <input id="acnh-search-input" type="search" placeholder="Digite um termo (ex.: transito)">
+            <button type="button" id="acnh-search-btn" class="acnh-btn acnh-btn-secondary">Buscar</button>
+          </div>
+          <div class="acnh-search-status" id="acnh-search-status"></div>
+          <ol class="acnh-search-results" id="acnh-search-results"></ol>
+        </section>
+      </section>
+    </div>
 
     {{ viewer_config|json_script:"acnh-viewer-config" }}
   </main>

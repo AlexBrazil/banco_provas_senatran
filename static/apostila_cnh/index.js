@@ -11,12 +11,17 @@
   const canvasSecondary = document.getElementById("acnh-canvas-secondary");
   const prevBtn = document.getElementById("acnh-prev-btn");
   const nextBtn = document.getElementById("acnh-next-btn");
+  const pageInlineInfoEl = document.getElementById("acnh-page-inline-info");
   const pageInput = document.getElementById("acnh-page-input");
   const pageTotal = document.getElementById("acnh-page-total");
   const goBtn = document.getElementById("acnh-go-btn");
   const zoomOutBtn = document.getElementById("acnh-zoom-out-btn");
   const zoomInBtn = document.getElementById("acnh-zoom-in-btn");
   const zoomLabel = document.getElementById("acnh-zoom-label");
+  const openSearchBtn = document.getElementById("acnh-open-search-btn");
+  const searchModalEl = document.getElementById("acnh-search-modal");
+  const searchModalBackdropEl = document.getElementById("acnh-search-modal-backdrop");
+  const closeSearchBtn = document.getElementById("acnh-close-search-btn");
   const searchInput = document.getElementById("acnh-search-input");
   const searchBtn = document.getElementById("acnh-search-btn");
   const searchStatusEl = document.getElementById("acnh-search-status");
@@ -31,7 +36,6 @@
     pageNum: 1,
     totalPages: 0,
     zoomFactor: 1,
-    dualMode: false,
     renderInProgress: false,
     pendingPageNum: null,
     saveTimer: null,
@@ -61,12 +65,8 @@
     return state.zoomFactor > 1.01;
   }
 
-  function supportsDualModeNow() {
-    return (
-      !isZoomActive()
-      && window.matchMedia("(min-width: 1200px) and (orientation: landscape)").matches
-      && state.totalPages > 1
-    );
+  function isSmartphoneLayout() {
+    return window.matchMedia("(max-width: 40em)").matches;
   }
 
   function clampPage(pageNum) {
@@ -74,29 +74,16 @@
     return Math.min(Math.max(pageNum, 1), state.totalPages);
   }
 
-  function visiblePagesFor(pageNum) {
-    if (state.dualMode && pageNum < state.totalPages) {
-      return [pageNum, pageNum + 1];
-    }
-    return [pageNum];
-  }
 
-  function stepSize() {
-    return state.dualMode ? 2 : 1;
-  }
 
   function updateLayoutMode() {
-    state.dualMode = supportsDualModeNow();
     if (hintEl) {
       if (isZoomActive()) {
         hintEl.textContent =
-          "Zoom ativo: arraste para navegar no conteúdo. Reduza para 100% para habilitar troca por gesto lateral.";
-      } else if (state.dualMode) {
-        hintEl.textContent =
-          "Modo dupla página ativo no desktop/tablet landscape. Use teclado (setas) ou botões para navegar.";
+          "Zoom ativo: arraste para navegar no conteudo. Reduza para 100% para habilitar troca por gesto lateral.";
       } else {
         hintEl.textContent =
-          "Dica: em telas touch, use pinça para zoom e deslize lateral para trocar de página quando o zoom estiver em 100%.";
+          "Dica: em telas touch, use pinca para zoom e deslize lateral para trocar de pagina quando o zoom estiver em 100%.";
       }
     }
     document.body.classList.toggle("acnh-zoom-active", isZoomActive());
@@ -104,10 +91,9 @@
 
   function updateControls() {
     const hasDoc = Boolean(state.pdfDoc);
-    const lastStartPage = state.dualMode ? Math.max(state.totalPages - 1, 1) : state.totalPages;
 
     prevBtn.disabled = !hasDoc || state.pageNum <= 1 || state.renderInProgress;
-    nextBtn.disabled = !hasDoc || state.pageNum >= lastStartPage || state.renderInProgress;
+    nextBtn.disabled = !hasDoc || state.pageNum >= state.totalPages || state.renderInProgress;
     goBtn.disabled = !hasDoc || state.renderInProgress;
     zoomOutBtn.disabled = !hasDoc || state.renderInProgress;
     zoomInBtn.disabled = !hasDoc || state.renderInProgress;
@@ -115,9 +101,13 @@
     pageInput.max = String(state.totalPages || 1);
     pageInput.value = String(state.pageNum || 1);
     pageTotal.textContent = `/ ${state.totalPages || "-"}`;
+    if (pageInlineInfoEl) {
+      pageInlineInfoEl.textContent = `${state.pageNum || 1} / ${state.totalPages || "-"}`;
+    }
     zoomLabel.textContent = `${Math.round(state.zoomFactor * 100)}%`;
-    if (searchBtn) searchBtn.disabled = state.searchInFlight;
-    if (searchInput) searchInput.disabled = state.searchInFlight;
+    if (openSearchBtn) openSearchBtn.disabled = !hasDoc;
+    if (searchBtn) searchBtn.disabled = !hasDoc || state.searchInFlight;
+    if (searchInput) searchInput.disabled = !hasDoc || state.searchInFlight;
   }
 
   function getCsrfToken() {
@@ -315,6 +305,24 @@
     if (searchResultsEl) searchResultsEl.innerHTML = "";
   }
 
+  function isSearchModalOpen() {
+    return Boolean(searchModalEl && !searchModalEl.hasAttribute("hidden"));
+  }
+
+  function openSearchModal() {
+    if (!searchModalEl) return;
+    searchModalEl.removeAttribute("hidden");
+    document.body.classList.add("acnh-modal-open");
+    if (searchInput) searchInput.focus();
+  }
+
+  function closeSearchModal({ refocusTrigger = false } = {}) {
+    if (!searchModalEl) return;
+    searchModalEl.setAttribute("hidden", "");
+    document.body.classList.remove("acnh-modal-open");
+    if (refocusTrigger && openSearchBtn) openSearchBtn.focus();
+  }
+
   function renderSearchResults(resultados) {
     if (!searchResultsEl) return;
     clearSearchResults();
@@ -323,7 +331,10 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = `Pagina ${item.pagina}: ${item.trecho}`;
-      btn.addEventListener("click", () => gotoPage(item.pagina));
+      btn.addEventListener("click", () => {
+        closeSearchModal();
+        gotoPage(item.pagina);
+      });
       li.appendChild(btn);
       searchResultsEl.appendChild(li);
     }
@@ -369,12 +380,10 @@
     }
   }
 
-  function getFitScale(page, visibleCount) {
+  function getFitScale(page) {
     const baseViewport = page.getViewport({ scale: 1 });
-    const gap = visibleCount === 2 ? 12 : 0;
-    const availableWidth = Math.max((viewerEl ? viewerEl.clientWidth : baseViewport.width) - 30 - gap, 100);
-    const targetWidth = visibleCount === 2 ? availableWidth / 2 : availableWidth;
-    return targetWidth / baseViewport.width;
+    const availableWidth = Math.max((viewerEl ? viewerEl.clientWidth : baseViewport.width) - 30, 100);
+    return availableWidth / baseViewport.width;
   }
 
   async function renderPages(pageNum) {
@@ -385,29 +394,23 @@
     setStatus(`Renderizando pagina ${pageNum}...`);
 
     try {
-      const pages = visiblePagesFor(pageNum);
-      const pageA = await state.pdfDoc.getPage(pages[0]);
-      const fitScale = getFitScale(pageA, pages.length);
+      const pageA = await state.pdfDoc.getPage(pageNum);
+      const fitScale = getFitScale(pageA);
       const renderScale = fitScale * state.zoomFactor;
 
       ensureScaleCacheToken(renderScale);
-      for (const page of pages) {
-        await ensurePageCached(page, renderScale);
-      }
+      await ensurePageCached(pageNum, renderScale);
 
-      drawCachedPage(pages[0], canvasPrimary);
-      if (pages.length > 1) drawCachedPage(pages[1], canvasSecondary);
-      else canvasSecondary.style.display = "none";
+      drawCachedPage(pageNum, canvasPrimary);
+      if (canvasSecondary) canvasSecondary.style.display = "none";
 
       trimCacheToWindow(pageNum);
       prefetchWindow(pageNum, renderScale);
 
-      if (pages.length > 1) {
-        setStatus(
-          `Paginas ${pages[0]}-${pages[1]} de ${state.totalPages} | Zoom ${Math.round(state.zoomFactor * 100)}%`
-        );
+      if (isSmartphoneLayout()) {
+        setStatus(`Pagina ${pageNum} de ${state.totalPages}`);
       } else {
-        setStatus(`Pagina ${pages[0]} de ${state.totalPages} | Zoom ${Math.round(state.zoomFactor * 100)}%`);
+        setStatus(`Pagina ${pageNum} de ${state.totalPages} | Zoom ${Math.round(state.zoomFactor * 100)}%`);
       }
       scheduleProgressSave();
     } catch (error) {
@@ -448,11 +451,11 @@
   }
 
   function goNextPage() {
-    queueRender(state.pageNum + stepSize());
+    queueRender(state.pageNum + 1);
   }
 
   function goPrevPage() {
-    queueRender(state.pageNum - stepSize());
+    queueRender(state.pageNum - 1);
   }
 
   function setZoom(nextZoom) {
@@ -645,8 +648,7 @@
   });
 
   nextBtn.addEventListener("click", () => {
-    const lastStartPage = state.dualMode ? Math.max(state.totalPages - 1, 1) : state.totalPages;
-    if (state.pageNum >= lastStartPage) return;
+    if (state.pageNum >= state.totalPages) return;
     goNextPage();
   });
 
@@ -658,6 +660,15 @@
   zoomInBtn.addEventListener("click", () => setZoom(state.zoomFactor + 0.1));
   zoomOutBtn.addEventListener("click", () => setZoom(state.zoomFactor - 0.1));
 
+  if (openSearchBtn) {
+    openSearchBtn.addEventListener("click", () => openSearchModal());
+  }
+  if (closeSearchBtn) {
+    closeSearchBtn.addEventListener("click", () => closeSearchModal({ refocusTrigger: true }));
+  }
+  if (searchModalBackdropEl) {
+    searchModalBackdropEl.addEventListener("click", () => closeSearchModal({ refocusTrigger: true }));
+  }
   if (searchBtn) searchBtn.addEventListener("click", () => performSearch());
   if (searchInput) {
     searchInput.addEventListener("keydown", (event) => {
@@ -667,6 +678,12 @@
       }
     });
   }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isSearchModalOpen()) {
+      event.preventDefault();
+      closeSearchModal({ refocusTrigger: true });
+    }
+  });
 
   window.addEventListener("resize", () => {
     if (!state.pdfDoc) return;
@@ -686,3 +703,5 @@
     console.error(error);
   });
 })();
+
+

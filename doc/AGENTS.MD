@@ -60,6 +60,15 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 
 ---
 
+## Estrategia CSS (hibrida)
+
+- Usar `rem` para tipografia e espacamentos principais (acessibilidade e escala consistente).
+- Usar `%`, `fr`, `vw` e `clamp()` para comportamento responsivo de layout.
+- Usar `px` apenas em detalhes que exigem precisao fixa (bordas finas, sombras, hairlines e ajustes visuais pontuais).
+- Garantir alvos de toque minimos acessiveis (preferir pelo menos `44px`, ou equivalente em `rem`).
+
+---
+
 ## Janela de contexto e compactacao
 
 - O historico do chat pode ser compactado automaticamente durante a sessao para liberar contexto.

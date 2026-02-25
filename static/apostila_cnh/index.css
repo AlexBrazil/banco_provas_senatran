@@ -1,23 +1,23 @@
 .acnh-page {
   min-height: 100vh;
   margin: 0;
-  padding: 20px 16px 28px;
+  padding: 1.25rem 1rem 1.75rem;
   background: linear-gradient(160deg, #ecf4ff 0%, #ffffff 62%);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .acnh-header {
-  max-width: 1080px;
-  margin: 0 auto 14px;
+  max-width: 67.5rem;
+  margin: 0 auto 0.875rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .acnh-eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
+  margin: 0 0 0.375rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0f3d8a;
@@ -27,76 +27,106 @@
 .acnh-title {
   margin: 0;
   color: #12213d;
-  font-size: clamp(24px, 5vw, 34px);
+  font-size: clamp(1.5rem, 5vw, 2.125rem);
+}
+
+.acnh-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.acnh-title-row .acnh-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.acnh-menu-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.acnh-menu-link-icon {
+  display: none;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.acnh-menu-link-text {
+  display: inline;
 }
 
 .acnh-subtitle {
-  margin: 6px 0 0;
+  margin: 0.375rem 0 0;
   color: #425a78;
 }
 
 .acnh-toolbar {
-  max-width: 1080px;
-  margin: 0 auto 12px;
-  padding: 12px;
+  max-width: 67.5rem;
+  margin: 0 auto 0.75rem;
+  padding: 0.75rem;
   border: 1px solid #d5e1f3;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: #f8fbff;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
 .acnh-search {
-  max-width: 1080px;
-  margin: 0 auto 12px;
-  padding: 12px;
+  padding: 0.75rem;
   border: 1px solid #d5e1f3;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   background: #f8fbff;
 }
 
 .acnh-search label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
   color: #16325c;
   font-weight: 600;
 }
 
 .acnh-search-row {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .acnh-search-row input {
-  flex: 1 1 280px;
-  min-width: 220px;
-  padding: 8px 10px;
+  flex: 1 1 17.5rem;
+  min-width: 13.75rem;
+  padding: 0.5rem 0.625rem;
   border: 1px solid #c8d8f1;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .acnh-search-status {
-  margin-top: 8px;
+  margin-top: 0.5rem;
   color: #3d5478;
-  min-height: 20px;
-  font-size: 14px;
+  min-height: 1.25rem;
+  font-size: 0.875rem;
 }
 
 .acnh-search-results {
-  margin: 8px 0 0;
-  padding-left: 20px;
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
   display: grid;
-  gap: 7px;
+  gap: 0.4375rem;
+  max-height: 45vh;
+  overflow: auto;
 }
 
 .acnh-search-results button {
   border: 1px solid #d1def2;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   background: #fff;
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem;
   text-align: left;
   cursor: pointer;
   color: #16325c;
@@ -109,7 +139,7 @@
 .acnh-page-controls {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .acnh-page-controls label {
@@ -118,17 +148,17 @@
 }
 
 .acnh-page-controls input {
-  width: 90px;
-  padding: 8px 10px;
+  width: 5.625rem;
+  padding: 0.5rem 0.625rem;
   border: 1px solid #c8d8f1;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .acnh-zoom-controls {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .acnh-btn {
@@ -136,8 +166,8 @@
   background: #1d4ed8;
   color: #fff;
   font-weight: 600;
-  border-radius: 9px;
-  padding: 8px 12px;
+  border-radius: 0.5625rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
   text-decoration: none;
 }
@@ -147,38 +177,111 @@
   cursor: not-allowed;
 }
 
+.acnh-btn-icon {
+  display: none;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.acnh-btn-text {
+  display: inline;
+}
+
 .acnh-btn-secondary {
   border-color: #bfd1ef;
   background: #f3f7ff;
   color: #16325c;
 }
 
+.acnh-page-inline-info {
+  display: none;
+  color: #16325c;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.acnh-modal-open {
+  overflow: hidden;
+}
+
+.acnh-search-modal[hidden] {
+  display: none;
+}
+
+.acnh-search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.125rem;
+}
+
+.acnh-search-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 24, 52, 0.48);
+}
+
+.acnh-search-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(57.5rem, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  border: 1px solid #cad9f0;
+  border-radius: 0.875rem;
+  background: #fff;
+  box-shadow: 0 22px 40px rgba(12, 31, 67, 0.26);
+  padding: 0.875rem;
+}
+
+.acnh-search-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+.acnh-search-modal-header h2 {
+  margin: 0;
+  color: #12213d;
+  font-size: 1.3125rem;
+}
+
+.acnh-search-modal .acnh-search {
+  margin: 0;
+  max-width: none;
+}
+
 .acnh-viewer {
-  max-width: 1080px;
+  max-width: 67.5rem;
   margin: 0 auto;
   border: 1px solid #d5e1f3;
-  border-radius: 14px;
+  border-radius: 0.875rem;
   background: #fff;
   box-shadow: 0 16px 30px rgba(12, 31, 67, 0.08);
-  padding: 14px;
+  padding: 0.875rem;
   overflow: auto;
 }
 
 .acnh-status {
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   color: #3d5478;
-  min-height: 20px;
+  min-height: 1.25rem;
 }
 
 .acnh-gesture-hint {
-  margin: 0 0 10px;
+  margin: 0 0 0.625rem;
   color: #546b8e;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .acnh-canvas-track {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   align-items: flex-start;
   justify-content: center;
   min-height: 60vh;
@@ -189,7 +292,7 @@
   width: auto;
   max-width: none;
   border: 1px solid #dae6f6;
-  border-radius: 10px;
+  border-radius: 0.625rem;
   background: #fff;
   display: none;
 }
@@ -198,19 +301,19 @@ body.acnh-zoom-active .acnh-canvas-track {
   justify-content: flex-start;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 51.25em) {
   .acnh-zoom-controls {
     margin-left: 0;
   }
 
   .acnh-toolbar {
-    gap: 8px;
-    padding: 10px;
+    gap: 0.5rem;
+    padding: 0.625rem;
   }
 
   .acnh-btn {
-    padding: 9px 11px;
-    font-size: 14px;
+    padding: 0.5625rem 0.6875rem;
+    font-size: 0.875rem;
   }
 
   .acnh-page-controls {
@@ -219,38 +322,155 @@ body.acnh-zoom-active .acnh-canvas-track {
   }
 
   .acnh-page-controls input {
-    width: 78px;
+    width: 4.875rem;
   }
 
   .acnh-canvas-track {
-    gap: 8px;
+    gap: 0.5rem;
   }
 }
 
-@media (max-width: 1024px) and (orientation: landscape) {
-  .acnh-header,
-  .acnh-toolbar,
-  .acnh-search,
-  .acnh-viewer {
-    max-width: 980px;
-  }
-}
-
-@media (max-width: 540px) {
-  .acnh-page {
-    padding: 14px 10px 24px;
-  }
-
+@media (max-width: 40em) {
   .acnh-header {
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
+  }
+
+  .acnh-subtitle {
+    display: none;
+  }
+
+  .acnh-title-row {
+    align-items: center;
+  }
+
+  .acnh-menu-link {
+    width: 2.125rem;
+    height: 2.125rem;
+    min-width: 2.125rem;
+    padding: 0;
+    border-radius: 999px;
+    gap: 0;
+  }
+
+  .acnh-menu-link-icon {
+    display: inline-block;
+  }
+
+  .acnh-menu-link-text {
+    display: none;
+  }
+
+  .acnh-eyebrow {
+    font-size: 0.6875rem;
   }
 
   .acnh-title {
-    font-size: 32px;
-    line-height: 1.05;
+    font-size: clamp(1.25rem, 7.4vw, 1.5rem);
+    line-height: 1.1;
+  }
+
+  .acnh-subtitle {
+    font-size: 0.9375rem;
+  }
+
+  .acnh-toolbar {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+  }
+
+  .acnh-btn {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.5rem;
+    min-width: 2rem;
+    min-height: 2rem;
+  }
+
+  .acnh-btn-icon {
+    display: inline-block;
+    font-size: 1.0625rem;
+  }
+
+  .acnh-btn-text {
+    display: none;
+  }
+
+  .acnh-page-inline-info {
+    display: inline-block;
+    font-size: 0.8125rem;
+  }
+
+  #acnh-prev-btn {
+    order: 1;
+  }
+
+  #acnh-next-btn {
+    order: 3;
+  }
+
+  #acnh-open-search-btn {
+    order: 4;
+  }
+
+  #acnh-page-inline-info {
+    order: 2;
+    flex: 1;
+    text-align: center;
+  }
+
+  #acnh-prev-btn,
+  #acnh-next-btn,
+  #acnh-open-search-btn {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .acnh-page-controls {
+    display: none;
+  }
+
+  .acnh-zoom-controls {
+    display: none;
+  }
+}
+
+@media (max-width: 64em) and (orientation: landscape) {
+  .acnh-header,
+  .acnh-toolbar,
+  .acnh-viewer {
+    max-width: 61.25rem;
+  }
+}
+
+@media (max-width: 33.75em) {
+  .acnh-page {
+    padding: 0.875rem 0.625rem 1.5rem;
+  }
+
+  .acnh-title {
+    font-size: clamp(1.1875rem, 6.9vw, 1.375rem);
+    line-height: 1.12;
   }
 
   .acnh-gesture-hint {
-    font-size: 12px;
+    font-size: 0.75rem;
+  }
+
+  .acnh-search-modal {
+    padding: 0.625rem;
+  }
+
+  .acnh-search-modal-dialog {
+    max-height: 92vh;
+    padding: 0.625rem;
+  }
+
+  .acnh-search-modal-header h2 {
+    font-size: 1.125rem;
   }
 }

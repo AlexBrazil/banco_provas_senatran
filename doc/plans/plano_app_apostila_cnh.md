@@ -345,7 +345,9 @@ Tarefas:
 1. Criar endpoint de busca em `ApostilaPagina`.
 2. Implementar normalizacao basica de termo.
 3. Retornar lista enxuta (pagina + trecho pequeno).
-4. Integrar UI de busca com salto para pagina.
+4. Integrar UI de busca em modal acionada por botao na toolbar.
+5. Ao clicar em resultado, fechar modal e navegar para a pagina selecionada.
+6. Manter ultimo resultado visivel ao reabrir a modal durante a mesma sessao da pagina.
 
 Arquivos previstos:
 - `apostila_cnh/views.py`
@@ -381,8 +383,8 @@ Objetivo:
 - Garantir boa usabilidade em desktop/tablet/mobile.
 
 Tarefas:
-1. Layout de 1 pagina para mobile.
-2. Opcional de 2 paginas para desktop/tablet landscape.
+1. Layout de pagina unica em mobile, tablet e desktop.
+2. Nao habilitar modo de 2 paginas nesta versao.
 3. Implementar zoom por pinca (pinch-to-zoom) no mobile/tablet.
 4. Ajustar navegacao para coexistir com zoom:
    - com zoom ativo, priorizar arraste do conteudo;
