@@ -1,6 +1,1 @@
 questao_id,modulo,numero_no_modulo,codigo_placa,imagem_esperada,imagem_cadastrada,imagem_encontrada,status,observacao
-122afa58-6c0e-433b-a9c9-a756561eeab3,"Placas, Cores e Caminhos",122,R-35,R-35.png,R-35.png,,MISSING_FILE,arquivo nao encontrado em static/placas
-8206429c-e46a-4ce1-a147-c9713ea6c1dd,"Placas, Cores e Caminhos",164,R-35,R-35.png,R-35.png,,MISSING_FILE,arquivo nao encontrado em static/placas
-83f6a16e-6e1e-47a3-8988-f9d3331f53f0,"Placas, Cores e Caminhos",198,R-35,R-35.png,R-35.png,,MISSING_FILE,arquivo nao encontrado em static/placas
-97468543-db73-44d1-a1cc-feac6af559d9,"Placas, Cores e Caminhos",339,SAU-08,SAU-08.png,SAU-08.png,,MISSING_FILE,arquivo nao encontrado em static/placas
-a09071fa-2ce3-4ac5-ae29-1d6006a812f3,"Placas, Cores e Caminhos",356,SAU-08,SAU-08.png,SAU-08.png,,MISSING_FILE,arquivo nao encontrado em static/placas
