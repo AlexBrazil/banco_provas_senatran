@@ -1,0 +1,78 @@
+{
+  "summary": {
+    "generated_at": "2026-02-25T21:49:49.693553+00:00",
+    "placas_dir": "F:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital\\static\\placas",
+    "strict_case": true,
+    "strict_ext": false,
+    "total_auditadas": 226,
+    "total_ok": 221,
+    "total_missing_file": 5,
+    "total_case_mismatch": 0,
+    "total_inconsistent_data": 0,
+    "total_problemas": 5,
+    "missing_unique_count": 2,
+    "missing_unique_names": [
+      "R-35.png",
+      "SAU-08.png"
+    ],
+    "case_mismatch_pairs": [],
+    "static_files_count": 146
+  },
+  "rows": [
+    {
+      "questao_id": "122afa58-6c0e-433b-a9c9-a756561eeab3",
+      "modulo": "Placas, Cores e Caminhos",
+      "numero_no_modulo": "122",
+      "codigo_placa": "R-35",
+      "imagem_esperada": "R-35.png",
+      "imagem_cadastrada": "R-35.png",
+      "imagem_encontrada": "",
+      "status": "MISSING_FILE",
+      "observacao": "arquivo nao encontrado em static/placas"
+    },
+    {
+      "questao_id": "8206429c-e46a-4ce1-a147-c9713ea6c1dd",
+      "modulo": "Placas, Cores e Caminhos",
+      "numero_no_modulo": "164",
+      "codigo_placa": "R-35",
+      "imagem_esperada": "R-35.png",
+      "imagem_cadastrada": "R-35.png",
+      "imagem_encontrada": "",
+      "status": "MISSING_FILE",
+      "observacao": "arquivo nao encontrado em static/placas"
+    },
+    {
+      "questao_id": "83f6a16e-6e1e-47a3-8988-f9d3331f53f0",
+      "modulo": "Placas, Cores e Caminhos",
+      "numero_no_modulo": "198",
+      "codigo_placa": "R-35",
+      "imagem_esperada": "R-35.png",
+      "imagem_cadastrada": "R-35.png",
+      "imagem_encontrada": "",
+      "status": "MISSING_FILE",
+      "observacao": "arquivo nao encontrado em static/placas"
+    },
+    {
+      "questao_id": "97468543-db73-44d1-a1cc-feac6af559d9",
+      "modulo": "Placas, Cores e Caminhos",
+      "numero_no_modulo": "339",
+      "codigo_placa": "SAU-08",
+      "imagem_esperada": "SAU-08.png",
+      "imagem_cadastrada": "SAU-08.png",
+      "imagem_encontrada": "",
+      "status": "MISSING_FILE",
+      "observacao": "arquivo nao encontrado em static/placas"
+    },
+    {
+      "questao_id": "a09071fa-2ce3-4ac5-ae29-1d6006a812f3",
+      "modulo": "Placas, Cores e Caminhos",
+      "numero_no_modulo": "356",
+      "codigo_placa": "SAU-08",
+      "imagem_esperada": "SAU-08.png",
+      "imagem_cadastrada": "SAU-08.png",
+      "imagem_encontrada": "",
+      "status": "MISSING_FILE",
+      "observacao": "arquivo nao encontrado em static/placas"
+    }
+  ]
+}
