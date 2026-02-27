@@ -6,6 +6,7 @@
 {% block head_css %}
   <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
   <link rel="stylesheet" href="{% static 'auth/login.css' %}">
+  <link rel="stylesheet" href="{% static 'auth/password_toggle.css' %}">
 {% endblock %}
 
 {% block body_class %}simulado-container simulado-container--center{% endblock %}
@@ -35,9 +36,25 @@
         {{ form.username.errors }}
       </div>
 
-      <div class="form-group">
+      <div class="form-group password-field">
         {{ form.password.label_tag }}
-        {{ form.password }}
+        <div class="password-input-wrap">
+          {{ form.password }}
+          <button
+            type="button"
+            class="password-toggle"
+            data-toggle-password
+            data-target="id_password"
+            aria-label="Mostrar senha"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" class="password-toggle-icon" aria-hidden="true" focusable="false">
+              <path class="eye-outline" d="M2.2 12s3.2-6 9.8-6 9.8 6 9.8 6-3.2 6-9.8 6-9.8-6-9.8-6z"></path>
+              <circle class="eye-pupil" cx="12" cy="12" r="2.8"></circle>
+              <path class="eye-slash" d="M4 20L20 4"></path>
+            </svg>
+          </button>
+        </div>
         {{ form.password.errors }}
       </div>
 
@@ -48,4 +65,8 @@
       <button type="submit" class="btn-simulado login-submit">Entrar</button>
     </form>
   </div>
+{% endblock %}
+
+{% block body_end %}
+  <script src="{% static 'auth/password_toggle.js' %}"></script>
 {% endblock %}
