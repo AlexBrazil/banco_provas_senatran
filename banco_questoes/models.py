@@ -395,6 +395,35 @@ class UsoAppJanela(models.Model):
         return f"{self.usuario} :: {self.app_modulo.slug} :: {self.janela_inicio.date()}-{self.janela_fim.date()}"
 
 
+class OfertaUpgradeUsuario(models.Model):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ofertas_upgrade",
+    )
+    campanha_slug = models.SlugField(max_length=120)
+    ciclo = models.PositiveIntegerField(default=1)
+    janela_inicio = models.DateTimeField()
+    janela_fim = models.DateTimeField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-atualizado_em"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "campanha_slug"],
+                name="uniq_oferta_upgrade_usuario_campanha",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["campanha_slug", "janela_fim"], name="bq_oferta_slug_fim_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.usuario} :: {self.campanha_slug} :: ciclo {self.ciclo}"
+
+
 class EventoAuditoria(models.Model):
     tipo = models.CharField(max_length=60)
     usuario = models.ForeignKey(

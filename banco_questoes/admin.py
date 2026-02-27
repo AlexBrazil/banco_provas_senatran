@@ -15,6 +15,7 @@ from .models import (
     CursoModulo,
     Documento,
     EventoAuditoria,
+    OfertaUpgradeUsuario,
     Plano,
     PlanoPermissaoApp,
     Questao,
@@ -182,6 +183,14 @@ class UsoAppJanelaAdmin(admin.ModelAdmin):
     list_filter = ("app_modulo", "janela_fim")
     search_fields = ("usuario__email", "usuario__username", "app_modulo__nome", "app_modulo__slug")
     list_select_related = ("usuario", "app_modulo")
+
+
+@admin.register(OfertaUpgradeUsuario)
+class OfertaUpgradeUsuarioAdmin(admin.ModelAdmin):
+    list_display = ("usuario", "campanha_slug", "ciclo", "janela_inicio", "janela_fim", "atualizado_em")
+    list_filter = ("campanha_slug", "janela_fim")
+    search_fields = ("usuario__email", "usuario__username", "campanha_slug")
+    list_select_related = ("usuario",)
 
 
 @admin.register(EventoAuditoria)

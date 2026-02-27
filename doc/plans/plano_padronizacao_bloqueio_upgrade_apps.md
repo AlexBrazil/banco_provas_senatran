@@ -9,6 +9,11 @@ Status: em execucao (implementacao iniciada em 2026-02-27)
 - template real de bloqueio compartilhado em ajuste para tom comercial direto;
 - integracao do fluxo de bloqueio do Simulado para usar a tela padrao compartilhada;
 - preparacao de asset visual (`cnh_amor.png`) para tela de bloqueio.
+3. Campanha de escassez 24h implementada:
+- persistencia por usuario em banco para nao reiniciar contador a cada acesso;
+- reinicio automatico do ciclo apos expirar 24h;
+- mensagem de nova oportunidade a partir do segundo ciclo;
+- exibicao de oferta com ancora de preco (`de`/`por`) e `50% OFF` + cronometro regressivo.
 
 ## Objetivo
 Padronizar a experiencia de bloqueio por plano/limite em todos os apps (incluindo Simulado Digital e Simulacao de Prova), com uma tela unica mais informativa e mais persuasiva para aumentar upgrade para plano pago.
@@ -285,6 +290,5 @@ Objetivo deste wireframe:
 2. Validar metricas e feedback rapido.
 3. Expandir para todos os apps, incluindo simulado.
 4. Iniciar ciclo de otimizacao por experimentos controlados.
-
 
 

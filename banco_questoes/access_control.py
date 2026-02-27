@@ -15,10 +15,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .auditoria import log_event
-from .models import AppModulo, Assinatura, Plano, PlanoPermissaoApp, UsoAppJanela
+from .models import AppModulo, Assinatura, OfertaUpgradeUsuario, Plano, PlanoPermissaoApp, UsoAppJanela
 
 
 UPGRADE_PLAN_NAME = "Aprova DETRAN"
+UPGRADE_PROMO_CAMPAIGN_SLUG = "upgrade-free-24h"
+UPGRADE_PROMO_WINDOW_HOURS = 24
+UPGRADE_PROMO_DISCOUNT_PERCENT = 50
 
 
 def get_assinatura_ativa(user) -> Assinatura | None:
@@ -91,15 +94,44 @@ def _format_brl(value: Decimal | int | float | str | None) -> str:
     return f"R$ {amount}".replace(".", ",")
 
 
-def _get_upgrade_price_label() -> str:
-    plano = Plano.objects.filter(nome__iexact=UPGRADE_PLAN_NAME, ativo=True).only("preco").first()
-    if not plano:
-        return ""
-    return _format_brl(plano.preco)
+def _get_upgrade_plan() -> Plano | None:
+    return Plano.objects.filter(nome__iexact=UPGRADE_PLAN_NAME, ativo=True).only("preco").first()
+
+
+def _get_or_rotate_upgrade_offer(user) -> OfertaUpgradeUsuario | None:
+    if not getattr(user, "is_authenticated", False):
+        return None
+
+    now = timezone.now()
+    janela_delta = timedelta(hours=UPGRADE_PROMO_WINDOW_HOURS)
+    with transaction.atomic():
+        oferta = (
+            OfertaUpgradeUsuario.objects
+            .select_for_update()
+            .filter(usuario=user, campanha_slug=UPGRADE_PROMO_CAMPAIGN_SLUG)
+            .first()
+        )
+        if not oferta:
+            oferta = OfertaUpgradeUsuario.objects.create(
+                usuario=user,
+                campanha_slug=UPGRADE_PROMO_CAMPAIGN_SLUG,
+                ciclo=1,
+                janela_inicio=now,
+                janela_fim=now + janela_delta,
+            )
+            return oferta
+
+        if now >= oferta.janela_fim:
+            oferta.ciclo += 1
+            oferta.janela_inicio = now
+            oferta.janela_fim = now + janela_delta
+            oferta.save(update_fields=["ciclo", "janela_inicio", "janela_fim", "atualizado_em"])
+        return oferta
 
 
 def build_access_blocked_context(
     *,
+    user=None,
     app_slug: str,
     reason: str,
     plano_nome: str,
@@ -117,10 +149,28 @@ def build_access_blocked_context(
     else:
         headline = "Acesso bloqueado neste aplicativo."
 
-    upgrade_price_label = _get_upgrade_price_label()
+    upgrade_price_label = ""
+    upgrade_price_from_label = ""
+    promo_ends_at_iso = ""
+    promo_show_new_chance = False
+    promo_new_chance_text = ""
+    promo_discount_label = ""
     commercial_offer = ""
     commercial_low_cost = ""
     if show_upgrade_cta:
+        plano_upgrade = _get_upgrade_plan()
+        if plano_upgrade:
+            upgrade_price_label = _format_brl(plano_upgrade.preco)
+            upgrade_price_from_label = _format_brl(plano_upgrade.preco * Decimal("2"))
+
+        oferta = _get_or_rotate_upgrade_offer(user)
+        if oferta:
+            promo_ends_at_iso = oferta.janela_fim.isoformat()
+            promo_show_new_chance = oferta.ciclo > 1
+            if promo_show_new_chance:
+                promo_new_chance_text = "Te damos uma nova oportunidade de comprar com desconto."
+
+        promo_discount_label = f"{UPGRADE_PROMO_DISCOUNT_PERCENT}% OFF"
         if upgrade_price_label:
             commercial_offer = (
                 f"Libere todos os aplicativos por apenas {upgrade_price_label} e aumente suas chances "
@@ -141,9 +191,15 @@ def build_access_blocked_context(
         "show_upgrade_cta": show_upgrade_cta,
         "upgrade_url": upgrade_url,
         "upgrade_price_label": upgrade_price_label,
+        "upgrade_price_from_label": upgrade_price_from_label,
         "commercial_headline": headline,
         "commercial_offer": commercial_offer,
         "commercial_low_cost": commercial_low_cost,
+        "promo_enabled": bool(show_upgrade_cta and promo_ends_at_iso),
+        "promo_ends_at_iso": promo_ends_at_iso,
+        "promo_discount_label": promo_discount_label,
+        "promo_show_new_chance": promo_show_new_chance,
+        "promo_new_chance_text": promo_new_chance_text,
     }
 
 
@@ -549,6 +605,7 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
                 request,
                 "menu/access_blocked.html",
                 build_access_blocked_context(
+                    user=request.user,
                     app_slug=app_slug,
                     reason=reason or "Acesso bloqueado para este modulo.",
                     plano_nome=plano_nome,

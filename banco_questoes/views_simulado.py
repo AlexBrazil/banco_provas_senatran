@@ -390,6 +390,7 @@ def _render_access_blocked(
         request,
         "menu/access_blocked.html",
         build_access_blocked_context(
+            user=request.user,
             app_slug=SIMULADO_APP_SLUG,
             reason=msg,
             plano_nome=plano_nome,

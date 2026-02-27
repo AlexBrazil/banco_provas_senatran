@@ -86,17 +86,89 @@
 
     .ab-low-cost {
       margin: 0;
+      width: fit-content;
+      border: 2px solid #ffc08d;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #fff4e7, #ffe2c3);
+      color: #a42d00;
+      padding: 8px 12px;
+      font-size: clamp(16px, 2.2vw, 24px);
       font-weight: 900;
-      font-size: clamp(26px, 4vw, 46px);
-      line-height: 1.06;
-      color: var(--ab-accent);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
       text-transform: uppercase;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(255, 106, 0, 0.16);
     }
 
     .ab-reason {
       margin: 0;
       font-size: 14px;
       color: #734f32;
+    }
+
+    .ab-price-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 12px;
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .ab-price-from {
+      color: #8a5b42;
+      text-decoration: line-through;
+      font-size: clamp(18px, 2.8vw, 28px);
+    }
+
+    .ab-price-now {
+      color: var(--ab-accent);
+      font-size: clamp(32px, 4.8vw, 56px);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .ab-price-off {
+      border-radius: 999px;
+      background: #ffe5da;
+      color: #8a2f00;
+      border: 1px solid #f5bda8;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .ab-countdown-card {
+      border: 1px solid #ffcfab;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff9f2 0%, #fff1e3 100%);
+      padding: 12px;
+    }
+
+    .ab-countdown-label {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: #7d4c2d;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ab-countdown {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 900;
+      color: #ab2f00;
+      letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ab-next-chance {
+      margin: 0;
+      color: #1f7a44;
+      font-weight: 800;
+      font-size: 16px;
     }
 
     .ab-plan {
@@ -163,6 +235,132 @@
       display: block;
     }
 
+    @media (min-width: 861px) {
+      .ab-page {
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+        padding: 10px 16px;
+      }
+
+      .ab-wrap {
+        height: calc(100vh - 20px);
+      }
+
+      .ab-copy {
+        padding: 16px 18px;
+        gap: 10px;
+        align-content: start;
+      }
+
+      .ab-headline {
+        font-size: clamp(24px, 3.2vw, 44px);
+      }
+
+      .ab-offer {
+        font-size: clamp(18px, 2.2vw, 30px);
+        padding: 10px 12px;
+      }
+
+      .ab-price-from {
+        font-size: clamp(16px, 2vw, 24px);
+      }
+
+      .ab-price-now {
+        font-size: clamp(28px, 3.7vw, 46px);
+      }
+
+      .ab-low-cost {
+        font-size: clamp(14px, 1.5vw, 20px);
+        padding: 6px 10px;
+      }
+
+      .ab-countdown-label {
+        margin-bottom: 4px;
+      }
+
+      .ab-countdown {
+        font-size: clamp(24px, 3.2vw, 38px);
+      }
+
+      .ab-btn {
+        padding: 10px 14px;
+        font-size: clamp(14px, 1.8vw, 18px);
+      }
+    }
+
+    @media (min-width: 861px) and (max-height: 820px) {
+      .ab-page {
+        padding: 6px 12px;
+      }
+
+      .ab-wrap {
+        height: calc(100vh - 12px);
+      }
+
+      .ab-copy {
+        padding: 12px 14px;
+        gap: 8px;
+      }
+
+      .ab-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+
+      .ab-headline {
+        font-size: clamp(22px, 2.8vw, 34px);
+      }
+
+      .ab-offer {
+        font-size: clamp(16px, 1.9vw, 24px);
+        padding: 8px 10px;
+      }
+
+      .ab-price-row {
+        gap: 6px 10px;
+      }
+
+      .ab-price-now {
+        font-size: clamp(24px, 3.1vw, 36px);
+      }
+
+      .ab-low-cost {
+        font-size: clamp(13px, 1.2vw, 17px);
+        padding: 5px 8px;
+      }
+
+      .ab-countdown-card {
+        padding: 8px 10px;
+      }
+
+      .ab-countdown-label {
+        font-size: 11px;
+      }
+
+      .ab-countdown {
+        font-size: clamp(20px, 2.6vw, 30px);
+      }
+
+      .ab-next-chance {
+        font-size: 14px;
+      }
+
+      .ab-reason,
+      .ab-plan {
+        font-size: 12px;
+      }
+
+      .ab-actions {
+        gap: 8px;
+      }
+
+      .ab-btn {
+        padding: 8px 12px;
+        font-size: clamp(13px, 1.35vw, 16px);
+      }
+    }
+
     @media (max-width: 860px) {
       .ab-wrap {
         grid-template-columns: 1fr;
@@ -177,13 +375,16 @@
       }
 
       .ab-headline,
-      .ab-offer,
-      .ab-low-cost {
+      .ab-offer {
         text-align: center;
       }
 
       .ab-actions {
         justify-content: center;
+      }
+
+      .ab-low-cost {
+        white-space: normal;
       }
     }
   </style>
@@ -198,7 +399,31 @@
 
         {% if commercial_offer %}
           <p class="ab-offer">{{ commercial_offer }}</p>
-          <p class="ab-low-cost">{{ commercial_low_cost }}</p>
+          {% if promo_enabled %}
+            <p class="ab-price-row">
+              {% if upgrade_price_from_label %}
+                <span class="ab-price-from">{{ upgrade_price_from_label }}</span>
+              {% endif %}
+              {% if upgrade_price_label %}
+                <span class="ab-price-now">{{ upgrade_price_label }}</span>
+              {% endif %}
+              {% if promo_discount_label %}
+                <span class="ab-price-off">{{ promo_discount_label }}</span>
+              {% endif %}
+            </p>
+            {% if commercial_low_cost %}
+              <p class="ab-low-cost">{{ commercial_low_cost }}</p>
+            {% endif %}
+            <div class="ab-countdown-card" data-countdown-ends-at="{{ promo_ends_at_iso }}">
+              <p class="ab-countdown-label">Termina em</p>
+              <p class="ab-countdown" data-countdown-value>24:00:00</p>
+            </div>
+            {% if promo_show_new_chance and promo_new_chance_text %}
+              <p class="ab-next-chance">{{ promo_new_chance_text }}</p>
+            {% endif %}
+          {% elif commercial_low_cost %}
+            <p class="ab-low-cost">{{ commercial_low_cost }}</p>
+          {% endif %}
         {% endif %}
 
         <p class="ab-reason">{{ reason }}</p>
@@ -222,4 +447,37 @@
       </aside>
     </section>
   </main>
+{% endblock %}
+
+{% block body_end %}
+  <script>
+    (function () {
+      var card = document.querySelector("[data-countdown-ends-at]");
+      if (!card) return;
+
+      var valueEl = card.querySelector("[data-countdown-value]");
+      if (!valueEl) return;
+
+      var rawEnd = card.getAttribute("data-countdown-ends-at") || "";
+      var endTs = Date.parse(rawEnd);
+      if (Number.isNaN(endTs)) return;
+
+      function pad(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function render() {
+        var now = Date.now();
+        var remainingMs = Math.max(endTs - now, 0);
+        var totalSec = Math.floor(remainingMs / 1000);
+        var hh = Math.floor(totalSec / 3600);
+        var mm = Math.floor((totalSec % 3600) / 60);
+        var ss = totalSec % 60;
+        valueEl.textContent = pad(hh) + ":" + pad(mm) + ":" + pad(ss);
+      }
+
+      render();
+      setInterval(render, 1000);
+    })();
+  </script>
 {% endblock %}

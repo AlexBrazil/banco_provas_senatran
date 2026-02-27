@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock Escassez 24h - Upgrade PIX</title>
+  <style>
+    :root {
+      --bg-a: #fff3e7;
+      --bg-b: #ffe2c8;
+      --ink: #1b1f2a;
+      --line: #ffd2ae;
+      --accent: #ff5a00;
+      --accent-2: #ff8a00;
+      --ok: #1f7a44;
+      --muted: #6d4b35;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 16px;
+      font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 20% -20%, #fff9f2 0%, transparent 65%),
+        linear-gradient(160deg, var(--bg-a), var(--bg-b));
+      display: grid;
+      place-items: center;
+    }
+
+    .wrap {
+      width: min(980px, 100%);
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 22px 50px rgba(130, 62, 15, 0.18);
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+
+    .copy {
+      padding: 24px;
+      display: grid;
+      gap: 12px;
+      align-content: center;
+    }
+
+    .badge {
+      margin: 0;
+      width: fit-content;
+      border-radius: 999px;
+      border: 1px solid #f5bda8;
+      background: #ffe5da;
+      color: #8a2f00;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4.6vw, 52px);
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .offer {
+      margin: 0;
+      border: 2px solid #ffc89b;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #fff2e5, #ffe1c3);
+      color: #9a3600;
+      padding: 12px;
+      font-size: clamp(20px, 3.4vw, 36px);
+      font-weight: 900;
+      line-height: 1.12;
+    }
+
+    .price-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 12px;
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .price-from {
+      color: #8a5b42;
+      text-decoration: line-through;
+      font-size: clamp(18px, 2.8vw, 28px);
+    }
+
+    .price-now {
+      color: var(--accent);
+      font-size: clamp(32px, 4.8vw, 56px);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .price-off {
+      border-radius: 999px;
+      background: #ffe5da;
+      color: #8a2f00;
+      border: 1px solid #f5bda8;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .countdown-card {
+      border: 1px solid #ffcfab;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff9f2 0%, #fff1e3 100%);
+      padding: 12px;
+    }
+
+    .countdown-label {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: #7d4c2d;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .countdown {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 900;
+      color: #ab2f00;
+      letter-spacing: 0.03em;
+    }
+
+    .next-chance {
+      margin: 0;
+      color: var(--ok);
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .sub {
+      margin: 0;
+    }
+
+    .sub-cost {
+      margin: 2px 0 0;
+      width: fit-content;
+      border: 2px solid #ffc08d;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #fff4e7, #ffe2c3);
+      color: #a42d00;
+      padding: 8px 12px;
+      font-size: clamp(16px, 2.2vw, 24px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(255, 106, 0, 0.16);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 22px rgba(255, 90, 0, 0.28);
+    }
+
+    .btn-secondary {
+      color: #5f3d24;
+      background: #fff5ea;
+      border: 1px solid #f4c89d;
+    }
+
+    .photo {
+      min-height: 340px;
+      border-left: 2px solid var(--line);
+      background: linear-gradient(180deg, #fff8ef 0%, #ffe8d2 100%);
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .debug {
+      margin-top: 6px;
+      color: #83553a;
+      font-size: 12px;
+    }
+
+    @media (max-width: 860px) {
+      .wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .photo {
+        order: -1;
+        min-height: 240px;
+        border-left: 0;
+        border-bottom: 2px solid var(--line);
+      }
+
+      .sub-cost {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="copy">
+      <p class="badge">Oferta relampago 24h</p>
+      <h1>Seu limite de uso gratuito foi atingido para este aplicativo</h1>
+
+      <p class="offer">
+        Libere todos os aplicativos e aumente suas chances de passar de primeira nas provas do DETRAN.
+      </p>
+
+      <p class="price-row">
+        <span class="price-from" id="priceFrom">R$ 19,80</span>
+        <span class="price-now" id="priceNow">R$ 9,90</span>
+        <span class="price-off">50% OFF</span>
+      </p>
+
+      <p class="sub">
+        <span class="sub-cost">Custa menos que um pastel.</span>
+      </p>
+
+      <div class="countdown-card">
+        <p class="countdown-label">Termina em</p>
+        <p class="countdown" id="countdown">24:00:00</p>
+      </div>
+
+      <p class="next-chance" id="nextChanceMsg" hidden>
+        Te damos uma nova oportunidade de comprar com desconto.
+      </p>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Pagar com PIX e liberar agora</a>
+        <button class="btn btn-secondary" id="resetDemo" type="button">Resetar mock</button>
+      </div>
+
+      <p class="debug" id="debugInfo"></p>
+    </section>
+
+    <aside class="photo">
+      <img src="../../static/menu_app/cnh_amor.png" alt="Pessoa celebrando aprovacao na CNH">
+    </aside>
+  </main>
+
+  <script>
+    (function () {
+      const KEY = "upgrade_offer_24h_v1";
+      const DURATION_MS = 24 * 60 * 60 * 1000;
+      const priceNow = 9.90;
+      const priceFrom = priceNow * 2;
+
+      const countdownEl = document.getElementById("countdown");
+      const nextChanceMsgEl = document.getElementById("nextChanceMsg");
+      const debugInfoEl = document.getElementById("debugInfo");
+      const resetDemoBtn = document.getElementById("resetDemo");
+      const priceNowEl = document.getElementById("priceNow");
+      const priceFromEl = document.getElementById("priceFrom");
+
+      function brl(v) {
+        return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      }
+
+      priceNowEl.textContent = brl(priceNow);
+      priceFromEl.textContent = brl(priceFrom);
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function saveState(state) {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+
+      function createCycle(cycle) {
+        const now = Date.now();
+        return {
+          cycle: cycle || 1,
+          startsAt: now,
+          endsAt: now + DURATION_MS,
+        };
+      }
+
+      function getOrCreateState() {
+        const now = Date.now();
+        let state = loadState();
+
+        if (!state || !state.endsAt || !state.startsAt) {
+          state = createCycle(1);
+          saveState(state);
+          return { state, renewed: false };
+        }
+
+        if (now >= state.endsAt) {
+          const nextCycle = (Number(state.cycle) || 1) + 1;
+          state = createCycle(nextCycle);
+          saveState(state);
+          return { state, renewed: true };
+        }
+
+        return { state, renewed: false };
+      }
+
+      function pad(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function formatRemaining(ms) {
+        const totalSec = Math.max(Math.floor(ms / 1000), 0);
+        const hh = Math.floor(totalSec / 3600);
+        const mm = Math.floor((totalSec % 3600) / 60);
+        const ss = totalSec % 60;
+        return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+      }
+
+      let lifecycle = getOrCreateState();
+      let state = lifecycle.state;
+      nextChanceMsgEl.hidden = !lifecycle.renewed && state.cycle <= 1;
+
+      function tick() {
+        const now = Date.now();
+        const remaining = state.endsAt - now;
+
+        if (remaining <= 0) {
+          lifecycle = getOrCreateState();
+          state = lifecycle.state;
+          nextChanceMsgEl.hidden = false;
+          return;
+        }
+
+        countdownEl.textContent = formatRemaining(remaining);
+        debugInfoEl.textContent =
+          `Ciclo: ${state.cycle} | Inicio: ${new Date(state.startsAt).toLocaleString("pt-BR")} | Fim: ${new Date(state.endsAt).toLocaleString("pt-BR")}`;
+      }
+
+      resetDemoBtn.addEventListener("click", function () {
+        localStorage.removeItem(KEY);
+        lifecycle = getOrCreateState();
+        state = lifecycle.state;
+        nextChanceMsgEl.hidden = true;
+        tick();
+      });
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
