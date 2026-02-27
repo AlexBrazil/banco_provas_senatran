@@ -12,10 +12,14 @@ Resumo tecnico atualizado do sistema, com foco em arquitetura, rotas, regras de 
   - login/cadastro;
   - menu de apps (hub);
   - acesso ao Simulado Digital, app Perguntas e Respostas e demais apps em evolucao.
-- Controle de acesso por app em producao de codigo:
+- Controle de acesso por app em producao:
   - assinatura ativa (`Assinatura`);
   - regra por app (`PlanoPermissaoApp`);
   - consumo por janela (`UsoAppJanela`).
+- Conversao comercial em bloqueio:
+  - tela unica padronizada (`menu/access_blocked.html`);
+  - campanha de oferta 24h com persistencia por usuario (`OfertaUpgradeUsuario`);
+  - CTA primario para upgrade via PIX.
 
 ---
 
@@ -42,7 +46,8 @@ Arquivo: `config/urls.py`
 - `/` -> menu (`menu.urls`).
 - `/menu/` -> alias com redirect para `/`.
 - Auth na raiz via `banco_questoes.urls_auth`:
-  - `/login/`, `/logout/`, `/registrar/`, reset de senha.
+  - `/login/`, `/logout/`, `/registrar/`;
+  - rotas de reset de senha seguem ativas em `/senha/reset/...`.
 - Apps:
   - `/perguntas-respostas/`
   - `/apostila-cnh/`
@@ -77,8 +82,8 @@ Arquivo: `config/settings.py`
   - `LOGOUT_REDIRECT_URL=/login/`
 
 Observacao:
-- O menu e os decorators de apps usam `APP_ACCESS_V2_ENABLED`.
-- O simulado ja esta em logica V2 no codigo atual (com dual-write opcional para legado).
+- Menu e decorators de apps usam `APP_ACCESS_V2_ENABLED`.
+- Simulado ja esta em logica V2 (dual-write opcional para legado).
 
 ---
 
@@ -92,36 +97,39 @@ Arquivos:
 Regras:
 - Catalogo estatico contem `slug`, `titulo`, `descricao`, `icone`, `rota_nome`.
 - Em V2, o menu usa `build_app_access_status(user)` para montar badges e clicabilidade.
-- O cabecalho do menu contem o botao `Meu plano` (substituiu o antigo `Abrir Simulado`).
-- O modal `Meu plano` e aberto no proprio menu (`menu/templates/menu/home.html`) e lista todos os apps ativos com:
+- Cabecalho do menu contem:
+  - botao `Meu plano`;
+  - botao `Sair` (POST para `logout`).
+- O modal `Meu plano` e aberto no proprio menu e lista todos os apps ativos com:
   - status por app (`Liberado`, `Bloqueado pelo plano`, `Em construcao`, `Regra ausente`, `Sem plano ativo`);
   - limite/usados/restantes quando houver limite por app;
   - plano atual e validade da assinatura no topo.
-- Status visual por card:
-  - `Liberado`
-  - `Bloqueado pelo plano`
-  - `Em construcao`
 
 Observacao operacional:
-- no seed oficial atual (`seed_apps_menu_access`), o slug `perguntas-respostas` e semeado com `em_construcao=False`.
-- manter este valor alinhado ao estado real de liberacao do app em producao.
+- No seed oficial atual (`seed_apps_menu_access`), `perguntas-respostas` e semeado com `em_construcao=False`.
+- Manter esse valor alinhado ao estado real de liberacao em producao.
 
-Slug canonico do simulado no ecossistema novo:
+Slug canonico do simulado:
 - `simulado-digital`.
 
 ---
 
-## 6) Modelo de dados de acesso por app
+## 6) Modelo de dados de acesso e oferta
 
 Arquivo: `banco_questoes/models.py`
 
-Modelos novos (Fase 2):
+Modelos do acesso por app:
 - `AppModulo`
-  - catalogo persistido de apps (`slug`, `nome`, `ordem_menu`, `rota_nome`, `em_construcao`, etc.).
+  - catalogo persistido de apps (`slug`, `nome`, `ordem_menu`, `rota_nome`, `em_construcao` etc.).
 - `PlanoPermissaoApp`
   - regra por plano x app (`permitido`, `limite_qtd`, `limite_periodo`).
 - `UsoAppJanela`
   - contador por usuario+app+janelas de tempo.
+
+Modelo de campanha comercial:
+- `OfertaUpgradeUsuario`
+  - persistencia por usuario/campanha da janela promocional de 24h;
+  - guarda `ciclo`, `janela_inicio` e `janela_fim`.
 
 Modelos legados ainda existentes:
 - `SimuladoUso` (contador antigo do simulado, mantido para compatibilidade observavel).
@@ -156,12 +164,19 @@ Responsabilidades:
 - resolver regra por app (`get_regra_app`);
 - validar e incrementar uso por app (`check_and_increment_app_use`);
 - montar status para o menu (`build_app_access_status`);
-- montar payload do modal `Meu plano` com todos os apps (`build_plan_modal_status`);
+- montar payload do modal `Meu plano` (`build_plan_modal_status`);
+- montar contexto comercial de bloqueio (`build_access_blocked_context`);
 - decorator `require_app_access(app_slug)` para proteger views.
 
-Uso atual:
-- todos os apps de menu usam controle por decorator (`@require_app_access(...)`) em V2.
-- Tela de bloqueio padrao: `menu/templates/menu/access_blocked.html`.
+Bloqueio padrao atual:
+- Template unico: `menu/templates/menu/access_blocked.html`.
+- Copy comercial direta por motivo de bloqueio.
+- Oferta 24h com:
+  - preco atual e preco de ancoragem (`de/por`);
+  - selo `50% OFF`;
+  - cronometro regressivo;
+  - mensagem de nova oportunidade quando `ciclo > 1`.
+- CTA principal faz POST para `payments:upgrade_free` (fluxo direto para gerar QRCode PIX).
 
 ---
 
@@ -177,15 +192,14 @@ Fluxo:
   - `simulado:api_modulos`
   - `simulado:api_stats`
 
-Regras de acesso/consumo no codigo atual:
-- decisao de acesso do simulado usa V2 (`check_and_increment_app_use` para `simulado-digital`);
-- sem fallback legado na decisao;
-- dual-write opcional para `SimuladoUso` quando `APP_ACCESS_DUAL_WRITE=1`.
+Regras de acesso/consumo:
+- Decisao de acesso usa V2 (`check_and_increment_app_use` para `simulado-digital`).
+- Sem fallback legado na decisao.
+- Dual-write opcional para `SimuladoUso` quando `APP_ACCESS_DUAL_WRITE=1`.
 
-Status de plano exibido em telas do simulado:
-- calculado por regra de `PlanoPermissaoApp` + `UsoAppJanela`.
-- O botao/modal `Meu plano` nao fica mais dentro do Simulado; o acesso a essa visao foi centralizado no Menu de Apps.
-- O Simulado passou a exibir atalho de navegacao `Voltar para o menu`.
+Bloqueio no simulado:
+- Pontos de bloqueio passaram a usar render unico (`_render_access_blocked`) com `menu/access_blocked.html`.
+- Fluxo do simulado ficou alinhado com os demais apps no comportamento visual/comercial.
 
 ---
 
@@ -229,12 +243,18 @@ Arquivos:
 - `banco_questoes/views_auth.py`
 - `banco_questoes/forms.py`
 - `banco_questoes/urls_auth.py`
+- `banco_questoes/templates/registration/login.html`
+- `banco_questoes/templates/registration/register.html`
 
 Resumo:
 - Login por email (`EmailAuthenticationForm`).
 - Cadastro cria usuario + assinatura Free.
-- Redirecionamento padrao pos-cadastro: Menu de Apps (`menu:home`), salvo quando `next` valido for informado.
+- Redirecionamento padrao pos-cadastro: `menu:home` (salvo `next` valido).
 - Cooldown de cadastro por IP/device quando habilitado.
+- UI atual:
+  - banner superior com imagem `static/menu_app/alegre2.png` em login e cadastro;
+  - acao de conta no topo direito (`Criar conta` no login / `Ja tenho conta` no cadastro);
+  - link "Esqueci a senha" ocultado da tela de login por enquanto (rotas de reset permanecem disponiveis).
 
 ---
 
@@ -245,11 +265,18 @@ Arquivos:
 - `payments/urls.py`
 - `payments/models.py`
 - `payments/abacatepay.py`
+- `payments/templates/payments/checkout_free_pix.html`
 
 Fluxo:
 - checkout de upgrade Free -> Aprova DETRAN;
 - polling de status;
 - webhook `billing.paid` com idempotencia.
+
+Ajustes atuais de UX no checkout:
+- botao da tela de bloqueio faz POST direto para `/payments/upgrade/free/`;
+- quando ainda nao existe cobranca, checkout exibe CTA `Gerar QRCode PIX`;
+- botao secundario renomeado para `Voltar ao menu`;
+- beneficio exibido no card: `Uso ilimitado` (quando aplicavel).
 
 Ao confirmar pagamento:
 - atualiza assinatura para plano de upgrade;
@@ -259,15 +286,23 @@ Ao confirmar pagamento:
 
 ## 13) Front-end
 
+- Bloqueio de acesso:
+  - template `menu/templates/menu/access_blocked.html`
+  - imagem `static/menu_app/cnh_amor.png`
+  - layout desktop ajustado para caber melhor na altura da viewport.
+- Menu:
+  - template `menu/templates/menu/home.html`
+  - css `static/menu_app/menu.css`
+- Auth:
+  - templates `banco_questoes/templates/registration/login.html` e `register.html`
+  - css `static/auth/login.css` e `static/auth/register.css`
+  - imagem `static/menu_app/alegre2.png`.
 - Simulado:
   - templates em `banco_questoes/templates/simulado/`
   - assets em `static/simulado/`
 - Perguntas e Respostas:
   - templates em `perguntas_respostas/templates/perguntas_respostas/`
   - assets em `static/perguntas_respostas/`
-- Menu:
-  - template `menu/templates/menu/home.html`
-  - css em `static/menu_app/menu.css`
 - Checkout:
   - template `payments/templates/payments/checkout_free_pix.html`
   - css em `static/payments/checkout_free_pix.css`
@@ -290,7 +325,8 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
-  - migrations aplicadas;
+  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`);
   - `seed_apps_menu_access` executado;
-  - planos em uso com regras em `PlanoPermissaoApp`.
-  - confirmar `AppModulo.em_construcao` dos apps liberados (especialmente `perguntas-respostas`).
+  - planos em uso com regras em `PlanoPermissaoApp`;
+  - conferencia de `AppModulo.em_construcao` dos apps liberados;
+  - disponibilidade dos assets `static/menu_app/cnh_amor.png` e `static/menu_app/alegre2.png`.

@@ -1,19 +1,23 @@
 # Plano de padronizacao - tela de bloqueio e conversao para upgrade (todos os apps)
 
 Data: 2026-02-27
-Status: em execucao (implementacao iniciada em 2026-02-27)
+Status: implementacao base concluida (refino continuo)
 
 ## Status de execucao (2026-02-27)
 1. Mock comercial aprovado e refinado.
-2. Inicio da implementacao tecnica:
-- template real de bloqueio compartilhado em ajuste para tom comercial direto;
-- integracao do fluxo de bloqueio do Simulado para usar a tela padrao compartilhada;
-- preparacao de asset visual (`cnh_amor.png`) para tela de bloqueio.
+2. Implementacao tecnica concluida:
+- template de bloqueio compartilhado aplicado com tom comercial direto;
+- simulado integrado ao mesmo renderer/template de bloqueio;
+- asset visual `cnh_amor.png` integrado na tela de bloqueio.
 3. Campanha de escassez 24h implementada:
 - persistencia por usuario em banco para nao reiniciar contador a cada acesso;
 - reinicio automatico do ciclo apos expirar 24h;
 - mensagem de nova oportunidade a partir do segundo ciclo;
 - exibicao de oferta com ancora de preco (`de`/`por`) e `50% OFF` + cronometro regressivo.
+4. Ajustes complementares de UX implementados:
+- CTA principal da tela de bloqueio com fluxo direto para gerar PIX;
+- mobile com imagem no topo;
+- desktop com melhor encaixe na altura da viewport.
 
 ## Objetivo
 Padronizar a experiencia de bloqueio por plano/limite em todos os apps (incluindo Simulado Digital e Simulacao de Prova), com uma tela unica mais informativa e mais persuasiva para aumentar upgrade para plano pago.
@@ -26,8 +30,8 @@ Padronizar a experiencia de bloqueio por plano/limite em todos os apps (incluind
 
 ## Contexto atual (resumo)
 - Apps com decorator `require_app_access(...)` usam bloqueio padrao (`menu/access_blocked.html`).
-- Simulado Digital ainda tem fluxo proprio em pontos de erro/bloqueio (`simulado/erro.html`).
-- Resultado: experiencia inconsistente entre apps e copy comercial fragmentada.
+- Simulado Digital foi alinhado para usar o mesmo fluxo de bloqueio compartilhado.
+- Resultado atual: experiencia padronizada entre apps, com copy comercial unica.
 
 ## Principios de UX e conversao
 1. Clareza imediata: explicar em 1 frase por que o acesso foi bloqueado.
@@ -123,7 +127,7 @@ Fora de escopo nesta etapa:
 5. Mobile-first: CTA primario fixo no viewport final (quando necessario).
 6. Coerencia com identidade atual, sem depender de layout exclusivo do simulado.
 
-## Plano de execucao (sem implementacao nesta etapa)
+## Plano de execucao (historico e proximos ajustes)
 
 ### Fase 0 - Alinhamento de negocio e copy
 1. Definir promessa comercial permitida (o que pode e nao pode afirmar).
@@ -290,5 +294,4 @@ Objetivo deste wireframe:
 2. Validar metricas e feedback rapido.
 3. Expandir para todos os apps, incluindo simulado.
 4. Iniciar ciclo de otimizacao por experimentos controlados.
-
 
