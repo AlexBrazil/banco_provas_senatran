@@ -1,0 +1,123 @@
+.register-card {
+  position: relative;
+  width: min(620px, 100%);
+  border: 1px solid #d6e1f4;
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(20, 33, 61, 0.1);
+  padding: 16px 24px 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  color: #1d2f4a;
+}
+
+.register-hero {
+  margin: -16px -24px 14px;
+  border-bottom: 1px solid #dbe6f8;
+  overflow: hidden;
+}
+
+.register-hero img {
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.register-top-actions {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  z-index: 2;
+}
+
+.btn-register-login {
+  margin-top: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid #0f3a7a;
+  background: #123f83;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.btn-register-login:hover {
+  background: #0d3167;
+}
+
+.register-title {
+  margin-bottom: 4px;
+  color: #102744;
+}
+
+.register-subtitle {
+  margin-bottom: 16px;
+  color: #3a5274;
+}
+
+.register-form {
+  margin-top: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.register-form .form-group {
+  gap: 8px;
+}
+
+.register-form label {
+  font-weight: 700;
+  color: #233a5d;
+}
+
+.register-form input[type="email"],
+.register-form input[type="text"],
+.register-form input[type="password"] {
+  width: 100%;
+  border: 1px solid #bfd0ee;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 1rem;
+  background: #ffffff;
+}
+
+.register-form input[type="email"]:focus,
+.register-form input[type="text"]:focus,
+.register-form input[type="password"]:focus {
+  outline: 2px solid rgba(43, 108, 255, 0.25);
+  outline-offset: 0;
+  border-color: #2b6cff;
+}
+
+.register-submit {
+  margin-top: 4px;
+  width: 100%;
+  border: 1px solid #0f3a7a;
+  background: #123f83;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.register-submit:hover {
+  background: #0d3167;
+}
+
+@media (max-width: 640px) {
+  .register-card {
+    padding: 14px 16px 18px;
+  }
+
+  .register-hero {
+    margin: -14px -16px 12px;
+  }
+
+  .register-top-actions {
+    top: 10px;
+    right: 10px;
+  }
+
+  .btn-register-login {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+}

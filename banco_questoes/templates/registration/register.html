@@ -5,20 +5,29 @@
 
 {% block head_css %}
   <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'auth/register.css' %}">
 {% endblock %}
 
 {% block body_class %}simulado-container simulado-container--center{% endblock %}
 
 {% block content %}
-  <div class="simulado-card">
-    <h1 class="simulado-title">Criar conta</h1>
-    <p class="simulado-subtitle">Cadastre seu email e senha.</p>
+  <div class="simulado-card register-card">
+    <div class="register-hero">
+      <img src="{% static 'menu_app/alegre2.png' %}" alt="Pessoa feliz apos aprovacao no DETRAN">
+    </div>
+
+    <div class="register-top-actions">
+      <a class="btn-simulado btn-register-login" href="{% url 'login' %}">Ja tenho conta</a>
+    </div>
+
+    <h1 class="simulado-title register-title">Criar conta</h1>
+    <p class="simulado-subtitle register-subtitle">Cadastre seu email e senha.</p>
 
     {% if cooldown_message %}
       <p class="stats-error">{{ cooldown_message }}</p>
     {% endif %}
 
-    <form method="post" class="simulado-form">
+    <form method="post" class="simulado-form register-form">
       {% csrf_token %}
       {% if form.non_field_errors %}
         <p class="stats-error">{{ form.non_field_errors|striptags }}</p>
@@ -46,11 +55,7 @@
         <input type="hidden" name="next" value="{{ next }}">
       {% endif %}
 
-      <button type="submit" class="btn-simulado">Criar conta</button>
+      <button type="submit" class="btn-simulado register-submit">Criar conta</button>
     </form>
-
-    <div class="form-actions">
-      <a class="btn-simulado" href="{% url 'login' %}">Ja tenho conta</a>
-    </div>
   </div>
 {% endblock %}

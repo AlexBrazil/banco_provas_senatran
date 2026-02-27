@@ -60,6 +60,14 @@ body.menu-body {
 
 .menu-header-actions {
   margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.menu-logout-form {
+  margin: 0;
 }
 
 .menu-cta {
@@ -80,6 +88,16 @@ body.menu-body {
 
 .menu-cta:hover {
   background: var(--menu-cta-bg-hover);
+}
+
+.menu-cta--secondary {
+  color: #17335f;
+  background: #eef4ff;
+  border: 1px solid #c6d8f7;
+}
+
+.menu-cta--secondary:hover {
+  background: #dfeaff;
 }
 
 .menu-cta:focus-visible {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from datetime import timedelta
 from functools import wraps
 from typing import Any, Callable
@@ -14,7 +15,10 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .auditoria import log_event
-from .models import AppModulo, Assinatura, PlanoPermissaoApp, UsoAppJanela
+from .models import AppModulo, Assinatura, Plano, PlanoPermissaoApp, UsoAppJanela
+
+
+UPGRADE_PLAN_NAME = "Aprova DETRAN"
 
 
 def get_assinatura_ativa(user) -> Assinatura | None:
@@ -75,6 +79,72 @@ def _nome_plano(assinatura: Assinatura | None) -> str:
     if assinatura.plano:
         return assinatura.plano.nome
     return ""
+
+
+def _format_brl(value: Decimal | int | float | str | None) -> str:
+    if value is None:
+        return ""
+    try:
+        amount = Decimal(value).quantize(Decimal("0.01"))
+    except (InvalidOperation, TypeError, ValueError):
+        return ""
+    return f"R$ {amount}".replace(".", ",")
+
+
+def _get_upgrade_price_label() -> str:
+    plano = Plano.objects.filter(nome__iexact=UPGRADE_PLAN_NAME, ativo=True).only("preco").first()
+    if not plano:
+        return ""
+    return _format_brl(plano.preco)
+
+
+def build_access_blocked_context(
+    *,
+    app_slug: str,
+    reason: str,
+    plano_nome: str,
+    show_upgrade_cta: bool,
+    upgrade_url: str,
+    motivo_bloqueio: str = "",
+) -> dict[str, Any]:
+    motivo = (motivo_bloqueio or "").strip().lower()
+    if motivo in {"limite_atingido", "limite_atingido_sem_consumo"}:
+        headline = "Seu limite de uso gratuito foi atingido para este aplicativo."
+    elif motivo == "plano_sem_permissao":
+        headline = "Este aplicativo nao esta incluido no seu plano gratuito."
+    elif motivo == "assinatura_inativa":
+        headline = "Sua assinatura esta inativa no momento."
+    else:
+        headline = "Acesso bloqueado neste aplicativo."
+
+    upgrade_price_label = _get_upgrade_price_label()
+    commercial_offer = ""
+    commercial_low_cost = ""
+    if show_upgrade_cta:
+        if upgrade_price_label:
+            commercial_offer = (
+                f"Libere todos os aplicativos por apenas {upgrade_price_label} e aumente suas chances "
+                "de passar de primeira nas provas do DETRAN."
+            )
+        else:
+            commercial_offer = (
+                "Libere todos os aplicativos com o plano Aprova DETRAN e aumente suas chances "
+                "de passar de primeira nas provas do DETRAN."
+            )
+        commercial_low_cost = "Custa menos que um pastel."
+
+    return {
+        "app_slug": app_slug,
+        "reason": reason or "Acesso bloqueado para este modulo.",
+        "motivo_bloqueio": motivo,
+        "plano_nome": plano_nome,
+        "show_upgrade_cta": show_upgrade_cta,
+        "upgrade_url": upgrade_url,
+        "upgrade_price_label": upgrade_price_label,
+        "commercial_headline": headline,
+        "commercial_offer": commercial_offer,
+        "commercial_low_cost": commercial_low_cost,
+    }
 
 
 def _check_app_use(
@@ -468,6 +538,7 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
             plano_nome = _nome_plano(assinatura)
             show_upgrade_cta = plano_nome.strip().lower() == "free"
             upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
+            motivo_bloqueio = str((contexto or {}).get("motivo") or "")
             log_event(
                 request,
                 "app_access_blocked",
@@ -477,13 +548,14 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
             return render(
                 request,
                 "menu/access_blocked.html",
-                {
-                    "app_slug": app_slug,
-                    "reason": reason or "Acesso bloqueado para este modulo.",
-                    "plano_nome": plano_nome,
-                    "show_upgrade_cta": show_upgrade_cta,
-                    "upgrade_url": upgrade_url,
-                },
+                build_access_blocked_context(
+                    app_slug=app_slug,
+                    reason=reason or "Acesso bloqueado para este modulo.",
+                    plano_nome=plano_nome,
+                    show_upgrade_cta=show_upgrade_cta,
+                    upgrade_url=upgrade_url,
+                    motivo_bloqueio=motivo_bloqueio,
+                ),
                 status=403,
             )
 

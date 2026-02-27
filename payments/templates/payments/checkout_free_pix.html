@@ -27,7 +27,7 @@
         {% if plano.limite_qtd %}
           <span class="pill checkout-pill">Limite {{ plano.limite_qtd }}</span>
         {% else %}
-          <span class="pill checkout-pill">Simulados ilimitados</span>
+          <span class="pill checkout-pill">Uso ilimitado</span>
         {% endif %}
       </div>
     </div>
@@ -81,7 +81,7 @@
     {% endif %}
 
     <div class="form-actions">
-      <a class="btn-simulado" href="{% url 'simulado:inicio' %}">Voltar ao inicio</a>
+      <a class="btn-simulado" href="{% url 'menu:home' %}">Voltar ao menu</a>
     </div>
   </div>
 

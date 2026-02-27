@@ -23,6 +23,10 @@
         >
           Meu plano
         </button>
+        <form method="post" action="{% url 'logout' %}" class="menu-logout-form">
+          {% csrf_token %}
+          <button type="submit" class="menu-cta menu-cta--secondary">Sair</button>
+        </form>
       </div>
     </header>
 

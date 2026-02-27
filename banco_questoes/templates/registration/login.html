@@ -5,16 +5,25 @@
 
 {% block head_css %}
   <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'auth/login.css' %}">
 {% endblock %}
 
 {% block body_class %}simulado-container simulado-container--center{% endblock %}
 
 {% block content %}
-  <div class="simulado-card">
-    <h1 class="simulado-title">Entrar</h1>
-    <p class="simulado-subtitle">Use seu email e senha.</p>
+  <div class="simulado-card login-card">
+    <div class="login-hero">
+      <img src="{% static 'menu_app/alegre2.png' %}" alt="Pessoa feliz apos aprovacao no DETRAN">
+    </div>
 
-    <form method="post" class="simulado-form">
+    <div class="login-top-actions">
+      <a class="btn-simulado btn-login-register" href="{% url 'register' %}">Criar conta</a>
+    </div>
+
+    <h1 class="simulado-title login-title">Entrar</h1>
+    <p class="simulado-subtitle login-subtitle">Use seu email e senha.</p>
+
+    <form method="post" class="simulado-form login-form">
       {% csrf_token %}
       {% if form.non_field_errors %}
         <p class="stats-error">{{ form.non_field_errors|striptags }}</p>
@@ -36,12 +45,7 @@
         <input type="hidden" name="next" value="{{ next }}">
       {% endif %}
 
-      <button type="submit" class="btn-simulado">Entrar</button>
+      <button type="submit" class="btn-simulado login-submit">Entrar</button>
     </form>
-
-    <div class="form-actions">
-      <a class="btn-simulado" href="{% url 'register' %}">Criar conta</a>
-      <a class="btn-simulado" href="{% url 'password_reset' %}">Esqueci a senha</a>
-    </div>
   </div>
 {% endblock %}

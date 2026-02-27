@@ -1,90 +1,225 @@
 {% extends "simulado/base.html" %}
+{% load static %}
 
-{% block title %}Acesso ao modulo{% endblock %}
+{% block title %}Acesso bloqueado{% endblock %}
 
 {% block head_extra %}
   <style>
+    :root {
+      --ab-bg-a: #fff3e7;
+      --ab-bg-b: #ffe2c8;
+      --ab-ink: #1b1f2a;
+      --ab-accent: #ff5a00;
+      --ab-accent-2: #ff8a00;
+      --ab-card: #ffffff;
+      --ab-line: #ffd2ae;
+    }
+
+    * { box-sizing: border-box; }
+
     .ab-page {
-      min-height: 100vh;
       margin: 0;
-      padding: 24px 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(165deg, #eef5ff 0%, #ffffff 70%);
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ab-ink);
+      background:
+        radial-gradient(1200px 600px at 20% -20%, #fff9f2 0%, transparent 65%),
+        linear-gradient(160deg, var(--ab-bg-a), var(--ab-bg-b));
+      display: grid;
+      place-items: center;
+      padding: 18px;
     }
-    .ab-card {
-      width: min(680px, 100%);
-      background: #ffffff;
-      border: 1px solid #d9e4f6;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08);
-      padding: 24px;
+
+    .ab-wrap {
+      width: min(980px, 100%);
+      background: var(--ab-card);
+      border: 2px solid var(--ab-line);
+      border-radius: 24px;
+      box-shadow: 0 22px 50px rgba(130, 62, 15, 0.18);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
     }
+
+    .ab-copy {
+      padding: 30px 26px;
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
     .ab-badge {
       display: inline-block;
-      margin: 0 0 10px;
+      width: fit-content;
+      margin: 0;
       padding: 5px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       color: #8a2f00;
       background: #ffe5da;
       border: 1px solid #f5bda8;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    .ab-title {
-      margin: 0 0 8px;
-      font-size: clamp(24px, 5vw, 34px);
-      color: #12213d;
+
+    .ab-headline {
+      margin: 0;
+      font-weight: 900;
+      font-size: clamp(30px, 4.6vw, 54px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
     }
-    .ab-text {
-      margin: 0 0 8px;
-      color: #425a78;
-      line-height: 1.5;
+
+    .ab-offer {
+      margin: 0;
+      font-weight: 900;
+      font-size: clamp(24px, 3.8vw, 42px);
+      line-height: 1.12;
+      color: #b33a00;
+      background: linear-gradient(90deg, #fff2e5, #ffe1c3);
+      border: 2px solid #ffc89b;
+      border-radius: 16px;
+      padding: 14px;
     }
+
+    .ab-low-cost {
+      margin: 0;
+      font-weight: 900;
+      font-size: clamp(26px, 4vw, 46px);
+      line-height: 1.06;
+      color: var(--ab-accent);
+      text-transform: uppercase;
+    }
+
+    .ab-reason {
+      margin: 0;
+      font-size: 14px;
+      color: #734f32;
+    }
+
+    .ab-plan {
+      margin: 0;
+      font-size: 13px;
+      color: #5f3d24;
+      font-weight: 700;
+    }
+
     .ab-actions {
-      margin-top: 16px;
+      margin-top: 6px;
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
     }
+
+    .ab-actions form {
+      margin: 0;
+    }
+
     .ab-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
-      font-weight: 600;
-      border-radius: 10px;
-      padding: 10px 14px;
-      border: 1px solid #1d4ed8;
-      color: #ffffff;
-      background: #1d4ed8;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: clamp(16px, 2.4vw, 22px);
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
     }
+
+    .ab-btn-primary {
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--ab-accent), var(--ab-accent-2));
+      box-shadow: 0 10px 22px rgba(255, 90, 0, 0.28);
+    }
+
+    .ab-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(255, 90, 0, 0.34);
+    }
+
     .ab-btn-secondary {
-      border-color: #c7d6ee;
-      color: #16325c;
-      background: #f3f7ff;
+      color: #5f3d24;
+      background: #fff5ea;
+      border: 1px solid #f4c89d;
+    }
+
+    .ab-photo {
+      min-height: 360px;
+      position: relative;
+      border-left: 2px solid var(--ab-line);
+      background: linear-gradient(180deg, #fff8ef 0%, #ffe8d2 100%);
+    }
+
+    .ab-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    @media (max-width: 860px) {
+      .ab-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .ab-photo {
+        order: -1;
+        border-left: 0;
+        border-top: 0;
+        border-bottom: 2px solid var(--ab-line);
+        min-height: 280px;
+      }
+
+      .ab-headline,
+      .ab-offer,
+      .ab-low-cost {
+        text-align: center;
+      }
+
+      .ab-actions {
+        justify-content: center;
+      }
     }
   </style>
 {% endblock %}
 
 {% block content %}
   <main class="ab-page">
-    <section class="ab-card">
-      <p class="ab-badge">Acesso bloqueado</p>
-      <h1 class="ab-title">Este modulo nao esta disponivel agora</h1>
-      <p class="ab-text">{{ reason }}</p>
-      {% if plano_nome %}
-        <p class="ab-text">Plano atual: {{ plano_nome }}</p>
-      {% endif %}
-      <div class="ab-actions">
-        <a href="{% url 'menu:home' %}" class="ab-btn ab-btn-secondary">Voltar ao menu</a>
-        <a href="{% url 'simulado:inicio' %}" class="ab-btn ab-btn-secondary">Ir para Simulado</a>
-        {% if show_upgrade_cta %}
-          <a href="{{ upgrade_url }}" class="ab-btn">Fazer upgrade</a>
+    <section class="ab-wrap">
+      <article class="ab-copy">
+        <p class="ab-badge">Acesso bloqueado</p>
+        <h1 class="ab-headline">{{ commercial_headline|default:"Acesso bloqueado neste aplicativo." }}</h1>
+
+        {% if commercial_offer %}
+          <p class="ab-offer">{{ commercial_offer }}</p>
+          <p class="ab-low-cost">{{ commercial_low_cost }}</p>
         {% endif %}
-      </div>
+
+        <p class="ab-reason">{{ reason }}</p>
+        {% if plano_nome %}
+          <p class="ab-plan">Plano atual: {{ plano_nome }}</p>
+        {% endif %}
+
+        <div class="ab-actions">
+          {% if show_upgrade_cta %}
+            <form method="post" action="{{ upgrade_url }}">
+              {% csrf_token %}
+              <button type="submit" class="ab-btn ab-btn-primary">Pagar com PIX e liberar agora</button>
+            </form>
+          {% endif %}
+          <a href="{% url 'menu:home' %}" class="ab-btn ab-btn-secondary">Voltar ao menu</a>
+        </div>
+      </article>
+
+      <aside class="ab-photo">
+        <img src="{% static 'menu_app/cnh_amor.png' %}" alt="Pessoa beijando sua CNH">
+      </aside>
     </section>
   </main>
 {% endblock %}
-

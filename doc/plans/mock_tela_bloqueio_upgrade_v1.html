@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock - Tela de Bloqueio v1</title>
+  <style>
+    :root {
+      --bg-1: #eef3ff;
+      --bg-2: #f9f5ea;
+      --ink-900: #14213d;
+      --ink-700: #2b3a55;
+      --ink-500: #5f6f8e;
+      --line: #d8e2f6;
+      --surface: #ffffff;
+      --warn-bg: #ffe9da;
+      --warn-ink: #8d3300;
+      --ok-bg: #e7f9ee;
+      --ok-ink: #1c6b39;
+      --cta: #ff6b00;
+      --cta-hover: #e55f00;
+      --cta-ink: #ffffff;
+      --radius-xl: 20px;
+      --radius-md: 12px;
+      --shadow: 0 16px 40px rgba(20, 33, 61, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink-900);
+      font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+      background:
+        radial-gradient(900px 500px at 90% 0%, #d9ebff 0%, transparent 70%),
+        linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+      padding: 20px 16px 28px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(6px);
+    }
+
+    .panel-left,
+    .panel-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill {
+      border: 1px solid #c7d6f0;
+      background: #f3f8ff;
+      color: #21426e;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .pill.active {
+      background: #21426e;
+      color: #ffffff;
+      border-color: #21426e;
+    }
+
+    .main {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 24px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--warn-bg);
+      color: var(--warn-ink);
+      border: 1px solid #ffc9a8;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 10px 0 6px;
+      font-size: clamp(26px, 4.2vw, 38px);
+      line-height: 1.07;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--ink-700);
+      font-size: clamp(15px, 2vw, 18px);
+      max-width: 72ch;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background: #ffffff;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px dashed #dce5f7;
+      background: #fbfdff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+
+    .meta-row b {
+      color: var(--ink-700);
+      white-space: nowrap;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .col {
+      border: 1px solid #d9e6fa;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fbfdff;
+    }
+
+    .col h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #24436f;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      color: #2f4466;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .list li + li {
+      margin-top: 5px;
+    }
+
+    .unlock {
+      border: 1px solid #ffd1ae;
+      background: linear-gradient(160deg, #fff5eb 0%, #fffaf5 100%);
+    }
+
+    .unlock-head {
+      margin: 0 0 4px;
+      font-size: 20px;
+    }
+
+    .unlock-text {
+      margin: 0 0 12px;
+      color: #6c4a2f;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 140ms ease;
+    }
+
+    .btn-primary {
+      background: var(--cta);
+      color: var(--cta-ink);
+    }
+
+    .btn-primary:hover {
+      background: var(--cta-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      border-color: #c4d5f1;
+      background: #eff5ff;
+      color: #1f3b63;
+    }
+
+    .trust {
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #d7e6f9;
+      background: #f5fbff;
+      color: #23506c;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .note {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--ink-500);
+    }
+
+    .status-ok {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--ok-bg);
+      color: var(--ok-ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 820px) {
+      .compare {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        font-size: clamp(24px, 9vw, 33px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="panel">
+      <div class="panel-left" id="scenario-buttons">
+        <button class="pill active" data-scenario="limite_atingido">limite_atingido</button>
+        <button class="pill" data-scenario="plano_sem_permissao">plano_sem_permissao</button>
+        <button class="pill" data-scenario="assinatura_inativa">assinatura_inativa</button>
+        <button class="pill" data-scenario="regra_ausente">regra_ausente</button>
+      </div>
+      <div class="panel-right">
+        <span class="note">Mock visual para validacao de copy/estrutura.</span>
+      </div>
+    </div>
+
+    <main class="main">
+      <section class="hero">
+        <span class="badge">Acesso bloqueado</span>
+        <h1 class="title">Acesso bloqueado neste aplicativo</h1>
+        <p class="subtitle" id="subtitle"></p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Seu status atual</h2>
+          <div class="meta">
+            <div class="meta-row"><b>App</b><span id="app_nome"></span></div>
+            <div class="meta-row"><b>Plano atual</b><span id="plano_nome"></span></div>
+            <div class="meta-row"><b>Uso no periodo</b><span id="uso_periodo"></span></div>
+            <div class="meta-row"><b>Restantes</b><span id="restantes"></span></div>
+            <div class="meta-row"><b>Renova em</b><span id="janela_fim"></span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Plano atual x Plano pago</h2>
+          <div class="compare">
+            <div class="col">
+              <h3>Plano atual</h3>
+              <ul class="list" id="list_atual"></ul>
+            </div>
+            <div class="col">
+              <h3>Plano pago</h3>
+              <ul class="list" id="list_pago"></ul>
+              <span class="status-ok">Upgrade recomendado para liberar todos os apps</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card unlock">
+          <h2 class="unlock-head">Libere todos os aplicativos por apenas &lt;Valor do Plano Default&gt;</h2>
+          <p class="unlock-text">Aumente suas chances de passar de primeira nas provas do DETRAN. Custa menos que um pastel.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#" aria-label="Desbloquear com PIX">Desbloquear agora com PIX</a>
+            <a class="btn btn-secondary" href="#" aria-label="Voltar ao menu">Voltar ao menu</a>
+          </div>
+          <div class="trust">Seus dados e seu pagamento sao processados com seguranca.</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const DATA = {
+      limite_atingido: {
+        subtitle: "Seu limite de uso gratuito foi atingido para este aplicativo.",
+        app_nome: "Simulado Digital",
+        plano_nome: "Free",
+        uso_periodo: "3/3",
+        restantes: "0",
+        janela_fim: "28/02/2026 08:00",
+        atual: [
+          "Limite diario de uso atingido",
+          "Parte dos apps com acesso parcial",
+          "Sem prioridade de liberacao"
+        ],
+        pago: [
+          "Acesso aos apps liberados no plano",
+          "Maior disponibilidade de uso",
+          "Fluxo sem bloqueio por limite Free"
+        ]
+      },
+      plano_sem_permissao: {
+        subtitle: "Este aplicativo nao esta incluido no seu plano gratuito.",
+        app_nome: "Oraculo",
+        plano_nome: "Free",
+        uso_periodo: "Nao se aplica",
+        restantes: "Nao se aplica",
+        janela_fim: "Nao se aplica",
+        atual: [
+          "Modulo atual bloqueado pelo plano",
+          "Recursos premium indisponiveis",
+          "Acesso restrito aos modulos basicos"
+        ],
+        pago: [
+          "Modulo atual liberado",
+          "Mais recursos de estudo ativos",
+          "Experiencia completa entre apps"
+        ]
+      },
+      assinatura_inativa: {
+        subtitle: "Sua assinatura esta inativa no momento.",
+        app_nome: "Perguntas e Respostas",
+        plano_nome: "Sem plano ativo",
+        uso_periodo: "Nao se aplica",
+        restantes: "Nao se aplica",
+        janela_fim: "Nao se aplica",
+        atual: [
+          "Sem acesso aos apps protegidos",
+          "Plano inativo",
+          "Sessao de estudo nao pode iniciar"
+        ],
+        pago: [
+          "Acesso reativado apos pagamento",
+          "Apps liberados conforme plano",
+          "Continuidade imediata dos estudos"
+        ]
+      },
+      regra_ausente: {
+        subtitle: "Nao foi possivel validar a regra de acesso deste app.",
+        app_nome: "Apostila CNH",
+        plano_nome: "Free",
+        uso_periodo: "Indisponivel",
+        restantes: "Indisponivel",
+        janela_fim: "Indisponivel",
+        atual: [
+          "Regra de acesso nao localizada",
+          "Acesso preventivamente bloqueado",
+          "Necessario validar configuracao"
+        ],
+        pago: [
+          "Plano pago com regras completas",
+          "Fluxo de acesso consistente",
+          "Menor risco de bloqueio por configuracao"
+        ]
+      }
+    };
+
+    const el = {
+      subtitle: document.getElementById("subtitle"),
+      app_nome: document.getElementById("app_nome"),
+      plano_nome: document.getElementById("plano_nome"),
+      uso_periodo: document.getElementById("uso_periodo"),
+      restantes: document.getElementById("restantes"),
+      janela_fim: document.getElementById("janela_fim"),
+      list_atual: document.getElementById("list_atual"),
+      list_pago: document.getElementById("list_pago"),
+      btns: Array.from(document.querySelectorAll("[data-scenario]"))
+    };
+
+    function fillList(target, items) {
+      target.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        target.appendChild(li);
+      });
+    }
+
+    function renderScenario(name) {
+      const d = DATA[name];
+      if (!d) return;
+      el.subtitle.textContent = d.subtitle;
+      el.app_nome.textContent = d.app_nome;
+      el.plano_nome.textContent = d.plano_nome;
+      el.uso_periodo.textContent = d.uso_periodo;
+      el.restantes.textContent = d.restantes;
+      el.janela_fim.textContent = d.janela_fim;
+      fillList(el.list_atual, d.atual);
+      fillList(el.list_pago, d.pago);
+      el.btns.forEach((btn) => btn.classList.toggle("active", btn.dataset.scenario === name));
+    }
+
+    el.btns.forEach((btn) => {
+      btn.addEventListener("click", () => renderScenario(btn.dataset.scenario));
+    });
+
+    renderScenario("limite_atingido");
+  </script>
+</body>
+</html>

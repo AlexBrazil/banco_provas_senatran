@@ -17,7 +17,11 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_GET
 
-from banco_questoes.access_control import check_and_increment_app_use, get_regra_app
+from banco_questoes.access_control import (
+    build_access_blocked_context,
+    check_and_increment_app_use,
+    get_regra_app,
+)
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import (
     Alternativa,
@@ -364,6 +368,39 @@ def _build_error_context(
     }
 
 
+def _render_access_blocked(
+    request: HttpRequest,
+    *,
+    msg: str,
+    assinatura: Assinatura | None = None,
+    allow_upgrade: bool = False,
+    motivo_bloqueio: str = "",
+) -> HttpResponse:
+    plano_status = _build_plano_status(request.user, assinatura)
+    plano_nome = ""
+    if plano_status and plano_status.get("ativo"):
+        plano_nome = str(plano_status.get("nome") or "")
+
+    show_upgrade_cta = bool(
+        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("is_free")
+    )
+    upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
+
+    return render(
+        request,
+        "menu/access_blocked.html",
+        build_access_blocked_context(
+            app_slug=SIMULADO_APP_SLUG,
+            reason=msg,
+            plano_nome=plano_nome,
+            show_upgrade_cta=show_upgrade_cta,
+            upgrade_url=upgrade_url,
+            motivo_bloqueio=motivo_bloqueio,
+        ),
+        status=403,
+    )
+
+
 @login_required_audit
 @require_http_methods(["GET"])
 def simulado_inicio(request: HttpRequest) -> HttpResponse:
@@ -452,11 +489,10 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"path": request.path},
         )
-        return render(
+        return _render_access_blocked(
             request,
-            "simulado/erro.html",
-            _build_error_context(request, msg="Assinatura inativa ou expirada."),
-            status=403,
+            msg="Assinatura inativa ou expirada.",
+            motivo_bloqueio="assinatura_inativa",
         )
 
     cfg = get_simulado_config()
@@ -563,11 +599,12 @@ def simulado_iniciar(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"plano": assinatura.nome_plano_snapshot, "limite": assinatura.limite_qtd_snapshot},
         )
-        return render(
+        return _render_access_blocked(
             request,
-            "simulado/erro.html",
-            _build_error_context(request, msg=error_msg, assinatura=assinatura, allow_upgrade=True),
-            status=403,
+            msg=error_msg or "Limite de uso atingido para este modulo no periodo atual.",
+            assinatura=assinatura,
+            allow_upgrade=True,
+            motivo_bloqueio="limite_atingido",
         )
 
     # SeleÃ§Ã£o aleatÃ³ria eficiente
@@ -623,11 +660,10 @@ def simulado_questao(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"path": request.path},
         )
-        return render(
+        return _render_access_blocked(
             request,
-            "simulado/erro.html",
-            _build_error_context(request, msg="Assinatura inativa ou expirada."),
-            status=403,
+            msg="Assinatura inativa ou expirada.",
+            motivo_bloqueio="assinatura_inativa",
         )
 
     cfg = get_simulado_config()
@@ -691,11 +727,10 @@ def simulado_responder(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"path": request.path},
         )
-        return render(
+        return _render_access_blocked(
             request,
-            "simulado/erro.html",
-            _build_error_context(request, msg="Assinatura inativa ou expirada."),
-            status=403,
+            msg="Assinatura inativa ou expirada.",
+            motivo_bloqueio="assinatura_inativa",
         )
 
     state = _get_state(request)
@@ -796,11 +831,10 @@ def simulado_resultado(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"path": request.path},
         )
-        return render(
+        return _render_access_blocked(
             request,
-            "simulado/erro.html",
-            _build_error_context(request, msg="Assinatura inativa ou expirada."),
-            status=403,
+            msg="Assinatura inativa ou expirada.",
+            motivo_bloqueio="assinatura_inativa",
         )
 
     state = _get_state(request)
