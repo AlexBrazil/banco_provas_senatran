@@ -14,6 +14,7 @@ Data de sincronizacao: 2026-03-02
   - `banco_questoes.0005_ofertaupgradeusuario`
   - `banco_questoes.0006_convitecadastroplano`
   - `banco_questoes.0007_convitecadastroplano_permitir_fallback_free`
+  - `banco_questoes.0008_convitecadastroplano_logo_url_and_more`
 - Slug canonico do simulado alinhado em todo o fluxo: `simulado-digital`.
 - Simulado em V2 sem fallback legado de decisao:
   - regra por app via `PlanoPermissaoApp` + `UsoAppJanela`;
@@ -75,6 +76,11 @@ Data de sincronizacao: 2026-03-02
   - vigencia;
   - limite de usos;
   - revogacao imediata (`ativo=False`).
+- Convite com identidade visual opcional:
+  - `nome_representante`;
+  - `logo_url`.
+- Rota de login parceiro:
+  - `/login/parceiro/<token>/`.
 - Comportamento de convite indisponivel:
   - com fallback: redireciona para `/registrar/`;
   - sem fallback: exibe tela informativa de indisponibilidade.

@@ -42,6 +42,8 @@ Nome sugerido: `ConviteCadastroPlano`
 Campos:
 - `token` (char unico; valor opaco para URL)
 - `plano` (FK para `Plano`)
+- `nome_representante` (opcional, exibicao comercial)
+- `logo_url` (opcional, personalizacao visual em login/cadastro parceiro)
 - `ativo` (bool, default `True`)
 - `permitir_fallback_free` (bool, default `True`)
 - `inicio_vigencia` (datetime, opcional)
@@ -81,12 +83,14 @@ Isso evita race condition quando varios usuarios usam o mesmo link ao mesmo temp
 ### 3.1 Rotas
 
 Adicionar em `banco_questoes/urls_auth.py`:
+- `path("login/parceiro/<str:token>/", views_auth.login_parceiro, name="login_partner")`
 - `path("registrar/parceiro/<str:token>/", views_auth.registrar_parceiro, name="register_partner")`
 
 ### 3.2 Views
 
 Em `banco_questoes/views_auth.py`:
 - manter `registrar` atual sem alteracao de regra;
+- criar `login_parceiro(request, token)` com identidade visual do convite;
 - criar `registrar_parceiro(request, token)` com:
   - validacao de token/campanha;
   - render da tela de cadastro (reuso do template atual, com contexto indicando origem parceiro);
@@ -107,7 +111,7 @@ Com CTA:
 
 Registrar `ConviteCadastroPlano` no admin com:
 - filtros: `ativo`, `plano`, vigencia;
-- campos editaveis: plano, ativo, inicio/fim vigencia, limite_usos;
+- campos editaveis: plano, nome_representante, logo_url, ativo, inicio/fim vigencia, limite_usos;
 - campos leitura: `usos_realizados`, criado_em, atualizado_em;
 - acao rapida de revogacao:
   - marcar `ativo=False` para selecao.
@@ -168,6 +172,7 @@ Entregavel:
 4. Token expirado bloqueia.
 5. Limite de usos bloqueia apos atingir teto.
 6. Concorrencia basica: garantir nao ultrapassar `limite_usos`.
+7. Login parceiro exibe logo personalizada quando `logo_url` estiver configurada.
 
 Entregavel:
 - cobertura de regressao minima para nao quebrar onboarding atual.

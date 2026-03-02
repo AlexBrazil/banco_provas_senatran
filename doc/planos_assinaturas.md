@@ -132,10 +132,13 @@ Objetivo:
 
 Rota:
 - `/registrar/parceiro/<token>/`
+- `/login/parceiro/<token>/`
 
 Campos relevantes:
 - `token` (opaco e unico)
 - `plano` (plano de entrada do novo usuario)
+- `nome_representante` (rotulo comercial da marca)
+- `logo_url` (logo exibida nas telas de login/cadastro do parceiro)
 - `ativo`
 - `inicio_vigencia` / `fim_vigencia`
 - `limite_usos` / `usos_realizados`
@@ -147,6 +150,7 @@ Comportamento quando convite esta indisponivel (expirado, sem creditos, inativo)
 
 Observacao:
 - token inexistente/invalido continua redirecionando para `/registrar/`.
+- login parceiro com token valido usa a identidade visual do convite (quando configurada).
 
 ---
 
@@ -223,7 +227,7 @@ Sem regra em `PlanoPermissaoApp`:
 
 ## 12) Checklist de deploy (acesso por app + oferta + convite)
 
-1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano` e `0007_convitecadastroplano_permitir_fallback_free`).
+1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free` e `0008_convitecadastroplano_logo_url_and_more`).
 2. Rodar `seed_apps_menu_access`.
 3. Validar no admin:
   - 8 `AppModulo`;
@@ -235,3 +239,4 @@ Sem regra em `PlanoPermissaoApp`:
   - usuario Aprova DETRAN;
   - menu + simulado + perguntas-respostas + bloqueio comercial + checkout PIX.
   - cadastro parceiro com convite valido e convite indisponivel (com e sem fallback).
+  - login parceiro com logo personalizada.

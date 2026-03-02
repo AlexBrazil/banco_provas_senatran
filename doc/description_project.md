@@ -47,6 +47,7 @@ Arquivo: `config/urls.py`
 - `/menu/` -> alias com redirect para `/`.
 - Auth na raiz via `banco_questoes.urls_auth`:
   - `/login/`, `/logout/`, `/registrar/`;
+  - `/login/parceiro/<token>/` para login com identidade do representante;
   - `/registrar/parceiro/<token>/` para onboarding via convite;
   - rotas de reset de senha seguem ativas em `/senha/reset/...`.
 - Apps:
@@ -136,6 +137,7 @@ Modelo de onboarding por representante:
 - `ConviteCadastroPlano`
   - token opaco para rota dedicada de cadastro;
   - define plano de entrada, vigencia e limite de usos;
+  - suporta identidade visual do representante via `nome_representante` e `logo_url`;
   - chave `permitir_fallback_free` controla fallback para `/registrar/` quando indisponivel.
 
 Modelos legados ainda existentes:
@@ -258,6 +260,7 @@ Resumo:
 - Login por email (`EmailAuthenticationForm`).
 - Cadastro cria usuario + assinatura Free.
 - Cadastro por parceiro (`/registrar/parceiro/<token>/`) cria usuario no plano do convite quando valido.
+- Login por parceiro (`/login/parceiro/<token>/`) aplica identidade visual vinculada ao convite.
 - Redirecionamento padrao pos-cadastro: `menu:home` (salvo `next` valido).
 - Cooldown de cadastro por IP/device quando habilitado.
 - Regras de convite indisponivel:
@@ -272,6 +275,7 @@ Resumo:
     - CTA de pagamento PIX direto so aparece para usuarios no plano `Free`.
 - UI atual:
   - banner superior com imagem `static/menu_app/alegre2.png` em login e cadastro;
+  - login/cadastro por parceiro exibem logo personalizada quando `logo_url` estiver preenchida no convite;
   - acao de conta no topo direito (`Criar conta` no login / `Ja tenho conta` no cadastro);
   - link "Esqueci a senha" ocultado da tela de login por enquanto (rotas de reset permanecem disponiveis).
 
@@ -344,7 +348,7 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
-  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano` e `0007_convitecadastroplano_permitir_fallback_free`);
+  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free` e `0008_convitecadastroplano_logo_url_and_more`);
   - `seed_apps_menu_access` executado;
   - planos em uso com regras em `PlanoPermissaoApp`;
   - conferencia de `AppModulo.em_construcao` dos apps liberados;
