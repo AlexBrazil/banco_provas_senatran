@@ -1,6 +1,6 @@
 # Status de Execucao - Menu e Controle de Acesso por App
 
-Data de sincronizacao: 2026-02-27
+Data de sincronizacao: 2026-03-02
 
 ## Resumo rapido
 - Fase 1 (Etapas 1 a 8): concluida.
@@ -12,6 +12,8 @@ Data de sincronizacao: 2026-02-27
 - Migrations relevantes aplicadas:
   - `banco_questoes.0004_app_access_schema`
   - `banco_questoes.0005_ofertaupgradeusuario`
+  - `banco_questoes.0006_convitecadastroplano`
+  - `banco_questoes.0007_convitecadastroplano_permitir_fallback_free`
 - Slug canonico do simulado alinhado em todo o fluxo: `simulado-digital`.
 - Simulado em V2 sem fallback legado de decisao:
   - regra por app via `PlanoPermissaoApp` + `UsoAppJanela`;
@@ -22,6 +24,10 @@ Data de sincronizacao: 2026-02-27
   - persistida por usuario em `OfertaUpgradeUsuario`;
   - cronometro nao reinicia em cada entrada;
   - novo ciclo automatico apos expiracao da janela.
+- Cadastro por representante:
+  - rota dedicada `/registrar/parceiro/<token>/`;
+  - convite com vigencia e limite de usos no banco;
+  - toggle `permitir_fallback_free` para decidir fallback em convite indisponivel.
 
 ## Fase 1 - Menu e rotas
 - Etapa 1: app `menu` criado e integrado.
@@ -62,6 +68,16 @@ Data de sincronizacao: 2026-02-27
   - imagem superior compartilhada (`alegre2.png`);
   - acao de conta no topo direito;
   - link "Esqueci a senha" ocultado no login por enquanto.
+
+## Evolucao onboarding parceiro (2026-03-02)
+- Modelo `ConviteCadastroPlano` implementado e disponivel no admin.
+- Convite com token opaco e controle de:
+  - vigencia;
+  - limite de usos;
+  - revogacao imediata (`ativo=False`).
+- Comportamento de convite indisponivel:
+  - com fallback: redireciona para `/registrar/`;
+  - sem fallback: exibe tela informativa de indisponibilidade.
 
 ## Proximos passos sugeridos (ordem)
 1. Rodar regressao manual completa (login, menu, bloqueio, checkout PIX, webhook, logout/login).

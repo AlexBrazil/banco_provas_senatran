@@ -1,0 +1,24 @@
+{% extends "simulado/base.html" %}
+{% load static %}
+
+{% block title %}Cadastro indisponivel{% endblock %}
+
+{% block head_css %}
+  <link rel="stylesheet" href="{% static 'simulado/simulado.css' %}">
+  <link rel="stylesheet" href="{% static 'auth/register.css' %}">
+{% endblock %}
+
+{% block body_class %}simulado-container simulado-container--center{% endblock %}
+
+{% block content %}
+  <div class="simulado-card register-card">
+    <div class="register-hero">
+      <img src="{% static 'menu_app/alegre2.png' %}" alt="Pessoa feliz apos aprovacao no DETRAN">
+    </div>
+
+    <h1 class="simulado-title register-title">Cadastro indisponivel</h1>
+    <p class="simulado-subtitle register-subtitle">
+      {{ invite_unavailable_message|default:"Este plano nao possui mais creditos para novos cadastros." }}
+    </p>
+  </div>
+{% endblock %}

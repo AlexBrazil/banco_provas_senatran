@@ -11,6 +11,7 @@ from .models import (
     Alternativa,
     AppModulo,
     Assinatura,
+    ConviteCadastroPlano,
     Curso,
     CursoModulo,
     Documento,
@@ -191,6 +192,30 @@ class OfertaUpgradeUsuarioAdmin(admin.ModelAdmin):
     list_filter = ("campanha_slug", "janela_fim")
     search_fields = ("usuario__email", "usuario__username", "campanha_slug")
     list_select_related = ("usuario",)
+
+
+@admin.register(ConviteCadastroPlano)
+class ConviteCadastroPlanoAdmin(admin.ModelAdmin):
+    list_display = (
+        "token",
+        "plano",
+        "ativo",
+        "permitir_fallback_free",
+        "inicio_vigencia",
+        "fim_vigencia",
+        "limite_usos",
+        "usos_realizados",
+        "atualizado_em",
+    )
+    list_filter = ("ativo", "permitir_fallback_free", "plano", "inicio_vigencia", "fim_vigencia")
+    search_fields = ("token", "plano__nome")
+    list_select_related = ("plano",)
+    readonly_fields = ("usos_realizados", "criado_em", "atualizado_em")
+    actions = ("desativar_convites",)
+
+    @admin.action(description="Desativar convites selecionados")
+    def desativar_convites(self, request, queryset):
+        queryset.update(ativo=False, atualizado_em=timezone.now())
 
 
 @admin.register(EventoAuditoria)

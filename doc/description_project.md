@@ -47,6 +47,7 @@ Arquivo: `config/urls.py`
 - `/menu/` -> alias com redirect para `/`.
 - Auth na raiz via `banco_questoes.urls_auth`:
   - `/login/`, `/logout/`, `/registrar/`;
+  - `/registrar/parceiro/<token>/` para onboarding via convite;
   - rotas de reset de senha seguem ativas em `/senha/reset/...`.
 - Apps:
   - `/perguntas-respostas/`
@@ -114,7 +115,7 @@ Slug canonico do simulado:
 
 ---
 
-## 6) Modelo de dados de acesso e oferta
+## 6) Modelo de dados de acesso, oferta e onboarding
 
 Arquivo: `banco_questoes/models.py`
 
@@ -130,6 +131,12 @@ Modelo de campanha comercial:
 - `OfertaUpgradeUsuario`
   - persistencia por usuario/campanha da janela promocional de 24h;
   - guarda `ciclo`, `janela_inicio` e `janela_fim`.
+
+Modelo de onboarding por representante:
+- `ConviteCadastroPlano`
+  - token opaco para rota dedicada de cadastro;
+  - define plano de entrada, vigencia e limite de usos;
+  - chave `permitir_fallback_free` controla fallback para `/registrar/` quando indisponivel.
 
 Modelos legados ainda existentes:
 - `SimuladoUso` (contador antigo do simulado, mantido para compatibilidade observavel).
@@ -245,12 +252,24 @@ Arquivos:
 - `banco_questoes/urls_auth.py`
 - `banco_questoes/templates/registration/login.html`
 - `banco_questoes/templates/registration/register.html`
+- `banco_questoes/templates/registration/register_partner_unavailable.html`
 
 Resumo:
 - Login por email (`EmailAuthenticationForm`).
 - Cadastro cria usuario + assinatura Free.
+- Cadastro por parceiro (`/registrar/parceiro/<token>/`) cria usuario no plano do convite quando valido.
 - Redirecionamento padrao pos-cadastro: `menu:home` (salvo `next` valido).
 - Cooldown de cadastro por IP/device quando habilitado.
+- Regras de convite indisponivel:
+  - `permitir_fallback_free=True` -> redireciona para `/registrar/`;
+  - `permitir_fallback_free=False` -> exibe tela informativa sem fallback automatico.
+- Cenarios praticos (representante):
+  - convite sem creditos/expirado/inativo:
+    - com `permitir_fallback_free=True`, o aluno e redirecionado para `/registrar/` e pode entrar no fluxo Free;
+    - com `permitir_fallback_free=False`, o aluno ve apenas a tela de indisponibilidade de cadastro.
+  - aluno do representante atingiu limite de uso do app:
+    - o acesso ao app e bloqueado pela regra de `PlanoPermissaoApp`;
+    - CTA de pagamento PIX direto so aparece para usuarios no plano `Free`.
 - UI atual:
   - banner superior com imagem `static/menu_app/alegre2.png` em login e cadastro;
   - acao de conta no topo direito (`Criar conta` no login / `Ja tenho conta` no cadastro);
@@ -325,7 +344,7 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
-  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`);
+  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano` e `0007_convitecadastroplano_permitir_fallback_free`);
   - `seed_apps_menu_access` executado;
   - planos em uso com regras em `PlanoPermissaoApp`;
   - conferencia de `AppModulo.em_construcao` dos apps liberados;

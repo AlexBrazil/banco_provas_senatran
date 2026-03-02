@@ -1,6 +1,6 @@
 # Planos e assinaturas (guia rapido atualizado)
 
-Este guia descreve como funcionam `Plano`, `Assinatura`, controle por app (`AppModulo` / `PlanoPermissaoApp` / `UsoAppJanela`) e a oferta promocional 24h de upgrade (`OfertaUpgradeUsuario`).
+Este guia descreve como funcionam `Plano`, `Assinatura`, controle por app (`AppModulo` / `PlanoPermissaoApp` / `UsoAppJanela`), oferta promocional 24h de upgrade (`OfertaUpgradeUsuario`) e onboarding por convite de representante (`ConviteCadastroPlano`).
 
 ---
 
@@ -123,7 +123,34 @@ Importante:
 
 ---
 
-## 7) Seed oficial de apps e permissoes
+## 7) Cadastro por convite de representante
+
+Modelo: `ConviteCadastroPlano`
+
+Objetivo:
+- direcionar novos cadastros para plano especifico sem alterar o cadastro padrao (`/registrar/`).
+
+Rota:
+- `/registrar/parceiro/<token>/`
+
+Campos relevantes:
+- `token` (opaco e unico)
+- `plano` (plano de entrada do novo usuario)
+- `ativo`
+- `inicio_vigencia` / `fim_vigencia`
+- `limite_usos` / `usos_realizados`
+- `permitir_fallback_free` (bool)
+
+Comportamento quando convite esta indisponivel (expirado, sem creditos, inativo):
+- `permitir_fallback_free=True`: redireciona para `/registrar/`.
+- `permitir_fallback_free=False`: exibe tela informativa de indisponibilidade de creditos.
+
+Observacao:
+- token inexistente/invalido continua redirecionando para `/registrar/`.
+
+---
+
+## 8) Seed oficial de apps e permissoes
 
 Comando:
 
@@ -143,7 +170,7 @@ Importante para deploy:
 
 ---
 
-## 8) Configuracao recomendada de planos (padrao do projeto)
+## 9) Configuracao recomendada de planos (padrao do projeto)
 
 Free:
 - permitido somente `simulado-digital`;
@@ -158,7 +185,7 @@ Observacao:
 
 ---
 
-## 9) Fluxo comercial de bloqueio e upgrade
+## 10) Fluxo comercial de bloqueio e upgrade
 
 1. Usuario Free atinge limite ou acessa app sem permissao.
 2. Sistema renderiza `menu/access_blocked.html` com contexto comercial.
@@ -170,9 +197,18 @@ Notas:
 - CTA de upgrade so aparece para plano Free.
 - Checkout mostra `Uso ilimitado` quando plano de destino nao possui limite.
 
+Cenarios praticos (representante):
+1. Convite do representante sem creditos:
+- se `permitir_fallback_free=True`, o acesso por `/registrar/parceiro/<token>/` redireciona para `/registrar/`;
+- se `permitir_fallback_free=False`, exibe tela de indisponibilidade de cadastro.
+
+2. Aluno do representante atingiu o limite de uso de um app:
+- o bloqueio ocorre por regra de `PlanoPermissaoApp` + `UsoAppJanela`;
+- no estado atual, CTA de pagamento PIX direto na tela de bloqueio permanece exclusivo para plano `Free`.
+
 ---
 
-## 10) Criar/ajustar assinatura manualmente (admin)
+## 11) Criar/ajustar assinatura manualmente (admin)
 
 Passos:
 1. Confirmar que o `Plano` desejado existe e esta ativo.
@@ -185,9 +221,9 @@ Sem regra em `PlanoPermissaoApp`:
 
 ---
 
-## 11) Checklist de deploy (acesso por app + oferta)
+## 12) Checklist de deploy (acesso por app + oferta + convite)
 
-1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`).
+1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano` e `0007_convitecadastroplano_permitir_fallback_free`).
 2. Rodar `seed_apps_menu_access`.
 3. Validar no admin:
   - 8 `AppModulo`;
@@ -198,3 +234,4 @@ Sem regra em `PlanoPermissaoApp`:
   - usuario Free;
   - usuario Aprova DETRAN;
   - menu + simulado + perguntas-respostas + bloqueio comercial + checkout PIX.
+  - cadastro parceiro com convite valido e convite indisponivel (com e sem fallback).

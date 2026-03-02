@@ -22,7 +22,11 @@
     </div>
 
     <h1 class="simulado-title register-title">Criar conta</h1>
-    <p class="simulado-subtitle register-subtitle">Cadastre seu email e senha.</p>
+    {% if partner_signup and partner_plan_name %}
+      <p class="simulado-subtitle register-subtitle">Cadastro via parceiro. Plano de entrada: {{ partner_plan_name }}.</p>
+    {% else %}
+      <p class="simulado-subtitle register-subtitle">Cadastre seu email e senha.</p>
+    {% endif %}
 
     {% if cooldown_message %}
       <p class="stats-error">{{ cooldown_message }}</p>

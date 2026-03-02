@@ -1,10 +1,12 @@
 ﻿# -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import secrets
 import uuid
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class Curso(models.Model):
@@ -422,6 +424,51 @@ class OfertaUpgradeUsuario(models.Model):
 
     def __str__(self) -> str:
         return f"{self.usuario} :: {self.campanha_slug} :: ciclo {self.ciclo}"
+
+
+def _generate_convite_token() -> str:
+    return secrets.token_urlsafe(24)
+
+
+class ConviteCadastroPlano(models.Model):
+    token = models.CharField(max_length=120, unique=True, default=_generate_convite_token)
+    plano = models.ForeignKey(
+        Plano,
+        on_delete=models.PROTECT,
+        related_name="convites_cadastro",
+    )
+    ativo = models.BooleanField(default=True)
+    permitir_fallback_free = models.BooleanField(default=True)
+    inicio_vigencia = models.DateTimeField(null=True, blank=True)
+    fim_vigencia = models.DateTimeField(null=True, blank=True)
+    limite_usos = models.PositiveIntegerField(null=True, blank=True)
+    usos_realizados = models.PositiveIntegerField(default=0)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        indexes = [
+            models.Index(fields=["ativo", "fim_vigencia"], name="bq_convite_ativo_fim_idx"),
+        ]
+
+    def get_indisponibilidade_motivo(self, *, now=None) -> str:
+        now = now or timezone.now()
+        if not self.ativo:
+            return "inativo"
+        if self.inicio_vigencia and now < self.inicio_vigencia:
+            return "fora_inicio"
+        if self.fim_vigencia and now > self.fim_vigencia:
+            return "expirado"
+        if self.limite_usos is not None and self.usos_realizados >= self.limite_usos:
+            return "sem_creditos"
+        return ""
+
+    def is_disponivel(self, *, now=None) -> bool:
+        return self.get_indisponibilidade_motivo(now=now) == ""
+
+    def __str__(self) -> str:
+        return f"{self.plano.nome} :: {self.token}"
 
 
 class EventoAuditoria(models.Model):

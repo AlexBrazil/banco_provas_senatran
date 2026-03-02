@@ -11,6 +11,7 @@ urlpatterns = [
     path("login/", views_auth.EmailLoginView.as_view(), name="login"),
     path("logout/", views_auth.EmailLogoutView.as_view(), name="logout"),
     path("registrar/", views_auth.registrar, name="register"),
+    path("registrar/parceiro/<str:token>/", views_auth.registrar_parceiro, name="register_partner"),
     path(
         "senha/reset/",
         auth_views.PasswordResetView.as_view(

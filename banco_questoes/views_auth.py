@@ -6,17 +6,18 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
+from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
-from django.db.models import Q
 
 from .auditoria import DEVICE_COOKIE_NAME, get_client_ip, log_event
 from .forms import EmailAuthenticationForm, RegistroForm
-from .models import Assinatura, EventoAuditoria, Plano
+from .models import Assinatura, ConviteCadastroPlano, EventoAuditoria, Plano
 
 
 DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2
@@ -112,7 +113,7 @@ def _format_remaining(remaining: timedelta) -> str:
     return f"{hours}h {minutes}min"
 
 
-def _create_free_assinatura(user, plano: Plano) -> Assinatura:
+def _create_assinatura(user, plano: Plano) -> Assinatura:
     now = timezone.now()
     valid_until = None
     if plano.validade_dias:
@@ -129,6 +130,56 @@ def _create_free_assinatura(user, plano: Plano) -> Assinatura:
         status=Assinatura.Status.ATIVO,
         inicio=now,
         valid_until=valid_until,
+    )
+
+
+def _get_convite_cadastro(token: str, *, for_update: bool = False) -> ConviteCadastroPlano | None:
+    raw_token = (token or "").strip()
+    if not raw_token:
+        return None
+
+    qs = (
+        ConviteCadastroPlano.objects
+        .select_related("plano")
+        .filter(token=raw_token)
+    )
+    if for_update:
+        qs = qs.select_for_update()
+    return qs.first()
+
+
+def _convite_disponivel_para_cadastro(convite: ConviteCadastroPlano) -> bool:
+    if not convite.plano_id or not convite.plano.ativo:
+        return False
+    return convite.is_disponivel()
+
+
+def _render_convite_indisponivel(
+    request: HttpRequest,
+    convite: ConviteCadastroPlano | None,
+) -> HttpResponse:
+    if convite and convite.permitir_fallback_free:
+        return redirect("register")
+
+    mensagem = "Este plano nao possui mais creditos para novos cadastros."
+    if convite:
+        motivo = convite.get_indisponibilidade_motivo()
+        if not convite.plano_id or not convite.plano.ativo:
+            mensagem = "Este link de cadastro nao esta disponivel no momento."
+        elif motivo == "expirado":
+            mensagem = "Este link de cadastro expirou."
+        elif motivo == "inativo":
+            mensagem = "Este link de cadastro foi desativado."
+        elif motivo == "fora_inicio":
+            mensagem = "Este link de cadastro ainda nao esta disponivel."
+        elif motivo == "sem_creditos":
+            mensagem = "Este plano nao possui mais creditos para novos cadastros."
+
+    return render(
+        request,
+        "registration/register_partner_unavailable.html",
+        {"invite_unavailable_message": mensagem},
+        status=200,
     )
 
 
@@ -170,7 +221,7 @@ def registrar(request: HttpRequest) -> HttpResponse:
                 form.add_error(None, "Plano Free nao encontrado. Contate o suporte.")
             else:
                 user = form.save()
-                assinatura = _create_free_assinatura(user, plano_free)
+                assinatura = _create_assinatura(user, plano_free)
                 login(request, user)
                 request.session.set_expiry(settings.SESSION_COOKIE_AGE)
                 log_event(
@@ -189,6 +240,92 @@ def registrar(request: HttpRequest) -> HttpResponse:
         form = RegistroForm()
 
     response = render(request, "registration/register.html", {"form": form, "next": next_url})
+    if new_device:
+        _set_device_cookie(response, device_id)
+    return response
+
+
+@require_http_methods(["GET", "POST"])
+def registrar_parceiro(request: HttpRequest, token: str) -> HttpResponse:
+    if request.user.is_authenticated:
+        return redirect(_safe_next_url(request))
+
+    convite = _get_convite_cadastro(token)
+    if not convite:
+        return redirect("register")
+    if not _convite_disponivel_para_cadastro(convite):
+        return _render_convite_indisponivel(request, convite)
+
+    device_id, new_device = _get_device_id(request)
+    ip = get_client_ip(request)
+    next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
+    base_context = {
+        "next": next_url,
+        "partner_signup": True,
+        "partner_plan_name": convite.plano.nome,
+    }
+
+    if request.method == "POST":
+        remaining = _cooldown_remaining(ip, device_id)
+        if remaining:
+            log_event(
+                request,
+                "auth_register_blocked",
+                user=None,
+                ip=ip or None,
+                device_id=device_id,
+                contexto={"motivo": "cooldown", "restante": _format_remaining(remaining)},
+            )
+            form = RegistroForm()
+            msg = f"Aguarde { _format_remaining(remaining) } para cadastrar outra conta."
+            response = render(
+                request,
+                "registration/register.html",
+                {**base_context, "form": form, "cooldown_message": msg},
+            )
+            if new_device:
+                _set_device_cookie(response, device_id)
+            return response
+
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    convite_locked = _get_convite_cadastro(token, for_update=True)
+                    if not convite_locked:
+                        return redirect("register")
+                    if not _convite_disponivel_para_cadastro(convite_locked):
+                        return _render_convite_indisponivel(request, convite_locked)
+
+                    user = form.save()
+                    assinatura = _create_assinatura(user, convite_locked.plano)
+                    convite_locked.usos_realizados += 1
+                    convite_locked.save(update_fields=["usos_realizados", "atualizado_em"])
+            except IntegrityError:
+                form.add_error("username", "Email ja cadastrado.")
+            else:
+                login(request, user)
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                log_event(
+                    request,
+                    "auth_register",
+                    user=user,
+                    ip=ip or None,
+                    device_id=device_id,
+                    contexto={"plano": assinatura.nome_plano_snapshot},
+                )
+                response = redirect(_safe_next_url(request))
+                if new_device:
+                    _set_device_cookie(response, device_id)
+                return response
+    else:
+        form = RegistroForm()
+
+    response = render(
+        request,
+        "registration/register.html",
+        {**base_context, "form": form},
+    )
     if new_device:
         _set_device_cookie(response, device_id)
     return response
