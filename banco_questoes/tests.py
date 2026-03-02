@@ -95,3 +95,15 @@ class CadastroPlanoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "registration/register_partner_unavailable.html")
         self.assertContains(response, "nao possui mais creditos")
+
+    def test_login_parceiro_exibe_identidade_visual(self):
+        convite = ConviteCadastroPlano.objects.create(
+            plano=self.plano_premium,
+            ativo=True,
+            nome_representante="Representante Viviane",
+            logo_url="https://exemplo.com/logo-viviane.png",
+        )
+        response = self.client.get(reverse("login_partner", kwargs={"token": convite.token}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Representante Viviane")
+        self.assertContains(response, "https://exemplo.com/logo-viviane.png")

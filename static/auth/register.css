@@ -30,6 +30,18 @@
   z-index: 2;
 }
 
+.register-partner-brand {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 8px;
+}
+
+.register-partner-brand img {
+  width: min(220px, 60%);
+  max-height: 64px;
+  object-fit: contain;
+}
+
 .btn-register-login {
   margin-top: 0;
   padding: 9px 14px;

@@ -17,13 +17,25 @@
       <img src="{% static 'menu_app/alegre2.png' %}" alt="Pessoa feliz apos aprovacao no DETRAN">
     </div>
 
+    {% if partner_logo_url %}
+      <div class="register-partner-brand">
+        <img src="{{ partner_logo_url }}" alt="Logo {{ partner_brand_name|default:'do representante' }}">
+      </div>
+    {% endif %}
+
     <div class="register-top-actions">
-      <a class="btn-simulado btn-register-login" href="{% url 'login' %}">Ja tenho conta</a>
+      {% if partner_signup and partner_login_url %}
+        <a class="btn-simulado btn-register-login" href="{{ partner_login_url }}">Ja tenho conta</a>
+      {% else %}
+        <a class="btn-simulado btn-register-login" href="{% url 'login' %}">Ja tenho conta</a>
+      {% endif %}
     </div>
 
     <h1 class="simulado-title register-title">Criar conta</h1>
     {% if partner_signup and partner_plan_name %}
-      <p class="simulado-subtitle register-subtitle">Cadastro via parceiro. Plano de entrada: {{ partner_plan_name }}.</p>
+      <p class="simulado-subtitle register-subtitle">
+        Cadastro via parceiro{% if partner_brand_name %} ({{ partner_brand_name }}){% endif %}. Plano de entrada: {{ partner_plan_name }}.
+      </p>
     {% else %}
       <p class="simulado-subtitle register-subtitle">Cadastre seu email e senha.</p>
     {% endif %}

@@ -16,9 +16,22 @@
       <img src="{% static 'menu_app/alegre2.png' %}" alt="Pessoa feliz apos aprovacao no DETRAN">
     </div>
 
+    {% if partner_logo_url %}
+      <div class="register-partner-brand">
+        <img src="{{ partner_logo_url }}" alt="Logo {{ partner_brand_name|default:'do representante' }}">
+      </div>
+    {% endif %}
+
     <h1 class="simulado-title register-title">Cadastro indisponivel</h1>
     <p class="simulado-subtitle register-subtitle">
       {{ invite_unavailable_message|default:"Este plano nao possui mais creditos para novos cadastros." }}
     </p>
+
+    <div class="form-actions">
+      {% if partner_login_url %}
+        <a class="btn-simulado" href="{{ partner_login_url }}">Ir para login</a>
+      {% endif %}
+      <a class="btn-simulado" href="{% url 'register' %}">Ir para cadastro padrao</a>
+    </div>
   </div>
 {% endblock %}

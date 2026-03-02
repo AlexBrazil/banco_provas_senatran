@@ -437,6 +437,8 @@ class ConviteCadastroPlano(models.Model):
         on_delete=models.PROTECT,
         related_name="convites_cadastro",
     )
+    nome_representante = models.CharField(max_length=120, blank=True, default="")
+    logo_url = models.CharField(max_length=255, blank=True, default="")
     ativo = models.BooleanField(default=True)
     permitir_fallback_free = models.BooleanField(default=True)
     inicio_vigencia = models.DateTimeField(null=True, blank=True)

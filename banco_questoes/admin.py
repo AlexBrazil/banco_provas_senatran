@@ -198,6 +198,7 @@ class OfertaUpgradeUsuarioAdmin(admin.ModelAdmin):
 class ConviteCadastroPlanoAdmin(admin.ModelAdmin):
     list_display = (
         "token",
+        "nome_representante",
         "plano",
         "ativo",
         "permitir_fallback_free",
@@ -208,7 +209,7 @@ class ConviteCadastroPlanoAdmin(admin.ModelAdmin):
         "atualizado_em",
     )
     list_filter = ("ativo", "permitir_fallback_free", "plano", "inicio_vigencia", "fim_vigencia")
-    search_fields = ("token", "plano__nome")
+    search_fields = ("token", "nome_representante", "plano__nome")
     list_select_related = ("plano",)
     readonly_fields = ("usos_realizados", "criado_em", "atualizado_em")
     actions = ("desativar_convites",)

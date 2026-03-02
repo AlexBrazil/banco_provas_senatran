@@ -9,6 +9,7 @@ from . import views_auth
 
 urlpatterns = [
     path("login/", views_auth.EmailLoginView.as_view(), name="login"),
+    path("login/parceiro/<str:token>/", views_auth.login_parceiro, name="login_partner"),
     path("logout/", views_auth.EmailLogoutView.as_view(), name="logout"),
     path("registrar/", views_auth.registrar, name="register"),
     path("registrar/parceiro/<str:token>/", views_auth.registrar_parceiro, name="register_partner"),

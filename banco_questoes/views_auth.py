@@ -50,6 +50,19 @@ class EmailLogoutView(auth_views.LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
+def _build_partner_brand_context(convite: ConviteCadastroPlano) -> dict:
+    nome_representante = (convite.nome_representante or "").strip()
+    partner_brand_name = nome_representante or (convite.plano.nome if convite.plano_id else "")
+    return {
+        "partner_brand_name": partner_brand_name,
+        "partner_logo_url": (convite.logo_url or "").strip(),
+        "partner_plan_name": convite.plano.nome if convite.plano_id else "",
+        "partner_token": convite.token,
+        "partner_login_url": reverse("login_partner", kwargs={"token": convite.token}),
+        "partner_register_url": reverse("register_partner", kwargs={"token": convite.token}),
+    }
+
+
 def _get_device_id(request: HttpRequest) -> tuple[str, bool]:
     device_id = (request.COOKIES.get(DEVICE_COOKIE_NAME) or "").strip()
     if device_id:
@@ -178,9 +191,24 @@ def _render_convite_indisponivel(
     return render(
         request,
         "registration/register_partner_unavailable.html",
-        {"invite_unavailable_message": mensagem},
+        {
+            "invite_unavailable_message": mensagem,
+            **(_build_partner_brand_context(convite) if convite else {}),
+        },
         status=200,
     )
+
+
+def login_parceiro(request: HttpRequest, token: str) -> HttpResponse:
+    convite = _get_convite_cadastro(token)
+    if not convite:
+        return redirect("login")
+    extra_context = {
+        "partner_login": True,
+        **_build_partner_brand_context(convite),
+    }
+    view = EmailLoginView.as_view(extra_context=extra_context)
+    return view(request)
 
 
 @require_http_methods(["GET", "POST"])
@@ -262,7 +290,7 @@ def registrar_parceiro(request: HttpRequest, token: str) -> HttpResponse:
     base_context = {
         "next": next_url,
         "partner_signup": True,
-        "partner_plan_name": convite.plano.nome,
+        **_build_partner_brand_context(convite),
     }
 
     if request.method == "POST":
