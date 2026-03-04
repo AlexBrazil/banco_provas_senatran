@@ -21,6 +21,7 @@ from banco_questoes.access_control import (
     build_access_blocked_context,
     check_and_increment_app_use,
     get_regra_app,
+    is_upgrade_pix_eligible,
 )
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import (
@@ -254,12 +255,14 @@ def _check_and_increment_uso(request: HttpRequest, user, assinatura: Assinatura)
 def _build_plano_status_v2(user, assinatura: Assinatura) -> dict:
     nome_plano = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "Plano")
     is_free = nome_plano.strip().lower() == "free"
+    upgrade_pix_eligible = is_upgrade_pix_eligible(assinatura)
     regra = get_regra_app(assinatura, SIMULADO_APP_SLUG)
     if not regra:
         return {
             "ativo": True,
             "nome": nome_plano,
             "is_free": is_free,
+            "upgrade_pix_eligible": upgrade_pix_eligible,
             "limite_qtd": None,
             "limite_periodo": None,
             "limite_periodo_label": "",
@@ -277,6 +280,7 @@ def _build_plano_status_v2(user, assinatura: Assinatura) -> dict:
             "ativo": True,
             "nome": nome_plano,
             "is_free": is_free,
+            "upgrade_pix_eligible": upgrade_pix_eligible,
             "limite_qtd": regra.limite_qtd,
             "limite_periodo": regra.limite_periodo,
             "limite_periodo_label": regra.get_limite_periodo_display() if regra.limite_periodo else "",
@@ -324,6 +328,7 @@ def _build_plano_status_v2(user, assinatura: Assinatura) -> dict:
         "ativo": True,
         "nome": nome_plano,
         "is_free": is_free,
+        "upgrade_pix_eligible": upgrade_pix_eligible,
         "limite_qtd": limite,
         "limite_periodo": periodo,
         "limite_periodo_label": periodo_label,
@@ -357,7 +362,7 @@ def _build_error_context(
 ) -> dict:
     plano_status = _build_plano_status(request.user, assinatura)
     show_upgrade_cta = bool(
-        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("is_free")
+        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("upgrade_pix_eligible")
     )
     upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
     return {
@@ -382,7 +387,7 @@ def _render_access_blocked(
         plano_nome = str(plano_status.get("nome") or "")
 
     show_upgrade_cta = bool(
-        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("is_free")
+        allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("upgrade_pix_eligible")
     )
     upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
 

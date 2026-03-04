@@ -219,6 +219,7 @@ class Plano(models.Model):
     )
     preco = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     ativo = models.BooleanField(default=True)
+    permite_upgrade_pix = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

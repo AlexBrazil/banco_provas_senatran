@@ -77,8 +77,8 @@ class AlternativaAdmin(admin.ModelAdmin):
 
 @admin.register(Plano)
 class PlanoAdmin(admin.ModelAdmin):
-    list_display = ("nome", "limite_qtd", "limite_periodo", "validade_dias", "ciclo_cobranca", "preco", "ativo")
-    list_filter = ("ativo", "limite_periodo", "ciclo_cobranca")
+    list_display = ("nome", "limite_qtd", "limite_periodo", "validade_dias", "ciclo_cobranca", "preco", "ativo", "permite_upgrade_pix")
+    list_filter = ("ativo", "permite_upgrade_pix", "limite_periodo", "ciclo_cobranca")
     search_fields = ("nome",)
 
     def save_model(self, request, obj, form, change):

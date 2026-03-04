@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from banco_questoes.access_control import is_upgrade_pix_eligible
 from banco_questoes.auditoria import log_event
 from banco_questoes.models import Assinatura, EventoAuditoria, Plano
 
@@ -23,7 +24,6 @@ from .abacatepay import AbacatePayError, check_pix_qrcode, create_pix_qrcode, ve
 from .models import Billing, WebhookEvent
 
 
-FREE_PLAN_NAME = "Free"
 UPGRADE_PLAN_NAME = "Aprova DETRAN"
 MANUAL_CHECK_DELAY_SECONDS = 60
 CHECK_COOLDOWN_SECONDS = 30
@@ -38,11 +38,6 @@ def _get_active_assinatura(user) -> Assinatura | None:
         .order_by("-inicio", "-criado_em")
         .first()
     )
-
-
-def _assinatura_is_free(assinatura: Assinatura) -> bool:
-    nome = assinatura.nome_plano_snapshot or (assinatura.plano.nome if assinatura.plano else "")
-    return nome.strip().lower() == FREE_PLAN_NAME.lower()
 
 
 def _get_plano_upgrade() -> Plano | None:
@@ -108,6 +103,12 @@ def _registrar_troca_plano(
 
 def _ativar_plano_upgrade(*, user, plano_upgrade: Plano, billing: Billing) -> None:
     now = timezone.now()
+    assinatura_origem = _get_active_assinatura(user)
+    plano_origem = "Desconhecido"
+    if assinatura_origem:
+        plano_origem = assinatura_origem.nome_plano_snapshot or (
+            assinatura_origem.plano.nome if assinatura_origem.plano else "Desconhecido"
+        )
     valid_until = None
     if plano_upgrade.validade_dias:
         valid_until = now + timedelta(days=plano_upgrade.validade_dias)
@@ -132,7 +133,7 @@ def _ativar_plano_upgrade(*, user, plano_upgrade: Plano, billing: Billing) -> No
 
     _registrar_troca_plano(
         user=user,
-        plano_origem=FREE_PLAN_NAME,
+        plano_origem=plano_origem,
         plano_destino=plano_upgrade.nome,
         billing=billing,
     )
@@ -151,11 +152,11 @@ def _finalizar_billing_pago(billing: Billing, payload: dict) -> bool:
 @require_http_methods(["GET", "POST"])
 def upgrade_free(request: HttpRequest) -> HttpResponse:
     assinatura = _get_active_assinatura(request.user)
-    if not assinatura or not _assinatura_is_free(assinatura):
+    if not assinatura or not is_upgrade_pix_eligible(assinatura):
         return render(
             request,
             "simulado/erro.html",
-            {"msg": "Upgrade disponivel apenas para usuarios do plano Free."},
+            {"msg": "Upgrade via PIX indisponivel para o seu plano atual."},
             status=403,
         )
 
@@ -166,6 +167,13 @@ def upgrade_free(request: HttpRequest) -> HttpResponse:
             "simulado/erro.html",
             {"msg": "Plano Aprova DETRAN indisponivel. Contate o suporte."},
             status=503,
+        )
+    if assinatura.plano_id == plano_upgrade.id:
+        return render(
+            request,
+            "simulado/erro.html",
+            {"msg": "Seu plano atual ja e o Aprova DETRAN."},
+            status=400,
         )
 
     if request.method == "POST":

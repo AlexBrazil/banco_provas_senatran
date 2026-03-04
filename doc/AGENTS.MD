@@ -43,6 +43,7 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 - Para executar comandos Python/Django no PowerShell, usar formato em 2 linhas com diretorio explicito:
   `Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"` e depois
   `.\.venv\Scripts\python.exe manage.py <comando>`.
+- Daqui em diante, usar sempre `.\.venv\Scripts\python.exe` nos comandos Python/Django deste projeto (nao usar `python` global).
 - Evitar wrapper `powershell.exe -Command ...` dentro do proprio PowerShell, pois pode travar os botoes de confirmacao no chat.
 - Em caso de instabilidade/congelamento do prompt no chat, preferir execucao assistida: o agente fornece o comando, o usuario executa no terminal local e cola o output para analise.
 - Convencao de nomes: para novos arquivos e pastas, usar lowercase (kebab_case/underscore quando necessario) e evitar variacoes por maiuscula/minuscula para prevenir conflitos entre Windows e Linux.
@@ -81,6 +82,6 @@ Instrucoes para atuacao neste repositorio. Baseado em `doc/description_project.m
 
 ## Validacao sugerida
 
-- Se aplicavel: `python manage.py check`.
-- Se houver testes relevantes: `python manage.py test`.
+- Se aplicavel: `.\.venv\Scripts\python.exe manage.py check`.
+- Se houver testes relevantes: `.\.venv\Scripts\python.exe manage.py test`.
 - Quando nao for possivel executar, declarar a limitacao no retorno.

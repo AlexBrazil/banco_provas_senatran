@@ -37,6 +37,19 @@ def get_assinatura_ativa(user) -> Assinatura | None:
     )
 
 
+def is_upgrade_pix_eligible(assinatura: Assinatura | None) -> bool:
+    if not assinatura:
+        return False
+    if assinatura.status != Assinatura.Status.ATIVO:
+        return False
+    if assinatura.valid_until and assinatura.valid_until < timezone.now():
+        return False
+    plano = assinatura.plano
+    if not plano or not plano.ativo:
+        return False
+    return bool(plano.permite_upgrade_pix)
+
+
 def get_regra_app(assinatura: Assinatura | None, app_slug: str) -> PlanoPermissaoApp | None:
     if not assinatura or not assinatura.plano_id:
         return None
@@ -485,16 +498,18 @@ def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
 
     assinatura = get_assinatura_ativa(user)
     if not assinatura:
-        return {"ativo": False}
+        return {"ativo": False, "upgrade_pix_eligible": False}
 
     nome_plano = _nome_plano(assinatura) or "Plano"
     is_free = nome_plano.strip().lower() == "free"
+    upgrade_pix_eligible = is_upgrade_pix_eligible(assinatura)
     regra = get_regra_app(assinatura, app_slug)
     if not regra:
         return {
             "ativo": True,
             "nome": nome_plano,
             "is_free": is_free,
+            "upgrade_pix_eligible": upgrade_pix_eligible,
             "limite_qtd": None,
             "limite_periodo": None,
             "limite_periodo_label": "",
@@ -512,6 +527,7 @@ def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
             "ativo": True,
             "nome": nome_plano,
             "is_free": is_free,
+            "upgrade_pix_eligible": upgrade_pix_eligible,
             "limite_qtd": regra.limite_qtd,
             "limite_periodo": regra.limite_periodo,
             "limite_periodo_label": regra.get_limite_periodo_display() if regra.limite_periodo else "",
@@ -559,6 +575,7 @@ def build_plan_status_for_app(user, app_slug: str) -> dict[str, Any] | None:
         "ativo": True,
         "nome": nome_plano,
         "is_free": is_free,
+        "upgrade_pix_eligible": upgrade_pix_eligible,
         "limite_qtd": limite,
         "limite_periodo": periodo,
         "limite_periodo_label": periodo_label,
@@ -592,7 +609,7 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
 
             assinatura = get_assinatura_ativa(request.user)
             plano_nome = _nome_plano(assinatura)
-            show_upgrade_cta = plano_nome.strip().lower() == "free"
+            show_upgrade_cta = is_upgrade_pix_eligible(assinatura)
             upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
             motivo_bloqueio = str((contexto or {}).get("motivo") or "")
             log_event(
