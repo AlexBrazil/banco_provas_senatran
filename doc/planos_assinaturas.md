@@ -32,11 +32,15 @@ Modelo: `Plano`
 - `ciclo_cobranca` (`MENSAL`, `ANUAL`, `NAO_RECORRENTE`)
 - `preco`
 - `ativo`
+- `permite_upgrade_pix` (bool)
 
 Importante no contexto atual:
 - limites globais de `Plano` nao sao suficientes para o V2 por app;
 - no V2, a regra efetiva por modulo fica em `PlanoPermissaoApp`;
 - no seed padrao, o plano Free ainda fornece limite base do app `simulado-digital`.
+- elegibilidade para CTA/checkout PIX no bloqueio e controlada por `permite_upgrade_pix`:
+  - `True`: exibe CTA e permite checkout PIX;
+  - `False`: nao exibe CTA e bloqueia checkout PIX para o plano.
 
 ---
 
@@ -191,14 +195,14 @@ Observacao:
 
 ## 10) Fluxo comercial de bloqueio e upgrade
 
-1. Usuario Free atinge limite ou acessa app sem permissao.
+1. Usuario de plano elegivel ao PIX (`permite_upgrade_pix=True`) atinge limite ou acessa app sem permissao.
 2. Sistema renderiza `menu/access_blocked.html` com contexto comercial.
 3. CTA principal `Pagar com PIX e liberar agora` faz POST direto para `payments:upgrade_free`.
 4. Checkout gera QRCode PIX.
 5. Em `billing.paid` (webhook ou check manual), assinatura migra para `Aprova DETRAN`.
 
 Notas:
-- CTA de upgrade so aparece para plano Free.
+- CTA de upgrade aparece apenas para planos com `permite_upgrade_pix=True`.
 - Checkout mostra `Uso ilimitado` quando plano de destino nao possui limite.
 
 Cenarios praticos (representante):
@@ -208,7 +212,7 @@ Cenarios praticos (representante):
 
 2. Aluno do representante atingiu o limite de uso de um app:
 - o bloqueio ocorre por regra de `PlanoPermissaoApp` + `UsoAppJanela`;
-- no estado atual, CTA de pagamento PIX direto na tela de bloqueio permanece exclusivo para plano `Free`.
+- no estado atual, CTA de pagamento PIX direto na tela de bloqueio depende de `Plano.permite_upgrade_pix=True`.
 
 ---
 
@@ -227,16 +231,19 @@ Sem regra em `PlanoPermissaoApp`:
 
 ## 12) Checklist de deploy (acesso por app + oferta + convite)
 
-1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free` e `0008_convitecadastroplano_logo_url_and_more`).
+1. Aplicar migrations (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free`, `0008_convitecadastroplano_logo_url_and_more` e `0009_plano_permite_upgrade_pix`).
 2. Rodar `seed_apps_menu_access`.
 3. Validar no admin:
   - 8 `AppModulo`;
   - regras Free e Aprova DETRAN em `PlanoPermissaoApp`;
   - campo `em_construcao` coerente com os apps liberados.
 4. Validar flags de ambiente conforme rollout.
-5. Smoke test:
+5. No admin de `Plano`, marcar `permite_upgrade_pix=True` para os planos autorizados ao upgrade via PIX.
+6. Smoke test:
   - usuario Free;
   - usuario Aprova DETRAN;
+  - usuario de plano nao-Free com `permite_upgrade_pix=True`;
+  - usuario de plano com `permite_upgrade_pix=False`;
   - menu + simulado + perguntas-respostas + bloqueio comercial + checkout PIX.
   - cadastro parceiro com convite valido e convite indisponivel (com e sem fallback).
   - login parceiro com logo personalizada.

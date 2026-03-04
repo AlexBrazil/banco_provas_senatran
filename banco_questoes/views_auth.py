@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods
 
 from .auditoria import DEVICE_COOKIE_NAME, get_client_ip, log_event
 from .forms import EmailAuthenticationForm, RegistroForm
+from .meta_capi import send_meta_event
 from .models import Assinatura, ConviteCadastroPlano, EventoAuditoria, Plano
 
 
@@ -146,6 +147,55 @@ def _create_assinatura(user, plano: Plano) -> Assinatura:
     )
 
 
+def _track_complete_registration(request: HttpRequest, *, user, event_id: str) -> None:
+    capi_result = send_meta_event(
+        event_name="CompleteRegistration",
+        event_id=event_id,
+        request=request,
+        user=user,
+        custom_data={"status": "success"},
+        event_source_url=request.build_absolute_uri(),
+    )
+    if capi_result.get("ok"):
+        log_event(
+            request,
+            "meta_capi_event_sent",
+            user=user,
+            contexto={
+                "event_name": "CompleteRegistration",
+                "event_id": event_id,
+                "status_code": capi_result.get("status_code"),
+            },
+        )
+        return
+    log_event(
+        request,
+        "meta_capi_event_failed",
+        user=user,
+        contexto={
+            "event_name": "CompleteRegistration",
+            "event_id": event_id,
+            "reason": capi_result.get("reason", ""),
+            "status_code": capi_result.get("status_code"),
+            "error": capi_result.get("error", ""),
+        },
+    )
+
+
+def _queue_pixel_event(request: HttpRequest, *, event_name: str, event_id: str, params: dict | None = None) -> None:
+    pending_events = request.session.get("meta_pending_events", [])
+    if not isinstance(pending_events, list):
+        pending_events = []
+    pending_events.append(
+        {
+            "event_name": event_name,
+            "event_id": event_id,
+            "params": params or {},
+        }
+    )
+    request.session["meta_pending_events"] = pending_events
+
+
 def _get_convite_cadastro(token: str, *, for_update: bool = False) -> ConviteCadastroPlano | None:
     raw_token = (token or "").strip()
     if not raw_token:
@@ -260,6 +310,14 @@ def registrar(request: HttpRequest) -> HttpResponse:
                     device_id=device_id,
                     contexto={"plano": assinatura.nome_plano_snapshot},
                 )
+                event_id = f"reg-{user.id}"
+                _queue_pixel_event(
+                    request,
+                    event_name="CompleteRegistration",
+                    event_id=event_id,
+                    params={"status": "success"},
+                )
+                _track_complete_registration(request, user=user, event_id=event_id)
                 response = redirect(_safe_next_url(request))
                 if new_device:
                     _set_device_cookie(response, device_id)
@@ -342,6 +400,14 @@ def registrar_parceiro(request: HttpRequest, token: str) -> HttpResponse:
                     device_id=device_id,
                     contexto={"plano": assinatura.nome_plano_snapshot},
                 )
+                event_id = f"reg-{user.id}"
+                _queue_pixel_event(
+                    request,
+                    event_name="CompleteRegistration",
+                    event_id=event_id,
+                    params={"status": "success"},
+                )
+                _track_complete_registration(request, user=user, event_id=event_id)
                 response = redirect(_safe_next_url(request))
                 if new_device:
                     _set_device_cookie(response, device_id)

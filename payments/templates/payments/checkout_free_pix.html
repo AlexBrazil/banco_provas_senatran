@@ -88,6 +88,26 @@
   {% if billing %}
   <script>
     (function () {
+      var checkoutEventName = "{{ checkout_event_name|default:''|escapejs }}";
+      var checkoutEventId = "{{ checkout_event_id|default:''|escapejs }}";
+      if (checkoutEventName && checkoutEventId && typeof window.trackMeta === "function") {
+        var valueRaw = "{{ plano.preco|stringformat:'s'|escapejs }}";
+        var valueNormalized = parseFloat((valueRaw || "0").replace(",", "."));
+        if (Number.isNaN(valueNormalized)) {
+          valueNormalized = 0;
+        }
+        window.trackMeta(
+          checkoutEventName,
+          {
+            value: valueNormalized,
+            currency: "BRL",
+            content_name: "{{ plano.nome|escapejs }}",
+            num_items: 1
+          },
+          checkoutEventId
+        );
+      }
+
       var copyBtn = document.getElementById("copy-btn");
       var brcode = document.getElementById("brcode");
       if (copyBtn && brcode) {

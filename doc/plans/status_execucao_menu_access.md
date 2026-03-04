@@ -1,6 +1,6 @@
 # Status de Execucao - Menu e Controle de Acesso por App
 
-Data de sincronizacao: 2026-03-02
+Data de sincronizacao: 2026-03-04
 
 ## Resumo rapido
 - Fase 1 (Etapas 1 a 8): concluida.
@@ -15,6 +15,7 @@ Data de sincronizacao: 2026-03-02
   - `banco_questoes.0006_convitecadastroplano`
   - `banco_questoes.0007_convitecadastroplano_permitir_fallback_free`
   - `banco_questoes.0008_convitecadastroplano_logo_url_and_more`
+  - `banco_questoes.0009_plano_permite_upgrade_pix`
 - Slug canonico do simulado alinhado em todo o fluxo: `simulado-digital`.
 - Simulado em V2 sem fallback legado de decisao:
   - regra por app via `PlanoPermissaoApp` + `UsoAppJanela`;
@@ -25,6 +26,10 @@ Data de sincronizacao: 2026-03-02
   - persistida por usuario em `OfertaUpgradeUsuario`;
   - cronometro nao reinicia em cada entrada;
   - novo ciclo automatico apos expiracao da janela.
+- Elegibilidade de upgrade PIX por plano:
+  - controlada por `Plano.permite_upgrade_pix` (backend);
+  - `True`: CTA de bloqueio + checkout PIX habilitados;
+  - `False`: CTA oculto e checkout bloqueado para o plano.
 - Cadastro por representante:
   - rota dedicada `/registrar/parceiro/<token>/`;
   - convite com vigencia e limite de usos no banco;

@@ -18,6 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from banco_questoes.access_control import is_upgrade_pix_eligible
 from banco_questoes.auditoria import log_event
+from banco_questoes.meta_capi import send_meta_event
 from banco_questoes.models import Assinatura, EventoAuditoria, Plano
 
 from .abacatepay import AbacatePayError, check_pix_qrcode, create_pix_qrcode, verify_webhook_signature
@@ -69,6 +70,8 @@ def _build_checkout_context(
     return {
         "plano": plano,
         "billing": billing,
+        "checkout_event_name": "InitiateCheckout" if billing else "",
+        "checkout_event_id": f"chk-{billing.billing_ref}" if billing else "",
         "message": message,
         "error": error,
         "show_manual_check": show_manual_check,
@@ -222,6 +225,46 @@ def upgrade_free(request: HttpRequest) -> HttpResponse:
             user=request.user,
             contexto={"billing_id": billing.id, "billing_ref": billing_ref},
         )
+        initiate_event_id = f"chk-{billing_ref}"
+        capi_result = send_meta_event(
+            event_name="InitiateCheckout",
+            event_id=initiate_event_id,
+            request=request,
+            user=request.user,
+            custom_data={
+                "value": float(Decimal(valor_centavos) / Decimal("100")),
+                "currency": "BRL",
+                "content_name": plano_upgrade.nome,
+                "num_items": 1,
+                "order_id": billing_ref,
+            },
+            event_source_url=request.build_absolute_uri(),
+        )
+        if capi_result.get("ok"):
+            log_event(
+                request,
+                "meta_capi_event_sent",
+                user=request.user,
+                contexto={
+                    "event_name": "InitiateCheckout",
+                    "event_id": initiate_event_id,
+                    "status_code": capi_result.get("status_code"),
+                    "billing_ref": billing_ref,
+                },
+            )
+        else:
+            log_event(
+                request,
+                "meta_capi_event_failed",
+                user=request.user,
+                contexto={
+                    "event_name": "InitiateCheckout",
+                    "event_id": initiate_event_id,
+                    "reason": capi_result.get("reason", ""),
+                    "status_code": capi_result.get("status_code"),
+                    "billing_ref": billing_ref,
+                },
+            )
 
         context = _build_checkout_context(plano=plano_upgrade, billing=billing)
         return render(request, "payments/checkout_free_pix.html", context)
@@ -445,6 +488,57 @@ def webhook_abacatepay(request: HttpRequest) -> HttpResponse:
     changed = _finalizar_billing_pago(billing, payload)
     if changed:
         _ativar_plano_upgrade(user=billing.usuario, plano_upgrade=billing.plano_destino, billing=billing)
+        purchase_event_id = f"pur-{billing.billing_ref}"
+        capi_result = send_meta_event(
+            event_name="Purchase",
+            event_id=purchase_event_id,
+            request=request,
+            user=billing.usuario,
+            custom_data={
+                "value": float(Decimal(billing.valor_centavos) / Decimal("100")),
+                "currency": "BRL",
+                "content_name": billing.plano_destino.nome,
+                "num_items": 1,
+                "order_id": billing.billing_ref,
+            },
+            event_source_url=request.build_absolute_uri(reverse("payments:upgrade_free")),
+        )
+        if capi_result.get("ok"):
+            log_event(
+                request,
+                "meta_capi_purchase_sent",
+                user=billing.usuario,
+                contexto={
+                    "event_name": "Purchase",
+                    "event_id": purchase_event_id,
+                    "billing_ref": billing.billing_ref,
+                    "status_code": capi_result.get("status_code"),
+                },
+            )
+        else:
+            log_event(
+                request,
+                "meta_capi_event_failed",
+                user=billing.usuario,
+                contexto={
+                    "event_name": "Purchase",
+                    "event_id": purchase_event_id,
+                    "billing_ref": billing.billing_ref,
+                    "reason": capi_result.get("reason", ""),
+                    "status_code": capi_result.get("status_code"),
+                },
+            )
+    else:
+        log_event(
+            request,
+            "meta_capi_purchase_skipped_idempotent",
+            user=billing.usuario,
+            contexto={
+                "event_name": "Purchase",
+                "event_id": f"pur-{billing.billing_ref}",
+                "billing_ref": billing.billing_ref,
+            },
+        )
 
     webhook_event.status_processamento = "OK"
     webhook_event.processado_em = timezone.now()

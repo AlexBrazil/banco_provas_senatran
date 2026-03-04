@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .auditoria import log_event
+from .meta_capi import send_meta_event
 from .models import AppModulo, Assinatura, OfertaUpgradeUsuario, Plano, PlanoPermissaoApp, UsoAppJanela
 
 
@@ -151,6 +152,8 @@ def build_access_blocked_context(
     show_upgrade_cta: bool,
     upgrade_url: str,
     motivo_bloqueio: str = "",
+    marketing_event_name: str = "",
+    marketing_event_id: str = "",
 ) -> dict[str, Any]:
     motivo = (motivo_bloqueio or "").strip().lower()
     if motivo in {"limite_atingido", "limite_atingido_sem_consumo"}:
@@ -213,6 +216,8 @@ def build_access_blocked_context(
         "promo_discount_label": promo_discount_label,
         "promo_show_new_chance": promo_show_new_chance,
         "promo_new_chance_text": promo_new_chance_text,
+        "marketing_event_name": marketing_event_name,
+        "marketing_event_id": marketing_event_id,
     }
 
 
@@ -612,12 +617,50 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
             show_upgrade_cta = is_upgrade_pix_eligible(assinatura)
             upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
             motivo_bloqueio = str((contexto or {}).get("motivo") or "")
+            lead_event_id = f"blk-{request.user.id}-{app_slug}-{int(timezone.now().timestamp())}"
+            capi_result = send_meta_event(
+                event_name="Lead",
+                event_id=lead_event_id,
+                request=request,
+                user=request.user,
+                custom_data={
+                    "app_slug": app_slug,
+                    "plano_nome": plano_nome,
+                    "motivo_bloqueio": motivo_bloqueio,
+                },
+                event_source_url=request.build_absolute_uri(),
+            )
             log_event(
                 request,
                 "app_access_blocked",
                 user=request.user,
                 contexto={**contexto, "reason": reason or ""},
             )
+            if capi_result.get("ok"):
+                log_event(
+                    request,
+                    "meta_capi_event_sent",
+                    user=request.user,
+                    contexto={
+                        "event_name": "Lead",
+                        "event_id": lead_event_id,
+                        "status_code": capi_result.get("status_code"),
+                        "app_slug": app_slug,
+                    },
+                )
+            else:
+                log_event(
+                    request,
+                    "meta_capi_event_failed",
+                    user=request.user,
+                    contexto={
+                        "event_name": "Lead",
+                        "event_id": lead_event_id,
+                        "reason": capi_result.get("reason", ""),
+                        "status_code": capi_result.get("status_code"),
+                        "app_slug": app_slug,
+                    },
+                )
             return render(
                 request,
                 "menu/access_blocked.html",
@@ -629,6 +672,8 @@ def require_app_access(app_slug: str, *, consume: bool = True) -> Callable:
                     show_upgrade_cta=show_upgrade_cta,
                     upgrade_url=upgrade_url,
                     motivo_bloqueio=motivo_bloqueio,
+                    marketing_event_name="Lead",
+                    marketing_event_id=lead_event_id,
                 ),
                 status=403,
             )

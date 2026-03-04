@@ -147,6 +147,11 @@ Modelos de assinatura/plano:
 - `Plano`
 - `Assinatura`
 
+Regra comercial de upgrade PIX por plano:
+- campo `Plano.permite_upgrade_pix` controla elegibilidade do CTA/checkout PIX.
+- `True`: plano pode exibir CTA e acessar checkout PIX.
+- `False`: plano nao exibe CTA e checkout PIX retorna bloqueio de elegibilidade.
+
 ---
 
 ## 7) Seed de acesso por app
@@ -186,6 +191,7 @@ Bloqueio padrao atual:
   - cronometro regressivo;
   - mensagem de nova oportunidade quando `ciclo > 1`.
 - CTA principal faz POST para `payments:upgrade_free` (fluxo direto para gerar QRCode PIX).
+- Elegibilidade do CTA/checkout usa regra unica por flag de plano (`permite_upgrade_pix`), nao por nome do plano.
 
 ---
 
@@ -272,7 +278,7 @@ Resumo:
     - com `permitir_fallback_free=False`, o aluno ve apenas a tela de indisponibilidade de cadastro.
   - aluno do representante atingiu limite de uso do app:
     - o acesso ao app e bloqueado pela regra de `PlanoPermissaoApp`;
-    - CTA de pagamento PIX direto so aparece para usuarios no plano `Free`.
+    - CTA de pagamento PIX direto aparece apenas se o plano tiver `permite_upgrade_pix=True`.
 - UI atual:
   - banner superior com imagem `static/menu_app/alegre2.png` em login e cadastro;
   - login/cadastro por parceiro exibem logo personalizada quando `logo_url` estiver preenchida no convite;
@@ -291,7 +297,7 @@ Arquivos:
 - `payments/templates/payments/checkout_free_pix.html`
 
 Fluxo:
-- checkout de upgrade Free -> Aprova DETRAN;
+- checkout de upgrade para planos elegiveis (`permite_upgrade_pix=True`) -> Aprova DETRAN;
 - polling de status;
 - webhook `billing.paid` com idempotencia.
 
@@ -300,6 +306,7 @@ Ajustes atuais de UX no checkout:
 - quando ainda nao existe cobranca, checkout exibe CTA `Gerar QRCode PIX`;
 - botao secundario renomeado para `Voltar ao menu`;
 - beneficio exibido no card: `Uso ilimitado` (quando aplicavel).
+- endpoint legado `/payments/upgrade/free/` foi mantido por compatibilidade de rota.
 
 Ao confirmar pagamento:
 - atualiza assinatura para plano de upgrade;
@@ -348,8 +355,9 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
-  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free` e `0008_convitecadastroplano_logo_url_and_more`);
+  - migrations aplicadas (incluindo `banco_questoes.0005_ofertaupgradeusuario`, `0006_convitecadastroplano`, `0007_convitecadastroplano_permitir_fallback_free`, `0008_convitecadastroplano_logo_url_and_more` e `0009_plano_permite_upgrade_pix`);
   - `seed_apps_menu_access` executado;
   - planos em uso com regras em `PlanoPermissaoApp`;
+  - planos autorizados ao PIX com `permite_upgrade_pix=True` no admin;
   - conferencia de `AppModulo.em_construcao` dos apps liberados;
   - disponibilidade dos assets `static/menu_app/cnh_amor.png` e `static/menu_app/alegre2.png`.

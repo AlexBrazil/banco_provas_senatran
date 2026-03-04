@@ -1,0 +1,56 @@
+{% if meta_pixel_enabled and meta_pixel_id %}
+  <script>
+    window.__META_PIXEL_ID__ = "{{ meta_pixel_id|escapejs }}";
+    window.__META_PAGEVIEW_EVENT_ID__ = "{{ meta_pageview_event_id|default:''|escapejs }}";
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', window.__META_PIXEL_ID__);
+    if (window.__META_PAGEVIEW_EVENT_ID__) {
+      fbq('track', 'PageView', {}, { eventID: window.__META_PAGEVIEW_EVENT_ID__ });
+    } else {
+      fbq('track', 'PageView');
+    }
+    window.trackMeta = function (eventName, params, eventId) {
+      if (!window.fbq || !eventName) return;
+      var payload = params || {};
+      if (eventId) {
+        fbq('track', eventName, payload, { eventID: eventId });
+        return;
+      }
+      fbq('track', eventName, payload);
+    };
+    (function () {
+      var queuedRaw = "{{ meta_pending_events_json|default:'[]'|escapejs }}";
+      var queuedEvents = [];
+      try {
+        queuedEvents = JSON.parse(queuedRaw);
+      } catch (err) {
+        queuedEvents = [];
+      }
+      if (!Array.isArray(queuedEvents)) return;
+      queuedEvents.forEach(function (eventItem) {
+        if (!eventItem || !eventItem.event_name) return;
+        window.trackMeta(eventItem.event_name, eventItem.params || {}, eventItem.event_id || "");
+      });
+    })();
+  </script>
+  <noscript>
+    <img
+      height="1"
+      width="1"
+      style="display:none"
+      src="https://www.facebook.com/tr?id={{ meta_pixel_id|urlencode }}&ev=PageView&noscript=1"
+      alt=""
+    />
+  </noscript>
+{% else %}
+  <script>
+    window.trackMeta = function () {};
+  </script>
+{% endif %}

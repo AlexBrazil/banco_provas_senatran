@@ -73,6 +73,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "banco_questoes.middleware.MetaPageViewCapiMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -107,6 +108,7 @@ TEMPLATES = [
                 "django.template.context_processors.media",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
+                "banco_questoes.context_processors.meta_pixel_context",
             ],
         },
     },
@@ -225,6 +227,17 @@ ABACATEPAY_WEBHOOK_SIGNATURE_HEADER = os.getenv(
     "ABACATEPAY_WEBHOOK_SIGNATURE_HEADER",
     "X-Webhook-Signature",
 )
+
+
+# -----------------------------------------------------------------------------
+# Meta Pixel / CAPI
+# -----------------------------------------------------------------------------
+META_PIXEL_ENABLED = env_bool("META_PIXEL_ENABLED", "0")
+META_PIXEL_ID = os.getenv("META_PIXEL_ID", "").strip()
+META_CAPI_ENABLED = env_bool("META_CAPI_ENABLED", "0")
+META_CAPI_ACCESS_TOKEN = os.getenv("META_CAPI_ACCESS_TOKEN", "").strip()
+META_CAPI_API_VERSION = os.getenv("META_CAPI_API_VERSION", "v20.0").strip()
+META_CAPI_TEST_EVENT_CODE = os.getenv("META_CAPI_TEST_EVENT_CODE", "").strip()
 
 
 # -----------------------------------------------------------------------------

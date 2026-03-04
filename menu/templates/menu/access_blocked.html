@@ -452,6 +452,16 @@
 {% block body_end %}
   <script>
     (function () {
+      var eventName = "{{ marketing_event_name|default:''|escapejs }}";
+      var eventId = "{{ marketing_event_id|default:''|escapejs }}";
+      if (eventName && eventId && typeof window.trackMeta === "function") {
+        window.trackMeta(eventName, {
+          app_slug: "{{ app_slug|default:''|escapejs }}",
+          plano_nome: "{{ plano_nome|default:''|escapejs }}",
+          motivo_bloqueio: "{{ motivo_bloqueio|default:''|escapejs }}"
+        }, eventId);
+      }
+
       var card = document.querySelector("[data-countdown-ends-at]");
       if (!card) return;
 

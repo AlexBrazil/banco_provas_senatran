@@ -24,6 +24,7 @@ from banco_questoes.access_control import (
     is_upgrade_pix_eligible,
 )
 from banco_questoes.auditoria import log_event
+from banco_questoes.meta_capi import send_meta_event
 from banco_questoes.models import (
     Alternativa,
     Assinatura,
@@ -390,6 +391,44 @@ def _render_access_blocked(
         allow_upgrade and plano_status and plano_status.get("ativo") and plano_status.get("upgrade_pix_eligible")
     )
     upgrade_url = reverse("payments:upgrade_free") if show_upgrade_cta else ""
+    lead_event_id = f"blk-{request.user.id}-{SIMULADO_APP_SLUG}-{int(timezone.now().timestamp())}"
+    capi_result = send_meta_event(
+        event_name="Lead",
+        event_id=lead_event_id,
+        request=request,
+        user=request.user,
+        custom_data={
+            "app_slug": SIMULADO_APP_SLUG,
+            "plano_nome": plano_nome,
+            "motivo_bloqueio": motivo_bloqueio,
+        },
+        event_source_url=request.build_absolute_uri(),
+    )
+    if capi_result.get("ok"):
+        log_event(
+            request,
+            "meta_capi_event_sent",
+            user=request.user,
+            contexto={
+                "event_name": "Lead",
+                "event_id": lead_event_id,
+                "status_code": capi_result.get("status_code"),
+                "app_slug": SIMULADO_APP_SLUG,
+            },
+        )
+    else:
+        log_event(
+            request,
+            "meta_capi_event_failed",
+            user=request.user,
+            contexto={
+                "event_name": "Lead",
+                "event_id": lead_event_id,
+                "reason": capi_result.get("reason", ""),
+                "status_code": capi_result.get("status_code"),
+                "app_slug": SIMULADO_APP_SLUG,
+            },
+        )
 
     return render(
         request,
@@ -402,6 +441,8 @@ def _render_access_blocked(
             show_upgrade_cta=show_upgrade_cta,
             upgrade_url=upgrade_url,
             motivo_bloqueio=motivo_bloqueio,
+            marketing_event_name="Lead",
+            marketing_event_id=lead_event_id,
         ),
         status=403,
     )
