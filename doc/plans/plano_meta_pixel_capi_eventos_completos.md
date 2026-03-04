@@ -1,7 +1,7 @@
 # Plano de implementacao - Meta Pixel + CAPI (eventos completos)
 
 Data: 2026-03-04  
-Status: planejamento
+Status: implementado no codigo e em homologacao
 
 ## 1) Objetivo
 

@@ -247,3 +247,45 @@ Sem regra em `PlanoPermissaoApp`:
   - menu + simulado + perguntas-respostas + bloqueio comercial + checkout PIX.
   - cadastro parceiro com convite valido e convite indisponivel (com e sem fallback).
   - login parceiro com logo personalizada.
+
+---
+
+## 13) Telemetria de conversao (Meta Pixel + CAPI)
+
+Objetivo:
+- acompanhar funil de cadastro, bloqueio, checkout e compra com maior confiabilidade.
+
+Configuracao por ambiente (`.env`):
+1. `META_PIXEL_ENABLED`
+2. `META_PIXEL_ID`
+3. `META_CAPI_ENABLED`
+4. `META_CAPI_ACCESS_TOKEN`
+5. `META_CAPI_API_VERSION`
+6. `META_CAPI_TEST_EVENT_CODE` (somente homologacao)
+
+Eventos mapeados:
+1. `PageView`
+- Pixel: snippet frontend.
+- CAPI: middleware server-side por namespace de app.
+
+2. `CompleteRegistration`
+- cadastro concluido em `registrar` e `registrar_parceiro`.
+
+3. `Lead`
+- exibicao da tela de bloqueio (`menu/access_blocked.html`).
+
+4. `InitiateCheckout`
+- QR PIX gerado (criacao de `Billing` pendente).
+
+5. `Purchase`
+- confirmacao no webhook `billing.paid` (transicao real para pago).
+
+Deduplicacao:
+1. Quando o evento existe em Pixel e CAPI, o mesmo `event_id` e usado nos dois canais.
+2. Exemplo de chaves: `pv-*`, `reg-*`, `blk-*`, `chk-*`, `pur-*`.
+
+Validacao recomendada no Events Manager:
+1. Testar login/cadastro e confirmar `PageView` + `CompleteRegistration`.
+2. Forcar bloqueio e confirmar `Lead`.
+3. Gerar QR e confirmar `InitiateCheckout`.
+4. Confirmar webhook pago e validar `Purchase`.

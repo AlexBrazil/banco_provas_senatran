@@ -77,6 +77,12 @@ Arquivo: `config/settings.py`
   - `REGISTER_COOLDOWN_ENABLED`
   - `APP_ACCESS_V2_ENABLED`
   - `APP_ACCESS_DUAL_WRITE`
+  - `META_PIXEL_ENABLED`
+  - `META_PIXEL_ID`
+  - `META_CAPI_ENABLED`
+  - `META_CAPI_ACCESS_TOKEN`
+  - `META_CAPI_API_VERSION`
+  - `META_CAPI_TEST_EVENT_CODE`
 - Apps ja registrados no `INSTALLED_APPS`: menu + 7 placeholders + core + payments.
 - Login/session:
   - `LOGIN_URL=/login/`
@@ -314,7 +320,62 @@ Ao confirmar pagamento:
 
 ---
 
-## 13) Front-end
+## 13) Meta Pixel + CAPI
+
+Objetivo:
+- rastrear navegacao e conversao com redundancia (browser + server-side).
+
+Arquivos principais:
+- `banco_questoes/templates/includes/meta_pixel.html`
+- `banco_questoes/context_processors.py`
+- `banco_questoes/middleware.py`
+- `banco_questoes/meta_capi.py`
+- `banco_questoes/views_auth.py`
+- `banco_questoes/access_control.py`
+- `banco_questoes/views_simulado.py`
+- `payments/views.py`
+- `payments/templates/payments/checkout_free_pix.html`
+
+Arquitetura:
+- Pixel no frontend: snippet injetado por template quando `META_PIXEL_ENABLED=1` e `META_PIXEL_ID` valido.
+- CAPI no backend: envio via `send_meta_event(...)` com timeout curto e falha nao bloqueante.
+- `PageView` CAPI: middleware por namespace (`menu`, `simulado`, `payments`, `perguntas_respostas`, `apostila_cnh`, `simulacao_prova`, `manual_pratico`, `aprenda_jogando`, `oraculo`, `aprova_plus`).
+- `event_id` compartilhado entre Pixel e CAPI quando o evento existe nos dois canais.
+
+Eventos implementados:
+1. `PageView`
+- Pixel: include global `meta_pixel.html`.
+- CAPI: `MetaPageViewCapiMiddleware`.
+
+2. `CompleteRegistration`
+- CAPI: em `registrar` e `registrar_parceiro`.
+- Pixel: fila de eventos de sessao (`meta_pending_events`) consumida no include.
+
+3. `Lead` (tela de bloqueio)
+- CAPI: no bloqueio em `require_app_access` e `_render_access_blocked`.
+- Pixel: disparo no template `menu/access_blocked.html`.
+
+4. `InitiateCheckout`
+- CAPI: ao criar `Billing` (geracao do QR PIX).
+- Pixel: no template de checkout quando existe `billing`.
+
+5. `Purchase`
+- CAPI: no webhook `billing.paid`, somente na transicao real `PENDING -> PAID`.
+- Idempotencia: se evento ja estiver pago, registra `meta_capi_purchase_skipped_idempotent`.
+
+Logs/auditoria:
+- `meta_capi_event_sent`
+- `meta_capi_event_failed`
+- `meta_capi_purchase_sent`
+- `meta_capi_purchase_skipped_idempotent`
+
+Observacao operacional:
+- em homologacao, preencher `META_CAPI_TEST_EVENT_CODE`;
+- em producao estavel, deixar `META_CAPI_TEST_EVENT_CODE` vazio.
+
+---
+
+## 14) Front-end
 
 - Bloqueio de acesso:
   - template `menu/templates/menu/access_blocked.html`
@@ -339,7 +400,7 @@ Ao confirmar pagamento:
 
 ---
 
-## 14) Comandos operacionais uteis
+## 15) Comandos operacionais uteis
 
 ```powershell
 Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
@@ -351,7 +412,7 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
 
 ---
 
-## 15) Observacoes de consistencia
+## 16) Observacoes de consistencia
 
 - `description_project.md` descreve o estado atual de codigo local.
 - Em deploy, garantir:
@@ -359,5 +420,7 @@ Set-Location "f:\\Nosso_Trânsito_2026\\Banco_Questoes\\Simulado_Digital"
   - `seed_apps_menu_access` executado;
   - planos em uso com regras em `PlanoPermissaoApp`;
   - planos autorizados ao PIX com `permite_upgrade_pix=True` no admin;
+  - variaveis Meta configuradas no `.env` (sem token hardcoded em codigo);
+  - `META_CAPI_TEST_EVENT_CODE` definido apenas durante homologacao;
   - conferencia de `AppModulo.em_construcao` dos apps liberados;
   - disponibilidade dos assets `static/menu_app/cnh_amor.png` e `static/menu_app/alegre2.png`.

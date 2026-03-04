@@ -6,6 +6,7 @@ Data de sincronizacao: 2026-03-04
 - Fase 1 (Etapas 1 a 8): concluida.
 - Fase 2 (Etapas A a H): concluida e estabilizada.
 - Evolucao comercial de bloqueio/upgrade: implementada.
+- Telemetria Meta Pixel + CAPI: implementada no codigo (homologacao em andamento).
 
 ## Estado atual do projeto
 - `manage.py check`: sem erros no ultimo ciclo de validacao.
@@ -30,6 +31,11 @@ Data de sincronizacao: 2026-03-04
   - controlada por `Plano.permite_upgrade_pix` (backend);
   - `True`: CTA de bloqueio + checkout PIX habilitados;
   - `False`: CTA oculto e checkout bloqueado para o plano.
+- Tracking de marketing:
+  - Pixel frontend com include centralizado;
+  - CAPI server-side com cliente reutilizavel;
+  - `PageView` por middleware (namespaces dos apps);
+  - eventos de funil: `CompleteRegistration`, `Lead`, `InitiateCheckout`, `Purchase`.
 - Cadastro por representante:
   - rota dedicada `/registrar/parceiro/<token>/`;
   - convite com vigencia e limite de usos no banco;
@@ -90,10 +96,33 @@ Data de sincronizacao: 2026-03-04
   - com fallback: redireciona para `/registrar/`;
   - sem fallback: exibe tela informativa de indisponibilidade.
 
+## Evolucao Meta Pixel + CAPI (2026-03-04)
+- Configuracao em `settings.py`:
+  - `META_PIXEL_ENABLED`, `META_PIXEL_ID`,
+  - `META_CAPI_ENABLED`, `META_CAPI_ACCESS_TOKEN`,
+  - `META_CAPI_API_VERSION`, `META_CAPI_TEST_EVENT_CODE`.
+- Context processor:
+  - `banco_questoes.context_processors.meta_pixel_context`.
+- Middleware:
+  - `banco_questoes.middleware.MetaPageViewCapiMiddleware` para `PageView` server-side.
+- Include frontend:
+  - `banco_questoes/templates/includes/meta_pixel.html`.
+- Eventos implementados:
+  - `PageView` (Pixel + CAPI),
+  - `CompleteRegistration` (Pixel + CAPI),
+  - `Lead` no bloqueio (Pixel + CAPI),
+  - `InitiateCheckout` no QR PIX (Pixel + CAPI),
+  - `Purchase` no webhook `billing.paid` (CAPI).
+- Idempotencia e deduplicacao:
+  - `Purchase` somente na transicao real para pago,
+  - uso de `event_id` consistente entre canais quando aplicavel.
+
 ## Proximos passos sugeridos (ordem)
 1. Rodar regressao manual completa (login, menu, bloqueio, checkout PIX, webhook, logout/login).
-2. Monitorar eventos de auditoria (`app_access_blocked`, `pix_qrcode_criado`, `webhook_billing_paid`).
-3. Planejar fase de deprecacao definitiva de `SimuladoUso` quando dual-write nao for mais necessario.
+2. Homologar eventos no Meta Events Manager (com `META_CAPI_TEST_EVENT_CODE`).
+3. Monitorar auditoria incluindo eventos Meta (`meta_capi_event_sent`, `meta_capi_event_failed`, `meta_capi_purchase_sent`).
+4. Remover `META_CAPI_TEST_EVENT_CODE` em producao estavel.
+5. Planejar fase de deprecacao definitiva de `SimuladoUso` quando dual-write nao for mais necessario.
 
 ## Comandos de validacao (execucao assistida)
 ```powershell
